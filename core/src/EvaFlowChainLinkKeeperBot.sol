@@ -151,10 +151,12 @@ contract EvaFlowChainLinkKeeperBot is
         uint256 nextId = KeeperRegistryInterface(keeperRegistry)
             .getUpkeepCount();
         chainLinkKeepId = nextId - 1;
+        config.addKeeper(address(this));
         return chainLinkKeepId;
     }
 
     function cancelTask() external onlyOwner {
         KeeperRegistryInterface(keeperRegistry).cancelUpkeep(chainLinkKeepId);
+        config.removeKeeper(address(this));
     }
 }
