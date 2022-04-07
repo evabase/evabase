@@ -45,7 +45,7 @@ contract EvaFlowChainLinkKeeperBot is
         evaFlowControler = IEvaFlowControler(_evaFlowControler);
         config = IEvabaseConfig(_config);
         evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
-        keepBotId = config.keepBotSize() + 1;
+
         keeperRegistry = KeeperRegistryInterface(_keeperRegistry);
         regiesterRequest = _regiesterRequest;
     }
@@ -152,6 +152,7 @@ contract EvaFlowChainLinkKeeperBot is
             .getUpkeepCount();
         chainLinkKeepId = nextId - 1;
         config.addKeeper(address(this));
+        keepBotId = config.keepBotSize() + 1;
         return chainLinkKeepId;
     }
 

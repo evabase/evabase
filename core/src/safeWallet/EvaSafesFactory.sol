@@ -47,7 +47,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
         assembly {
             wallet := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        IEvaSafes(wallet).initialize(user, config);
+        IEvaSafes(wallet).initialize(user, config, msg.sender);
         evaSafesMap[user] = wallet;
         allWallets.push(wallet);
 

@@ -15,55 +15,75 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     address public config;
     address public factory;
     uint256 private s_currentTask;
+    mapping(address => bool) control;
+    /* Whether access has been revoked. */
+    bool public revoked;
 
     constructor() {
         factory = _msgSender();
+    }
+
+    enum HowToCall {
+        Call,
+        DelegateCall
     }
 
     modifier onlyOwner() {
         require(owner == _msgSender(), "only owner can exec.");
         _;
     }
-    // modifier onlyKeeper() {
-    //     require(
-    //         IEvabaseConfig(config).isKeeper(_msgSender()),
-    //         "only call by keeper"
-    //     );
-    //     _;
-    // }
+
+    event Revoked(bool revoked);
 
     modifier onlyController() {
-        require(
-            IEvabaseConfig(config).control() == _msgSender(),
-            "only call by Controller"
-        );
+        require(control[_msgSender()] && revoked, "only call by Controller");
         _;
     }
 
     modifier onlyControllerOrOwner() {
         require(
-            owner == _msgSender() ||
-                IEvabaseConfig(config).control() == _msgSender(),
+            owner == _msgSender() || (control[_msgSender()] && revoked),
             "only call by Controller or owner"
         );
         _;
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _admin, address _config)
-        external
-        override
-        initializer
-    {
+    function initialize(
+        address _admin,
+        address _config,
+        address _control
+    ) external override initializer {
         require(_msgSender() == factory, "only factory can exec "); // sufficient check
         require(owner == address(0), "owner should zero address");
         owner = _admin;
         config = _config;
+        revoked = true;
+        control[_control] = true;
+    }
+
+    function setRevoke(bool revoke) external override onlyOwner {
+        revoked = revoke;
+        emit Revoked(revoke);
     }
 
     function refund(address token, uint256 amount) external onlyOwner {
         if (amount > 0)
             TransferHelper.safeTransfer(token, _msgSender(), amount);
+    }
+
+    function proxy(
+        address dest,
+        HowToCall howToCall,
+        bytes memory data
+    ) public onlyControllerOrOwner returns (bool result) {
+        bytes memory ret;
+        if (howToCall == HowToCall.Call) {
+            (result, ret) = dest.call(data);
+        } else if (howToCall == HowToCall.DelegateCall) {
+            (result, ret) = dest.delegatecall(data);
+        }
+        return result;
     }
 
     function refundETH(uint256 amount) external payable onlyOwner {
@@ -80,6 +100,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         onlyControllerOrOwner
         returns (bytes[] memory results)
     {
+        require(s_currentTask == 0, "doing task");
         s_currentTask = taskId; //set exec context
 
         results = new bytes[](data.length);
@@ -101,6 +122,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         onlyControllerOrOwner
         returns (bytes[] memory results)
     {
+        require(s_currentTask == 0, "doing task");
         s_currentTask = taskId; //set exec context
 
         results = new bytes[](data.length);

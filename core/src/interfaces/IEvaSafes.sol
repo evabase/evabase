@@ -3,7 +3,11 @@
 pragma solidity ^0.8.0;
 
 interface IEvaSafes {
-    function initialize(address admin, address agent) external;
+    function initialize(
+        address admin,
+        address agent,
+        address _control
+    ) external;
 
     function owner() external returns (address);
 
@@ -16,4 +20,6 @@ interface IEvaSafes {
     function multicallWithValue(uint256 taskId, bytes[] calldata data)
         external
         returns (bytes[] memory results);
+
+    function setRevoke(bool revoke) external;
 }
