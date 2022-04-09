@@ -22,4 +22,6 @@ interface IEvaSafes {
         returns (bytes[] memory results);
 
     function setRevoke(bool revoke) external;
+
+    function setControl(address add, bool revoke) external;
 }

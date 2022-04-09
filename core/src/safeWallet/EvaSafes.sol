@@ -34,6 +34,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     }
 
     event Revoked(bool revoked);
+    event SetControl(address add, bool revoked);
 
     modifier onlyController() {
         require(control[_msgSender()] && revoked, "only call by Controller");
@@ -65,6 +66,11 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     function setRevoke(bool revoke) external override onlyOwner {
         revoked = revoke;
         emit Revoked(revoke);
+    }
+
+    function setControl(address add, bool revoke) external override onlyOwner {
+        control[add] = revoke;
+        emit SetControl(add, revoke);
     }
 
     function refund(address token, uint256 amount) external onlyOwner {
