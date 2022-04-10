@@ -38,6 +38,7 @@ async function main() {
     evaSafesFactory.address
   );
   await evaFlowControler.deployed();
+  await evabaseConfig.setControl(evaFlowControler.address);
   store.set("evaFlowControler", evaFlowControler.address);
   console.log(`evaFlowControler: ${evaFlowControler.address}`);
   // 4
@@ -56,7 +57,7 @@ async function main() {
 
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
-    evaFlowControler.address,
+    evaFlowChecker.address,
     evaFlowControler.address,
     store.get("linkToken"),
     store.get("chainlinkKeeperRegistry"),
