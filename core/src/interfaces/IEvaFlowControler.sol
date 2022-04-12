@@ -99,4 +99,6 @@ interface IEvaFlowControler {
         external
         view
         returns (EvaFlowMeta memory);
+
+    function batchExecFlow(bytes memory _data, uint256 gasLimit) external;
 }

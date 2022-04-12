@@ -15,7 +15,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     address public config;
     address public factory;
     uint256 private s_currentTask;
-    mapping(address => bool) control;
+    // mapping(address => bool) control;
     /* Whether access has been revoked. */
     bool public revoked;
 
@@ -34,33 +34,38 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     }
 
     event Revoked(bool revoked);
-    event SetControl(address add, bool revoked);
+    // event SetControl(address add, bool revoked);
 
     modifier onlyController() {
-        require(control[_msgSender()] && revoked, "only call by Controller");
+        require(
+            IEvabaseConfig(config).isActiveControler(msg.sender) && revoked,
+            "only call by Controller"
+        );
         _;
     }
 
     modifier onlyControllerOrOwner() {
         require(
-            owner == _msgSender() || (control[_msgSender()] && revoked),
+            owner == _msgSender() ||
+                (IEvabaseConfig(config).isActiveControler(msg.sender) &&
+                    revoked),
             "only call by Controller or owner"
         );
         _;
     }
 
     // called once by the factory at time of deployment
-    function initialize(
-        address _admin,
-        address _config,
-        address _control
-    ) external override initializer {
-        require(_msgSender() == factory, "only factory can exec "); // sufficient check
+    function initialize(address _admin, address _config)
+        external
+        override
+        initializer
+    {
+        // require(_msgSender() == factory, "only factory can exec "); // sufficient check
         require(owner == address(0), "owner should zero address");
         owner = _admin;
         config = _config;
         revoked = true;
-        control[_control] = true;
+        // control[_control] = true;
     }
 
     function setRevoke(bool revoke) external override onlyOwner {
@@ -68,10 +73,10 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         emit Revoked(revoke);
     }
 
-    function setControl(address add, bool revoke) external override onlyOwner {
-        control[add] = revoke;
-        emit SetControl(add, revoke);
-    }
+    // function setControl(address add, bool revoke) external override onlyOwner {
+    //     control[add] = revoke;
+    //     emit SetControl(add, revoke);
+    // }
 
     function refund(address token, uint256 amount) external onlyOwner {
         if (amount > 0)

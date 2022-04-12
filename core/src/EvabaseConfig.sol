@@ -22,7 +22,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit SetBatchFlowNum(msg.sender, num);
     }
 
-    function addKeeper(address _keeper) external override onlyOwner {
+    function addKeeper(address _keeper) external override {
+        require(tx.origin == owner(), "only owner can add keeper");
         require(!keepBotExists[_keeper], "keeper exist");
         keepBotExists[_keeper] == true;
         // require(keepBots.contains(_keeper), "keeper exist");
@@ -31,11 +32,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit AddKeeper(msg.sender, _keeper);
     }
 
-    function removeBatchKeeper(address[] calldata arr)
-        external
-        override
-        onlyOwner
-    {
+    function removeBatchKeeper(address[] calldata arr) external override {
+        require(tx.origin == owner(), "only owner can add keeper");
         for (uint256 i = 0; i < arr.length; i++) {
             // if (keepBots.contains(arr[i])) {
             //     keepBots.remove(arr[i]);
@@ -49,7 +47,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit RemoveBatchKeeper(msg.sender, arr);
     }
 
-    function addBatchKeeper(address[] memory arr) external override onlyOwner {
+    function addBatchKeeper(address[] memory arr) external override {
+        require(tx.origin == owner(), "only owner can add keeper");
         for (uint256 i = 0; i < arr.length; i++) {
             // if (!keepBots.contains(arr[i])) {
             //     keepBots.add(arr[i]);
@@ -63,7 +62,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit AddBatchKeeper(msg.sender, arr);
     }
 
-    function removeKeeper(address _keeper) external override onlyOwner {
+    function removeKeeper(address _keeper) external override {
+        require(tx.origin == owner(), "only owner can add keeper");
         require(keepBotExists[_keeper], "keeper not exist");
         keepBotExists[_keeper] = false;
         keepBotSize--;
@@ -81,6 +81,15 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     function setControl(address _control) external override onlyOwner {
         control = _control;
         emit SetControl(msg.sender, _control);
+    }
+
+    function isActiveControler(address add)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return control == add;
     }
 
     // function keepBotSize() external view override returns (uint32) {

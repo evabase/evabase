@@ -5,7 +5,8 @@
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
 const store = require("data-store")({
-  path: process.cwd() + "/deployInfo.json",
+  // path: process.cwd() + "/deployInfo.json",
+  path: process.cwd() + "/scripts/deployInfo_bsctest.json",
 });
 
 async function main() {

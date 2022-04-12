@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
+import {Utils} from "./lib/Utils.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
 import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
@@ -49,7 +50,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         config = IEvabaseConfig(_config);
         flowMetas.push(
             EvaFlowMeta({
-                flowStatus: FlowStatus.Empty,
+                flowStatus: FlowStatus.Unknown,
                 keepNetWork: KeepNetWork.ChainLink,
                 maxVaildBlockNumber: MAX_INT,
                 admin: msg.sender,
@@ -395,7 +396,24 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         return flowMetas[index];
     }
 
-    function execFlow(uint256 _flowId) external override nonReentrant {
+    function batchExecFlow(bytes memory _data, uint256 gasLimit)
+        external
+        override
+    {
+        uint256 gasTotal = 0;
+        uint256[] memory arr = Utils.decodeUints(_data);
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] > 0) {
+                uint256 before = gasleft();
+                execFlow(arr[i]);
+                if (gasTotal + before - gasleft() > gasLimit) {
+                    return;
+                }
+            }
+        }
+    }
+
+    function execFlow(uint256 _flowId) public override nonReentrant {
         require(config.isKeeper(msg.sender), "exect keeper is not whitelist");
         uint256 before = gasleft();
         EvaFlowMeta memory flowMeta = flowMetas[_flowId];

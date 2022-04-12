@@ -40,6 +40,8 @@ interface IEvabaseConfig {
 
     function keepBotSize() external view returns (uint32);
 
+    function isActiveControler(address add) external view returns (bool);
+
     // function getKeepBotSize() external view returns (uint32);
 
     // function getAllKeepBots() external returns (address[] memory);
