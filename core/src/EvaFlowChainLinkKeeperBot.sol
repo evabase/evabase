@@ -22,32 +22,32 @@ contract EvaFlowChainLinkKeeperBot is
     uint32 private constant EXEC_GAS_LIMIT = 2_000_000;
     // KeeperRegistryInterface private immutable keeperRegistryInterface;
     uint32 public keepBotId;
-    uint256 public chainLinkKeepId;
-    address public linkToken;
+
+    // uint256 public chainLinkKeepId;
+    // address public linkToken;
     // uint256 lastBlockNum;
     KeeperRegistryInterface private immutable keeperRegistry;
-    address private regiesterRequest;
+
+    // address private regiesterRequest;
 
     constructor(
         address _config,
         address _evaFlowChecker,
         address _evaFlowControler,
-        address _linkToken,
-        address _keeperRegistry,
-        address _regiesterRequest
+        address _keeperRegistry
     ) {
         require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         require(_evaFlowChecker != address(0), "addess is 0x");
-        require(_linkToken != address(0), "addess is 0x");
+        // require(_linkToken != address(0), "addess is 0x");
         require(_keeperRegistry != address(0), "addess is 0x");
-        require(_regiesterRequest != address(0), "addess is 0x");
+        // require(_regiesterRequest != address(0), "addess is 0x");
         evaFlowControler = IEvaFlowControler(_evaFlowControler);
         config = IEvabaseConfig(_config);
         evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
-        linkToken = _linkToken;
+        // linkToken = _linkToken;
         keeperRegistry = KeeperRegistryInterface(_keeperRegistry);
-        regiesterRequest = _regiesterRequest;
+        // regiesterRequest = _regiesterRequest;
         config.addKeeper(address(this));
     }
 

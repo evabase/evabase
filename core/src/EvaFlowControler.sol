@@ -75,7 +75,30 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         );
     }
 
-    function beforeCreateFlow(
+    function checkEnoughGas() internal view {
+        bool isEnoughGas = true;
+        unchecked {
+            if (minConfig.feeToken == address(0)) {
+                isEnoughGas =
+                    (msg.value + UserMetaMap[msg.sender].ethBal >=
+                        minConfig.minGasFundForUser) &&
+                    (msg.value + UserMetaMap[msg.sender].ethBal >=
+                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
+                            minConfig.minGasFundOneFlow);
+            } else {
+                isEnoughGas =
+                    (UserMetaMap[msg.sender].gasTokenbal >=
+                        minConfig.minGasFundForUser) &&
+                    (UserMetaMap[msg.sender].gasTokenbal >=
+                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
+                            minConfig.minGasFundOneFlow);
+            }
+        }
+
+        require(isEnoughGas, "gas balance is not enough");
+    }
+
+    function _beforeCreateFlow(
         string memory _flowName,
         KeepNetWork _keepNetWork,
         bytes memory _input
@@ -99,28 +122,6 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             uint256(_keepNetWork) <= uint256(KeepNetWork.Others),
             "Illegal keepNetWork <"
         );
-
-        bool isEnoughGas = true;
-
-        unchecked {
-            if (minConfig.feeToken == address(0)) {
-                isEnoughGas =
-                    (msg.value + UserMetaMap[msg.sender].ethBal >=
-                        minConfig.minGasFundForUser) &&
-                    (msg.value + UserMetaMap[msg.sender].ethBal >=
-                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
-                            minConfig.minGasFundOneFlow);
-            } else {
-                isEnoughGas =
-                    (UserMetaMap[msg.sender].gasTokenbal >=
-                        minConfig.minGasFundForUser) &&
-                    (UserMetaMap[msg.sender].gasTokenbal >=
-                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
-                            minConfig.minGasFundOneFlow);
-            }
-        }
-
-        require(isEnoughGas, "gas balance is not enough");
     }
 
     function createFlow(
@@ -134,7 +135,14 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         nonReentrant
         returns (uint256 flowid, address add)
     {
-        beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
+        _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
+        if (msg.value > 0) {
+            UserMetaMap[msg.sender].ethBal =
+                UserMetaMap[msg.sender].ethBal +
+                msg.value;
+        }
+
+        checkEnoughGas();
         //create
         address addr;
         uint256 size;
@@ -200,7 +208,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             "flow's status is error"
         );
 
-        beforeCreateFlow(_flowName, flowMetas[_flowId].keepNetWork, _flowCode);
+        _beforeCreateFlow(_flowName, flowMetas[_flowId].keepNetWork, _flowCode);
         //create
         address addr;
         uint256 size;
@@ -401,11 +409,16 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         override
     {
         uint256 gasTotal = 0;
-        uint256[] memory arr = Utils.decodeUints(_data);
+        // uint256[] memory arr = Utils.decodeUints(_data);
+        (uint256[] memory arr, bytes[] memory executeDataArray) = Utils
+            ._decodeTwoArr(_data);
+
+        require(arr.length == executeDataArray.length, "arr is empty");
+
         for (uint256 i = 0; i < arr.length; i++) {
             if (arr[i] > 0) {
                 uint256 before = gasleft();
-                execFlow(arr[i]);
+                execFlow(arr[i], executeDataArray[i]);
                 if (gasTotal + before - gasleft() > gasLimit) {
                     return;
                 }
@@ -413,7 +426,11 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
     }
 
-    function execFlow(uint256 _flowId) public override nonReentrant {
+    function execFlow(uint256 _flowId, bytes memory _inputData)
+        public
+        override
+        nonReentrant
+    {
         require(config.isKeeper(msg.sender), "exect keeper is not whitelist");
         uint256 before = gasleft();
         EvaFlowMeta memory flowMeta = flowMetas[_flowId];
@@ -421,7 +438,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         if (
             flowMeta.lastVersionflow != address(0) &&
             flowMeta.flowStatus == FlowStatus.Active &&
-            msg.sender != flowMeta.lastKeeper &&
+            //keeep is self
+            (msg.sender != flowMeta.lastKeeper ||
+                flowMeta.keepNetWork != KeepNetWork.ChainLink) &&
             flowMeta.maxVaildBlockNumber >= block.number &&
             flowMeta.lastExecNumber >= block.number + 10
         ) {
@@ -430,20 +449,49 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             address admin = flowMeta.admin;
             address safesAdd = evaSafesFactory.get(admin);
             if (safesAdd != address(0)) {
+                (uint256 ethValue, bytes memory needExecutedDsata) = Utils
+                    ._decodeUintAndBytes(_inputData);
                 bytes[] memory data = new bytes[](1);
-                data[0] = abi.encode(
-                    flowMeta.lastVersionflow,
-                    abi.encodeWithSelector(IEvaFlow.execute.selector, "")
-                );
+                //todo ETH.value>0
+                if (ethValue == 0) {
+                    data[0] = abi.encode(
+                        flowMeta.lastVersionflow,
+                        abi.encodeWithSelector(
+                            IEvaFlow.execute.selector,
+                            _inputData
+                        )
+                    );
 
-                try IEvaSafes(safesAdd).multicall(_flowId, data) returns (
-                    bytes[] memory results
-                ) {
-                    // update
-                    flowMetas[_flowId].lastExecNumber = block.number;
+                    try IEvaSafes(safesAdd).multicall(_flowId, data) returns (
+                        bytes[] memory results
+                    ) {} catch {
+                        _sucess = false;
+                    }
+                } else {
+                    data[0] = abi.encode(
+                        flowMeta.lastVersionflow,
+                        abi.encodeWithSelector(
+                            IEvaFlow.execute.selector,
+                            _inputData
+                        ),
+                        ethValue
+                    );
+
+                    try
+                        IEvaSafes(safesAdd).multicallWithValue(_flowId, data)
+                    returns (bytes[] memory results) {
+                        // update
+                        // flowMetas[_flowId].lastExecNumber = block.number;
+                        // flowMetas[_flowId].lastKeeper = msg.sender;
+                    } catch {
+                        _sucess = false;
+                    }
+                }
+
+                // update
+                flowMetas[_flowId].lastExecNumber = block.number;
+                if (flowMeta.keepNetWork != KeepNetWork.ChainLink) {
                     flowMetas[_flowId].lastKeeper = msg.sender;
-                } catch {
-                    _sucess = false;
                 }
 
                 // IEvaSafes(safesAdd).multicall(_flowId, data);
@@ -491,5 +539,88 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
         //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
         return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX
+    }
+
+    // function execNftLimitOrderFlow(
+    //     uint256 _flowId,
+    //     uint256 _orderId,
+    //     uint256 _value,
+    //     address _admin,
+    //     uint8 _marketType,
+    //     bytes memory _execMarketData
+    // ) external nonReentrant {
+    //     require(config.isKeeper(msg.sender), "exect keeper is not whitelist");
+    //     uint256 before = gasleft();
+    //     EvaFlowMeta memory flowMeta = flowMetas[_flowId];
+    //     bool _sucess;
+    //     if (
+    //         flowMeta.flowStatus == FlowStatus.Active &&
+    //         flowMeta.maxVaildBlockNumber >= block.number
+    //     ) {
+    //         address safesAdd = evaSafesFactory.get(_admin);
+    //         if (safesAdd != address(0)) {
+    //             bytes[] memory data = new bytes[](1);
+    //             data[0] = abi.encode(
+    //                 flowMeta.lastVersionflow,
+    //                 abi.encodeWithSelector(IEvaFlow.execute.selector, "")
+    //             );
+
+    //             try
+    //                 IEvaSafes(safesAdd).multicallWithValue(_flowId, data)
+    //             returns (bytes[] memory results) {
+    //                 // update
+    //                 flowMetas[_flowId].lastExecNumber = block.number;
+    //                 flowMetas[_flowId].lastKeeper = msg.sender;
+    //             } catch {
+    //                 _sucess = false;
+    //             }
+
+    //             uint256 payAmountByETH = 0;
+    //             uint256 payAmountByFeeToken = 0;
+    //             uint256 afterGas = gasleft();
+
+    //             unchecked {
+    //                 if (minConfig.feeToken == address(0)) {
+    //                     payAmountByETH = calculatePaymentAmount(
+    //                         before - afterGas
+    //                     );
+
+    //                     require(payAmountByETH < UserMetaMap[_admin].ethBal);
+    //                     UserMetaMap[_admin].ethBal =
+    //                         UserMetaMap[_admin].ethBal -
+    //                         payAmountByETH;
+    //                 } else {
+    //                     //todo
+    //                 }
+    //             }
+    //             emit FlowExecuted(
+    //                 msg.sender,
+    //                 _flowId,
+    //                 _sucess,
+    //                 payAmountByETH,
+    //                 payAmountByFeeToken
+    //             );
+    //         }
+    //     }
+    // }
+
+    function addEvabaseFlowByOwner(
+        address evabaseFlowAdd,
+        KeepNetWork _keepNetWork,
+        string memory name
+    ) external onlyOwner {
+        flowMetas.push(
+            EvaFlowMeta({
+                flowStatus: FlowStatus.Active,
+                keepNetWork: _keepNetWork,
+                maxVaildBlockNumber: MAX_INT,
+                admin: msg.sender,
+                lastKeeper: address(0),
+                lastExecNumber: block.number,
+                lastVersionflow: evabaseFlowAdd,
+                flowName: name
+            })
+        );
+        emit FlowCreated(msg.sender, flowMetas.length, evabaseFlowAdd);
     }
 }

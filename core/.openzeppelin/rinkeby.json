@@ -1,0 +1,78 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x3B786c4d82332eC5396800164f881ded22131367",
+    "txHash": "0xaee532d9d2621e9256fc03d6feb8492f500986193d09ed41f5039fd36e0e0bc4"
+  },
+  "proxies": [
+    {
+      "address": "0x0358E7Ad85820719A0789013Aa95f0E4db5D4Cfa",
+      "txHash": "0x3c43806c11911538ae97ce932d685d0d8d3e416608d3b6ec5ca2b01dbdbfb893",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "b1643c8d6a7b725dcaa4e0539a3a396942428c7d60c1ee9db356c856f4c33cd0": {
+      "address": "0x032E7d17194298910fA4D8181d025e2bf9602ba8",
+      "txHash": "0xb7aa10f5cedbf4980eb3634cd67f15a27894265f8a97d7bfb499a6fb4910aaa3",
+      "layout": {
+        "storage": [
+          {
+            "label": "evaSafesFactory",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IEvaSafesFactory)6351",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/NftLimitOrderFlow.sol:41"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/NftLimitOrderFlow.sol:42"
+          },
+          {
+            "label": "isInitialized",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/NftLimitOrderFlow.sol:43"
+          },
+          {
+            "label": "orderExist",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/NftLimitOrderFlow.sol:45"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IEvaSafesFactory)6351": {
+            "label": "contract IEvaSafesFactory",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}

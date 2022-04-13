@@ -71,7 +71,7 @@ interface IEvaFlowControler {
 
     function createEvaSafes(address user) external;
 
-    function execFlow(uint256 _flowId) external;
+    function execFlow(uint256 _flowId, bytes memory _inputData) external;
 
     function addFundByUser(
         address tokenAdress,

@@ -40,9 +40,14 @@ contract EvaFlowChecker {
             bot1start
         );
 
-        uint256[] memory tmp = _ring(start, end, allVaildSize, checkdata);
-        execData = Utils.encodeUints(tmp);
-
+        (uint256[] memory tmp, bytes[] memory executeDataArray) = _ring(
+            start,
+            end,
+            allVaildSize,
+            checkdata
+        );
+        // execData = Utils.encodeUints(tmp);
+        execData = Utils._encodeTwoArr(tmp, executeDataArray);
         return (needExec, execData);
     }
 
@@ -57,38 +62,69 @@ contract EvaFlowChecker {
         uint256 _end,
         uint256 _allVaildSize,
         bytes memory _checkdata
-    ) internal view returns (uint256[] memory tmp) {
+    )
+        internal
+        view
+        returns (uint256[] memory tmp, bytes[] memory executeDataArray)
+    {
         uint256 j = 0;
         uint256 length = 0;
         if (_start > _end) {
             // start - allVaildSize
             length = _allVaildSize - _start + _end + 1;
             tmp = new uint256[](length);
-            (tmp, j) = _addVaildFlowIndex(
+            executeDataArray = new bytes[](length);
+            // , _executeDataArray
+            (tmp, j, executeDataArray) = _addVaildFlowIndex(
                 _start,
                 _allVaildSize,
                 tmp,
+                executeDataArray,
                 _checkdata,
                 j
             );
             // 0 - end
-            (tmp, j) = _addVaildFlowIndex(0, _end, tmp, _checkdata, j);
+            (tmp, j, executeDataArray) = _addVaildFlowIndex(
+                0,
+                _end,
+                tmp,
+                executeDataArray,
+                _checkdata,
+                j
+            );
         } else {
             length = _end - _start;
             tmp = new uint256[](length);
-            _addVaildFlowIndex(_start, _end, tmp, _checkdata, j);
+            executeDataArray = new bytes[](length);
+            _addVaildFlowIndex(
+                _start,
+                _end,
+                tmp,
+                executeDataArray,
+                _checkdata,
+                j
+            );
         }
 
-        return tmp;
+        return (tmp, executeDataArray);
     }
 
     function _addVaildFlowIndex(
         uint256 _start,
         uint256 _end,
         uint256[] memory _tmp,
+        bytes[] memory _executeDataArray,
         bytes memory _checkdata,
         uint256 j
-    ) internal view returns (uint256[] memory arr, uint256 k) {
+    )
+        internal
+        view
+        returns (
+            uint256[] memory arr,
+            uint256 k,
+            bytes[] memory _arrayBytes
+        )
+    {
         uint256 totalGas;
         for (uint256 i = _start; i < _end; i++) {
             uint256 beforGas = gasleft();
@@ -96,21 +132,22 @@ contract EvaFlowChecker {
 
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
-                (bool needExec, ) = IEvaFlow(
+                (bool needExec, bytes memory executeData) = IEvaFlow(
                     evaFlowControler.getFlowMetas(index).lastVersionflow
                 ).check(_checkdata);
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
                 if (totalGas > GAS_LIMIT || afterGas < checkGasLimitMin) {
-                    return (_tmp, j);
+                    return (_tmp, j, _executeDataArray);
                 }
                 if (needExec) {
                     _tmp[j++] = index;
+                    _executeDataArray[j++] = executeData;
                 }
             }
         }
 
-        return (_tmp, j);
+        return (_tmp, j, _executeDataArray);
     }
 
     function _getAvailCircle(

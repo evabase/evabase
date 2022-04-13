@@ -3,10 +3,11 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { ethers } from "hardhat";
+import "@openzeppelin/hardhat-upgrades";
+import { ethers, upgrades } from "hardhat";
 const store = require("data-store")({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deployInfo_bsctest.json",
+  path: process.cwd() + "/scripts/deployInfo_rinkeby.json",
 });
 
 async function main() {
@@ -18,7 +19,9 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  // config
+  const ownerO = await ethers.getSigners();
+  console.log(`deployer owner : ${ownerO[0].address}`);
+  // 1 config
   const EvabaseConfig = await ethers.getContractFactory("EvabaseConfig");
   const evabaseConfig = await EvabaseConfig.deploy();
 
@@ -42,7 +45,7 @@ async function main() {
   await evabaseConfig.setControl(evaFlowControler.address);
   store.set("evaFlowControler", evaFlowControler.address);
   console.log(`evaFlowControler: ${evaFlowControler.address}`);
-  // 4
+  // 4 EvaFlowChecker
   const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
   const evaFlowChecker = await EvaFlowChecker.deploy(
     evabaseConfig.address,
@@ -51,7 +54,7 @@ async function main() {
   await evaFlowChecker.deployed();
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   store.set("evaFlowChecker", evaFlowChecker.address);
-  // 5
+  // 5 EvaFlowChainLinkKeeperBot
   const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory(
     "EvaFlowChainLinkKeeperBot"
   );
@@ -69,6 +72,38 @@ async function main() {
     `evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`
   );
   store.set("evaFlowChainLinkKeeperBot", evaFlowChainLinkKeeperBot.address);
+
+  // 6 NftLimitOrder upgrade
+  const NftLimitOrderFlow = await ethers.getContractFactory(
+    "NftLimitOrderFlow"
+  );
+
+  // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
+  // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
+
+  const factory = evaSafesFactory.address;
+  const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [factory]);
+
+  await upgrade.deployed();
+  console.log("Upgrade NftLimitOrderFlow deployed to:", upgrade.address);
+  store.set("Upgrade NftLimitOrderFlow", upgrade.address);
+
+  await evaFlowControler.addEvabaseFlowByOwner(
+    upgrade.address,
+    1, // KeepNetWork.Evabase
+    "NFTLimitOrderFlow"
+  );
+
+  // 7 evabase bot
+  const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
+  const evaBaseServerBot = await EvaBaseServerBot.deploy(
+    evabaseConfig.address,
+    evaFlowChecker.address,
+    evaFlowControler.address
+  );
+  await evaBaseServerBot.deployed();
+  console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
+  store.set("evaBaseServerBot", evaBaseServerBot.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
