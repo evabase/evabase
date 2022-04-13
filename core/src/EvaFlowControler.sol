@@ -104,16 +104,16 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         unchecked {
             if (minConfig.feeToken == address(0)) {
                 isEnoughGas =
-                    (msg.value + UserMetaMap[msg.sender].ethBal >
+                    (msg.value + UserMetaMap[msg.sender].ethBal >=
                         minConfig.minGasFundForUser) &&
-                    (msg.value + UserMetaMap[msg.sender].ethBal >
+                    (msg.value + UserMetaMap[msg.sender].ethBal >=
                         (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
                             minConfig.minGasFundOneFlow);
             } else {
                 isEnoughGas =
-                    (UserMetaMap[msg.sender].gasTokenbal >
+                    (UserMetaMap[msg.sender].gasTokenbal >=
                         minConfig.minGasFundForUser) &&
-                    (UserMetaMap[msg.sender].gasTokenbal >
+                    (UserMetaMap[msg.sender].gasTokenbal >=
                         (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
                             minConfig.minGasFundOneFlow);
             }
