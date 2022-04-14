@@ -19,5 +19,8 @@ interface IEvaSafes {
 
     function setRevoke(bool revoke) external;
 
+    function refund(address token, uint256 amount) external;
+
+    function refundETH(uint256 amount) external;
     // function setControl(address add, bool revoke) external;
 }

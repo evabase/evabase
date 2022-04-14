@@ -85,8 +85,8 @@ async function main() {
   const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [factory]);
 
   await upgrade.deployed();
-  console.log("Upgrade NftLimitOrderFlow deployed to:", upgrade.address);
-  store.set("Upgrade NftLimitOrderFlow", upgrade.address);
+  console.log("NftLimitOrderFlow deployed to:", upgrade.address);
+  store.set("NftLimitOrderFlow", upgrade.address);
 
   await evaFlowControler.addEvabaseFlowByOwner(
     upgrade.address,

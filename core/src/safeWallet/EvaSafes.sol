@@ -78,9 +78,9 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     //     emit SetControl(add, revoke);
     // }
 
-    function refund(address token, uint256 amount) external onlyOwner {
-        if (amount > 0)
-            TransferHelper.safeTransfer(token, _msgSender(), amount);
+    function refund(address token, uint256 amount) external override {
+        require(tx.origin == owner, "only owner can refund");
+        if (amount > 0) TransferHelper.safeTransfer(token, tx.origin, amount);
     }
 
     function proxy(
@@ -97,11 +97,10 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         return result;
     }
 
-    function refundETH(uint256 amount) external payable onlyOwner {
-        if (address(this).balance >= amount) {
+    function refundETH(uint256 amount) external override {
+        require(tx.origin == owner, "only owner can refund");
+        if (amount >= 0) {
             TransferHelper.safeTransferETH(_msgSender(), amount);
-        } else {
-            TransferHelper.safeTransferETH(_msgSender(), address(this).balance);
         }
     }
 

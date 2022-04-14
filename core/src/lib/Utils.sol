@@ -109,4 +109,11 @@ library Utils {
                 )
             );
     }
+
+    function hashCompareInternal(bytes memory a, bytes memory b)
+        internal
+        returns (bool)
+    {
+        return keccak256(a) == keccak256(b);
+    }
 }
