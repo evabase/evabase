@@ -14,13 +14,14 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     EvaFlowMeta[] public flowMetas;
     MinConfig public minConfig;
-    mapping(address => EvaUserMeta) UserMetaMap;
+    mapping(address => EvaUserMeta) public userMetaMap;
     // bytes4 private constant FUNC_SELECTOR = bytes4(keccak256("execute(bytes)"));
 
     ////need exec flows
@@ -80,17 +81,17 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         unchecked {
             if (minConfig.feeToken == address(0)) {
                 isEnoughGas =
-                    (msg.value + UserMetaMap[msg.sender].ethBal >=
+                    (msg.value + userMetaMap[msg.sender].ethBal >=
                         minConfig.minGasFundForUser) &&
-                    (msg.value + UserMetaMap[msg.sender].ethBal >=
-                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
+                    (msg.value + userMetaMap[msg.sender].ethBal >=
+                        (userMetaMap[msg.sender].vaildFlowsNum + 1) *
                             minConfig.minGasFundOneFlow);
             } else {
                 isEnoughGas =
-                    (UserMetaMap[msg.sender].gasTokenbal >=
+                    (userMetaMap[msg.sender].gasTokenBal >=
                         minConfig.minGasFundForUser) &&
-                    (UserMetaMap[msg.sender].gasTokenbal >=
-                        (UserMetaMap[msg.sender].vaildFlowsNum + 1) *
+                    (userMetaMap[msg.sender].gasTokenBal >=
+                        (userMetaMap[msg.sender].vaildFlowsNum + 1) *
                             minConfig.minGasFundOneFlow);
             }
         }
@@ -137,9 +138,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     {
         _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
         if (msg.value > 0) {
-            UserMetaMap[msg.sender].ethBal =
-                UserMetaMap[msg.sender].ethBal +
-                msg.value;
+            userMetaMap[msg.sender].ethBal =
+                userMetaMap[msg.sender].ethBal +
+                Utils.toUint120(msg.value);
         }
 
         checkEnoughGas();
@@ -168,8 +169,8 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         );
 
         unchecked {
-            UserMetaMap[msg.sender].vaildFlowsNum =
-                UserMetaMap[msg.sender].vaildFlowsNum +
+            userMetaMap[msg.sender].vaildFlowsNum =
+                userMetaMap[msg.sender].vaildFlowsNum +
                 1;
         }
 
@@ -185,9 +186,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         require(user != address(0), "zero address");
         evaSafesFactory.create(user);
 
-        UserMetaMap[user] = EvaUserMeta({
+        userMetaMap[user] = EvaUserMeta({
             ethBal: 0,
-            gasTokenbal: 0,
+            gasTokenBal: 0,
             vaildFlowsNum: 1
         });
     }
@@ -232,7 +233,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     function pauseFlow(uint256 _flowId) external override {
         require(_flowId < flowMetas.length, "over bound");
         require(
-            UserMetaMap[msg.sender].vaildFlowsNum > 0,
+            userMetaMap[msg.sender].vaildFlowsNum > 0,
             "vaildFlowsNum should gt 0"
         );
         require(
@@ -243,8 +244,8 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         flowMetas[_flowId].flowStatus = FlowStatus.Paused;
 
         unchecked {
-            UserMetaMap[msg.sender].vaildFlowsNum =
-                UserMetaMap[msg.sender].vaildFlowsNum -
+            userMetaMap[msg.sender].vaildFlowsNum =
+                userMetaMap[msg.sender].vaildFlowsNum -
                 1;
         }
 
@@ -262,7 +263,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             "flow's owner is not y"
         );
         require(
-            UserMetaMap[msg.sender].vaildFlowsNum > 0,
+            userMetaMap[msg.sender].vaildFlowsNum > 0,
             "vaildFlowsNum should gt 0"
         );
         if (flowMetas[_flowId].lastVersionflow != address(0)) {
@@ -273,8 +274,8 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         flowMetas[_flowId].flowStatus = FlowStatus.Destroyed;
         flowMetas[_flowId].lastVersionflow = address(0);
         unchecked {
-            UserMetaMap[msg.sender].vaildFlowsNum =
-                UserMetaMap[msg.sender].vaildFlowsNum -
+            userMetaMap[msg.sender].vaildFlowsNum =
+                userMetaMap[msg.sender].vaildFlowsNum -
                 1;
         }
         //destroy flow IEvaFlow
@@ -294,13 +295,16 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
         unchecked {
             if (tokenAdress == address(0)) {
-                UserMetaMap[user].ethBal = UserMetaMap[user].ethBal + msg.value;
+                require(msg.value == amount, "value is not equal");
+                userMetaMap[user].ethBal =
+                    userMetaMap[user].ethBal +
+                    Utils.toUint120(msg.value);
             } else {
                 require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-                UserMetaMap[user].gasTokenbal =
-                    UserMetaMap[user].gasTokenbal +
-                    amount;
+                userMetaMap[user].gasTokenBal =
+                    userMetaMap[user].gasTokenBal +
+                    Utils.toUint120(msg.value);
 
                 IERC20(tokenAdress).safeTransferFrom(
                     msg.sender,
@@ -323,17 +327,17 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         unchecked {
             //        uint64 minGasFundForUser;
             // uint64 minGasFundOneFlow;
-            uint256 minTotalFlow = UserMetaMap[msg.sender].vaildFlowsNum *
+            uint256 minTotalFlow = userMetaMap[msg.sender].vaildFlowsNum *
                 minConfig.minGasFundOneFlow;
             uint256 minTotalGas = minTotalFlow > minConfig.minGasFundForUser
                 ? minTotalFlow
                 : minConfig.minGasFundForUser;
 
             if (tokenAdress == address(0)) {
-                require(UserMetaMap[msg.sender].ethBal >= amount + minTotalGas);
-                UserMetaMap[msg.sender].ethBal =
-                    UserMetaMap[msg.sender].ethBal -
-                    amount;
+                require(userMetaMap[msg.sender].ethBal >= amount + minTotalGas);
+                userMetaMap[msg.sender].ethBal =
+                    userMetaMap[msg.sender].ethBal -
+                    Utils.toUint120(amount);
                 (bool sent, bytes memory data) = msg.sender.call{value: amount}(
                     ""
                 );
@@ -341,11 +345,11 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             } else {
                 require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-                require(UserMetaMap[msg.sender].ethBal >= amount + minTotalGas);
+                require(userMetaMap[msg.sender].ethBal >= amount + minTotalGas);
 
-                UserMetaMap[msg.sender].gasTokenbal =
-                    UserMetaMap[msg.sender].gasTokenbal -
-                    amount;
+                userMetaMap[msg.sender].gasTokenBal =
+                    userMetaMap[msg.sender].gasTokenBal -
+                    Utils.toUint120(amount);
 
                 IERC20(tokenAdress).transfer(msg.sender, amount);
             }
@@ -498,29 +502,29 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
                 uint256 payAmountByETH = 0;
                 uint256 payAmountByFeeToken = 0;
-                uint256 afterGas = gasleft();
 
                 unchecked {
+                    uint256 usedGas = before - gasleft();
                     if (minConfig.feeToken == address(0)) {
-                        payAmountByETH = calculatePaymentAmount(
-                            before - afterGas
-                        );
+                        payAmountByETH = calculatePaymentAmount(usedGas);
 
-                        require(payAmountByETH < UserMetaMap[admin].ethBal);
-                        UserMetaMap[admin].ethBal =
-                            UserMetaMap[admin].ethBal -
-                            payAmountByETH;
+                        require(payAmountByETH < userMetaMap[admin].ethBal);
+                        userMetaMap[admin].ethBal =
+                            userMetaMap[admin].ethBal -
+                            Utils.toUint120(payAmountByETH);
                     } else {
                         //todo
                     }
+
+                    emit FlowExecuted(
+                        msg.sender,
+                        _flowId,
+                        _sucess,
+                        payAmountByETH,
+                        payAmountByFeeToken,
+                        usedGas
+                    );
                 }
-                emit FlowExecuted(
-                    msg.sender,
-                    _flowId,
-                    _sucess,
-                    payAmountByETH,
-                    payAmountByFeeToken
-                );
             }
         }
     }
@@ -585,9 +589,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     //                         before - afterGas
     //                     );
 
-    //                     require(payAmountByETH < UserMetaMap[_admin].ethBal);
-    //                     UserMetaMap[_admin].ethBal =
-    //                         UserMetaMap[_admin].ethBal -
+    //                     require(payAmountByETH < userMetaMap[_admin].ethBal);
+    //                     userMetaMap[_admin].ethBal =
+    //                         userMetaMap[_admin].ethBal -
     //                         payAmountByETH;
     //                 } else {
     //                     //todo

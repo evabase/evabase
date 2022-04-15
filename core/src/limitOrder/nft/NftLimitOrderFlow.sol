@@ -2,14 +2,17 @@
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
 import "../../interfaces/IEvaFlow.sol";
+import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
-contract NftLimitOrderFlow is IEvaFlow {
+contract NftLimitOrderFlow is IEvaFlow, EIP712 {
     using AddressUpgradeable for address;
+
     event OrderExecute(
         address indexed user,
         Order order,
@@ -28,6 +31,10 @@ contract NftLimitOrderFlow is IEvaFlow {
         uint256 tokenId;
         uint256 salt; //随机数
     }
+    bytes32 constant ORDER_TYPEHASH =
+        keccak256(
+            "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
+        );
     IEvaSafesFactory public evaSafesFactory;
     address public _owner;
     bool isInitialized;
@@ -40,13 +47,18 @@ contract NftLimitOrderFlow is IEvaFlow {
     // mapping(bytes32 => bool) public orderExist;
     mapping(bytes32 => OrderExist) public orderExists;
 
-    function initialize(address _evaSafesFactory) public {
+    function initialize(
+        address _evaSafesFactory,
+        string memory name,
+        string memory version
+    ) public {
         // constructor(address _evaSafesFactory) {
         require(isInitialized == false, "Already initialized");
         require(_evaSafesFactory != address(0), "addess is 0x");
         isInitialized = true;
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         _owner = msg.sender;
+        init(name, version);
     }
 
     function owner() public view override returns (address) {
@@ -77,6 +89,11 @@ contract NftLimitOrderFlow is IEvaFlow {
         target.functionCall(input, "CallFailed");
 
         return;
+    }
+
+    function setFactory() external {
+        require(_owner == msg.sender, "only owner can call this function");
+        evaSafesFactory = IEvaSafesFactory(msg.sender);
     }
 
     function execute(bytes memory executeData) external override {
@@ -239,12 +256,14 @@ contract NftLimitOrderFlow is IEvaFlow {
     function hashOrder(Order memory order) public pure returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked( // order
+                abi.encode( // order
+                    ORDER_TYPEHASH,
                     order.owner,
                     order.assetToken,
                     order.amount,
                     order.price,
                     order.expireTime,
+                    order.tokenId,
                     order.salt
                 )
             );
@@ -252,15 +271,27 @@ contract NftLimitOrderFlow is IEvaFlow {
 
     function verifyOrder(Order memory order, bytes memory signature)
         public
-        pure
+        view
         returns (bool)
     {
         bytes32 messageHash = hashOrder(order);
-        bytes32 ethSignedMessageHash = Utils.getEthSignedMessageHash(
-            messageHash
-        );
+        // bytes32 ethSignedMessageHash = Utils.getEthSignedMessageHash(
+        //     messageHash
+        // );
+
+        bytes32 ethSignedMessageHash = _hashTypedDataV4(messageHash);
 
         return
-            Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
+            SignatureChecker.isValidSignatureNow(
+                order.owner,
+                ethSignedMessageHash,
+                signature
+            );
+        // return
+        //     Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
+    }
+
+    function get() public view returns (address) {
+        return address(this);
     }
 }

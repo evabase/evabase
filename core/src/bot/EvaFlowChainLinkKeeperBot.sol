@@ -1,17 +1,17 @@
 //SPDX-License-Identifier: MIT
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
-import {KeeperRegistryInterface} from "./keeper/chainlink/KeeperRegistryInterface.sol";
-import {KeeperCompatibleInterface} from "./keeper/chainlink/KeeperCompatibleInterface.sol";
-import {EvaKeepBotBase} from "./keeper/EvaKeepBotBase.sol";
-import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
-import {EvaFlowChecker} from "./EvaFlowChecker.sol";
-import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
-// import {KeeperRegistryBaseInterface} from "./keeper/chainlink/KeeperRegistryInterface.sol";
-import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
+import {KeeperRegistryInterface} from "../keeper/chainlink/KeeperRegistryInterface.sol";
+import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
+import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
+import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
+import {EvaFlowChecker} from "../EvaFlowChecker.sol";
+import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
+import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import {UpkeepRegistrationRequestsInterface} from "./keeper/chainlink/UpkeepRegistrationRequestsInterface.sol";
+import {UpkeepRegistrationRequestsInterface} from "../keeper/chainlink/UpkeepRegistrationRequestsInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
 contract EvaFlowChainLinkKeeperBot is
     EvaKeepBotBase,
@@ -22,7 +22,7 @@ contract EvaFlowChainLinkKeeperBot is
     uint32 private constant EXEC_GAS_LIMIT = 2_000_000;
     // KeeperRegistryInterface private immutable keeperRegistryInterface;
     uint32 public keepBotId;
-
+    uint256 public lastMoveTime;
     // uint256 public chainLinkKeepId;
     // address public linkToken;
     // uint256 lastBlockNum;
@@ -34,7 +34,8 @@ contract EvaFlowChainLinkKeeperBot is
         address _config,
         address _evaFlowChecker,
         address _evaFlowControler,
-        address _keeperRegistry
+        address _keeperRegistry,
+        KeepNetWork keepNetWork
     ) {
         require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
@@ -48,7 +49,9 @@ contract EvaFlowChainLinkKeeperBot is
         // linkToken = _linkToken;
         keeperRegistry = KeeperRegistryInterface(_keeperRegistry);
         // regiesterRequest = _regiesterRequest;
-        config.addKeeper(address(this));
+        config.addKeeper(address(this), keepNetWork);
+        keepBotId = config.keepBotSize(keepNetWork);
+        lastMoveTime = block.timestamp;
     }
 
     function checkUpkeep(bytes calldata checkData)
@@ -77,7 +80,9 @@ contract EvaFlowChainLinkKeeperBot is
         (bool needExec, bytes memory execData) = evaFlowChecker.check(
             keepBotId,
             CHECK_GAS_LIMIT,
-            _checkdata
+            _checkdata,
+            lastMoveTime,
+            KeepNetWork.ChainLink
         );
 
         return (needExec, execData);
@@ -85,7 +90,7 @@ contract EvaFlowChainLinkKeeperBot is
 
     function _exec(bytes memory _execdata) internal override {
         // lastBlockNum = block.number;
-        evaFlowChecker.setLastMoveTime();
+        setLastMoveTime();
         _batchExec(_execdata);
     }
 
@@ -97,18 +102,12 @@ contract EvaFlowChainLinkKeeperBot is
         require(active, "not active chianlink active");
 
         evaFlowControler.batchExecFlow(_data, EXEC_GAS_LIMIT);
+    }
 
-        // uint256 gasTotal = 0;
-        // uint256[] memory arr = evaFlowChecker.decodeUints(_data);
-        // for (uint256 i = 0; i < arr.length; i++) {
-        //     if (arr[i] > 0) {
-        //         uint256 before = gasleft();
-        //         evaFlowControler.execFlow(arr[i]);
-        //         if (gasTotal + before - gasleft() > EXEC_GAS_LIMIT) {
-        //             return;
-        //         }
-        //     }
-        // }
+    function setLastMoveTime() public {
+        if (block.timestamp - lastMoveTime >= 10 seconds) {
+            lastMoveTime = block.timestamp;
+        }
     }
 
     // function registerTask(bytes memory checkData)

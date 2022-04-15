@@ -8,17 +8,17 @@ interface IEvaFlowControler {
     struct EvaFlowMeta {
         FlowStatus flowStatus;
         KeepNetWork keepNetWork;
-        uint256 maxVaildBlockNumber;
         address admin;
         address lastKeeper;
-        uint256 lastExecNumber;
         address lastVersionflow;
+        uint256 lastExecNumber;
+        uint256 maxVaildBlockNumber;
         string flowName;
     }
 
     struct EvaUserMeta {
-        uint256 ethBal;
-        uint256 gasTokenbal;
+        uint120 ethBal;
+        uint120 gasTokenBal;
         uint8 vaildFlowsNum;
     }
 
@@ -31,7 +31,11 @@ interface IEvaFlowControler {
         uint16 blockCountPerTurn;
     }
 
-    event FlowCreated(address indexed user, uint256 _flowId, address flowAdd);
+    event FlowCreated(
+        address indexed user,
+        uint256 indexed _flowId,
+        address flowAdd
+    );
     event FlowUpdated(address indexed user, uint256 _flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 _flowId);
     event FlowDestroyed(address indexed user, uint256 _flowId);
@@ -40,7 +44,8 @@ interface IEvaFlowControler {
         uint256 _flowId,
         bool sucesss,
         uint256 payAmountByETH,
-        uint256 payAmountByFeeToken
+        uint256 payAmountByFeeToken,
+        uint256 gasUsed
     );
 
     event SetMinConfig(

@@ -5,6 +5,7 @@ import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
 import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
 import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
 import {Utils} from "./lib/Utils.sol";
+import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 
 contract EvaFlowChecker {
     IEvabaseConfig public config;
@@ -12,7 +13,6 @@ contract EvaFlowChecker {
 
     uint32 public constant checkGasLimitMin = 4_000_0;
     uint32 private constant GAS_LIMIT = 2_000_000;
-    uint256 public lastMoveTime;
 
     constructor(address _config, address _evaFlowControler) {
         require(_evaFlowControler != address(0), "addess is 0x");
@@ -20,18 +20,19 @@ contract EvaFlowChecker {
 
         evaFlowControler = IEvaFlowControler(_evaFlowControler);
         config = IEvabaseConfig(_config);
-        lastMoveTime = block.timestamp;
     }
 
     function check(
         uint256 keepbotId,
         uint256 checkGasLimit,
-        bytes memory checkdata
+        bytes memory checkdata,
+        uint256 lastMoveTime,
+        KeepNetWork keepNetWork
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
-        uint32 keepBotSize = config.keepBotSize();
+        uint32 keepBotSize = config.keepBotSize(keepNetWork);
         uint256 allVaildSize = evaFlowControler.getAllVaildFlowSize();
-        uint256 bot1start = _getRandomStart(allVaildSize);
+        uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
         (uint256 start, uint256 end) = _getAvailCircle(
             allVaildSize,
             keepBotSize,
@@ -40,21 +41,23 @@ contract EvaFlowChecker {
             bot1start
         );
 
-        (uint256[] memory tmp, bytes[] memory executeDataArray) = _ring(
-            start,
-            end,
-            allVaildSize,
-            checkdata
-        );
-        // execData = Utils.encodeUints(tmp);
-        execData = Utils._encodeTwoArr(tmp, executeDataArray);
-        return (needExec, execData);
-    }
+        // {
+        //     (uint256[] memory tmp, bytes[] memory executeDataArray) = _ring(
+        //         start,
+        //         end,
+        //         allVaildSize,
+        //         checkdata
+        //     );
 
-    function setLastMoveTime() external {
-        if (block.timestamp - lastMoveTime >= 10 seconds) {
-            lastMoveTime = block.timestamp;
-        }
+        //     if (tmp.length > 0) {
+        //         needExec = true;
+        //     }
+
+        //     // execData = Utils.encodeUints(tmp);
+        //     execData = Utils._encodeTwoArr(tmp, executeDataArray);
+        // }
+        // return (needExec, execData);
+        return _ring(start, end, allVaildSize, checkdata);
     }
 
     function _ring(
@@ -62,13 +65,11 @@ contract EvaFlowChecker {
         uint256 _end,
         uint256 _allVaildSize,
         bytes memory _checkdata
-    )
-        internal
-        view
-        returns (uint256[] memory tmp, bytes[] memory executeDataArray)
-    {
+    ) internal view returns (bool needExec, bytes memory execData) {
         uint256 j = 0;
         uint256 length = 0;
+        uint256[] memory tmp;
+        bytes[] memory executeDataArray;
         if (_start > _end) {
             // start - allVaildSize
             length = _allVaildSize - _start + _end + 1;
@@ -106,7 +107,14 @@ contract EvaFlowChecker {
             );
         }
 
-        return (tmp, executeDataArray);
+        if (tmp.length > 0) {
+            needExec = true;
+        }
+
+        execData = Utils._encodeTwoArr(tmp, executeDataArray);
+
+        // return (tmp, executeDataArray);
+        return (needExec, execData);
     }
 
     function _addVaildFlowIndex(
@@ -199,7 +207,7 @@ contract EvaFlowChecker {
         return (botNIndexS, botNIndexE);
     }
 
-    function _getRandomStart(uint256 _flowSize)
+    function _getRandomStart(uint256 _flowSize, uint256 lastMoveTime)
         internal
         view
         returns (uint256 index)

@@ -5,9 +5,10 @@
 // Runtime Environment's members available in the global scope.
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
+// import { ethers } from "hardhat";
 const store = require("data-store")({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deployInfo_rinkeby.json",
+  path: process.cwd() + "/scripts/deploy/localhost.json",
 });
 
 async function main() {
@@ -64,7 +65,8 @@ async function main() {
     evaFlowChecker.address,
     evaFlowControler.address,
     // store.get("linkToken"),
-    store.get("chainlinkKeeperRegistry")
+    store.get("chainlinkKeeperRegistry"),
+    1
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
@@ -78,18 +80,27 @@ async function main() {
     "NftLimitOrderFlow"
   );
 
-  // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
-  // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
+  // const nftLimitOrderFlow = await NftLimitOrderFlow.deploy(
+  //   evaSafesFactory.address
+  // );
+
+  // console.log("NftLimitOrderFlow deployed to:", nftLimitOrderFlow.address);
+  // store.set("NftLimitOrderFlow", nftLimitOrderFlow.address);
 
   const factory = evaSafesFactory.address;
-  const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [factory]);
+  const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [
+    factory,
+    "EVABASE",
+    "1",
+  ]);
 
   await upgrade.deployed();
-  console.log("NftLimitOrderFlow deployed to:", upgrade.address);
-  store.set("NftLimitOrderFlow", upgrade.address);
+  console.log("Upgrade NftLimitOrderFlow deployed to:", upgrade.address);
+  store.set("Upgrade NftLimitOrderFlow", upgrade.address);
 
   await evaFlowControler.addEvabaseFlowByOwner(
     upgrade.address,
+    // nftLimitOrderFlow.address,
     1, // KeepNetWork.Evabase
     "NFTLimitOrderFlow"
   );
@@ -99,7 +110,8 @@ async function main() {
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    evaFlowControler.address
+    evaFlowControler.address,
+    1 // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
