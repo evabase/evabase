@@ -3,12 +3,10 @@
 pragma solidity ^0.8.0;
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {EvaFlowChecker} from "../EvaFlowChecker.sol";
-import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
 
 abstract contract EvaKeepBotBase {
     IEvabaseConfig public config;
     EvaFlowChecker public evaFlowChecker;
-    IEvaFlowControler public evaFlowControler;
 
     function _check(bytes memory checkdata)
         internal

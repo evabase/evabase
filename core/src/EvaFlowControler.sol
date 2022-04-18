@@ -9,7 +9,6 @@ import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
 import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -108,7 +107,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         require(_input.length > 0, "flowCode can't null");
         //check SafeWallet
         require(
-            evaSafesFactory.calcSafes(msg.sender) != address(0),
+            evaSafesFactory.get(msg.sender) != address(0),
             "safe wallet is 0x"
         );
 
@@ -186,11 +185,11 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         require(user != address(0), "zero address");
         evaSafesFactory.create(user);
 
-        userMetaMap[user] = EvaUserMeta({
-            ethBal: 0,
-            gasTokenBal: 0,
-            vaildFlowsNum: 1
-        });
+        // userMetaMap[user] = EvaUserMeta({
+        //     ethBal: 0,
+        //     gasTokenBal: 0,
+        //     vaildFlowsNum: 0
+        // });
     }
 
     function updateFlow(
@@ -237,6 +236,10 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             "vaildFlowsNum should gt 0"
         );
         require(
+            FlowStatus.Active == flowMetas[_flowId].flowStatus,
+            "flow's status is error"
+        );
+        require(
             msg.sender == flowMetas[_flowId].admin || msg.sender == owner(),
             "flow's owner is not y"
         );
@@ -254,6 +257,33 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
 
         emit FlowPaused(msg.sender, _flowId);
+    }
+
+    function startFlow(uint256 _flowId) external override {
+        require(_flowId < flowMetas.length, "over bound");
+
+        require(
+            msg.sender == flowMetas[_flowId].admin || msg.sender == owner(),
+            "flow's owner is not y"
+        );
+        require(
+            FlowStatus.Paused == flowMetas[_flowId].flowStatus,
+            "flow's status is error"
+        );
+        flowMetas[_flowId].lastExecNumber = block.number;
+        flowMetas[_flowId].flowStatus = FlowStatus.Active;
+
+        unchecked {
+            userMetaMap[msg.sender].vaildFlowsNum =
+                userMetaMap[msg.sender].vaildFlowsNum +
+                1;
+        }
+
+        if (flowMetas[_flowId].lastVersionflow != address(0)) {
+            vaildFlows.add(_flowId);
+        }
+
+        emit FlowStart(msg.sender, _flowId);
     }
 
     function destroyFlow(uint256 _flowId) external override {
@@ -288,10 +318,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         uint256 amount,
         address user
     ) external payable override nonReentrant {
-        require(
-            evaSafesFactory.calcSafes(user) != address(0),
-            "safe wallet is 0x"
-        );
+        require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
 
         unchecked {
             if (tokenAdress == address(0)) {
@@ -304,7 +331,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
                 userMetaMap[user].gasTokenBal =
                     userMetaMap[user].gasTokenBal +
-                    Utils.toUint120(msg.value);
+                    Utils.toUint120(amount);
 
                 IERC20(tokenAdress).safeTransferFrom(
                     msg.sender,
@@ -321,7 +348,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         nonReentrant
     {
         require(
-            evaSafesFactory.calcSafes(msg.sender) != address(0),
+            evaSafesFactory.get(msg.sender) != address(0),
             "safe wallet is 0x"
         );
         unchecked {
@@ -543,6 +570,10 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
         //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
         return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX
+    }
+
+    function getSafes(address user) external view override returns (address) {
+        return evaSafesFactory.get(user);
     }
 
     // function execNftLimitOrderFlow(

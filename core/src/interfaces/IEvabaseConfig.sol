@@ -9,21 +9,13 @@ interface IEvabaseConfig {
         address keeper,
         KeepNetWork keepNetWork
     );
-    event RemoveKeeper(
-        address indexed user,
-        address keeper,
-        KeepNetWork keepNetWork
-    );
+    event RemoveKeeper(address indexed user, address keeper);
     event AddBatchKeeper(
         address indexed user,
         address[] keeper,
         KeepNetWork[] keepNetWork
     );
-    event RemoveBatchKeeper(
-        address indexed user,
-        address[] keeper,
-        KeepNetWork[] keepNetWork
-    );
+    event RemoveBatchKeeper(address indexed user, address[] keeper);
 
     // event SetMinGasTokenBal(address indexed user, uint256 amount);
     // event SetMinGasEthBal(address indexed user, uint256 amount);
@@ -45,23 +37,20 @@ interface IEvabaseConfig {
 
     function addKeeper(address keeper, KeepNetWork keepNetWork) external;
 
-    function removeKeeper(address keeper, KeepNetWork keepNetWork) external;
+    function removeKeeper(address keeper) external;
 
     function addBatchKeeper(
         address[] memory arr,
         KeepNetWork[] memory keepNetWork
     ) external;
 
-    function removeBatchKeeper(
-        address[] memory arr,
-        KeepNetWork[] memory keepNetWorks
-    ) external;
+    function removeBatchKeeper(address[] memory arr) external;
 
     function setBatchFlowNum(uint32 num) external;
 
     function batchFlowNum() external view returns (uint32);
 
-    function keepBotSize(KeepNetWork keepNetWork)
+    function keepBotSizes(KeepNetWork keepNetWork)
         external
         view
         returns (uint32);

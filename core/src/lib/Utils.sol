@@ -3,28 +3,12 @@
 pragma solidity ^0.8.0;
 
 library Utils {
-    function encodeUints(uint256[] memory _uint)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return (abi.encode(_uint));
-    }
-
     function _decodeUints(bytes memory data)
         internal
         pure
         returns (uint256[] memory _arr)
     {
         _arr = abi.decode(data, (uint256[]));
-    }
-
-    function _encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return (abi.encode(_uint, _bytes));
     }
 
     function _decodeTwoArr(bytes memory data)
@@ -35,20 +19,20 @@ library Utils {
         (_arr, _bytes) = abi.decode(data, (uint256[], bytes[]));
     }
 
-    function _encodeUintAndBytes(uint256 _value, bytes memory _bytes)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return (abi.encode(_value, _bytes));
-    }
-
     function _decodeUintAndBytes(bytes memory data)
         internal
         pure
         returns (uint256 _arr, bytes memory _byte)
     {
         (_arr, _byte) = abi.decode(data, (uint256, bytes));
+    }
+
+    function _encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return (abi.encode(_uint, _bytes));
     }
 
     function hashCompareInternal(bytes memory a, bytes memory b)

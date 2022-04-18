@@ -54,10 +54,7 @@ async function main() {
   console.log(`evaFlowControler: ${evaFlowControler.address}`);
   // 4 EvaFlowChecker
   const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
-  const evaFlowChecker = await EvaFlowChecker.deploy(
-    evabaseConfig.address,
-    evaFlowControler.address
-  );
+  const evaFlowChecker = await EvaFlowChecker.deploy(evabaseConfig.address);
   await evaFlowChecker.deployed();
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   store.set("evaFlowChecker", evaFlowChecker.address);
@@ -69,7 +66,6 @@ async function main() {
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    evaFlowControler.address,
     // store.get("linkToken"),
     store.get("chainlinkKeeperRegistry"),
     1
@@ -116,7 +112,6 @@ async function main() {
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    evaFlowControler.address,
     1 // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();

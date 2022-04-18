@@ -38,6 +38,7 @@ interface IEvaFlowControler {
     );
     event FlowUpdated(address indexed user, uint256 _flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 _flowId);
+    event FlowStart(address indexed user, uint256 _flowId);
     event FlowDestroyed(address indexed user, uint256 _flowId);
     event FlowExecuted(
         address indexed user,
@@ -106,4 +107,8 @@ interface IEvaFlowControler {
         returns (EvaFlowMeta memory);
 
     function batchExecFlow(bytes memory _data, uint256 gasLimit) external;
+
+    function startFlow(uint256 _flowId) external;
+
+    function getSafes(address user) external view returns (address);
 }

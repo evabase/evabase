@@ -9,16 +9,17 @@ import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 
 contract EvaFlowChecker {
     IEvabaseConfig public config;
-    IEvaFlowControler public evaFlowControler;
 
     uint32 public constant checkGasLimitMin = 4_000_0;
     uint32 private constant GAS_LIMIT = 2_000_000;
 
-    constructor(address _config, address _evaFlowControler) {
-        require(_evaFlowControler != address(0), "addess is 0x");
+    constructor(address _config) {
+        // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
 
-        evaFlowControler = IEvaFlowControler(_evaFlowControler);
+        // IEvaFlowControler(config.control()) = IEvaFlowControler(
+        //     _evaFlowControler
+        // );
         config = IEvabaseConfig(_config);
     }
 
@@ -30,8 +31,9 @@ contract EvaFlowChecker {
         KeepNetWork keepNetWork
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
-        uint32 keepBotSize = config.keepBotSize(keepNetWork);
-        uint256 allVaildSize = evaFlowControler.getAllVaildFlowSize();
+        uint32 keepBotSize = config.keepBotSizes(keepNetWork);
+        uint256 allVaildSize = IEvaFlowControler(config.control())
+            .getAllVaildFlowSize();
         uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
         (uint256 start, uint256 end) = _getAvailCircle(
             allVaildSize,
@@ -136,12 +138,15 @@ contract EvaFlowChecker {
         uint256 totalGas;
         for (uint256 i = _start; i < _end; i++) {
             uint256 beforGas = gasleft();
-            uint256 index = evaFlowControler.getIndexVaildFlow(i);
+            uint256 index = IEvaFlowControler(config.control())
+                .getIndexVaildFlow(i);
 
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
                 (bool needExec, bytes memory executeData) = IEvaFlow(
-                    evaFlowControler.getFlowMetas(index).lastVersionflow
+                    IEvaFlowControler(config.control())
+                        .getFlowMetas(index)
+                        .lastVersionflow
                 ).check(_checkdata);
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;

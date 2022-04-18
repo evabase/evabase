@@ -13,7 +13,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         KeepNetWork keepNetWork;
     }
     mapping(address => KeepStuct) public keepBotExists;
-    mapping(KeepNetWork => uint32) public keepBotSizes;
+    mapping(KeepNetWork => uint32) public override keepBotSizes;
     // uint32 public override keepBotSize;
     // using EvabaseHelper for EvabaseHelper.AddressSet;
     // EvabaseHelper.AddressSet keepBots;
@@ -33,22 +33,21 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     {
         require(tx.origin == owner(), "only owner can add keeper");
         require(!keepBotExists[_keeper].isActive, "keeper exist");
-        keepBotExists[_keeper].isActive == true;
+
+        keepBotExists[_keeper] = KeepStuct(true, keepNetWork);
+
         // require(keepBots.contains(_keeper), "keeper exist");
         // keepBots.add(_keeper);
         keepBotSizes[keepNetWork] = keepBotSizes[keepNetWork] + 1;
         emit AddKeeper(msg.sender, _keeper, keepNetWork);
     }
 
-    function removeBatchKeeper(
-        address[] memory arr,
-        KeepNetWork[] memory keepNetWorks
-    ) external override {
+    function removeBatchKeeper(address[] memory arr) external override {
         require(tx.origin == owner(), "only owner can add keeper");
-        require(
-            arr.length == keepNetWorks.length,
-            "arr length not equal keepNetWorks length"
-        );
+        // require(
+        //     arr.length == keepNetWorks.length,
+        //     "arr length not equal keepNetWorks length"
+        // );
         for (uint256 i = 0; i < arr.length; i++) {
             // if (keepBots.contains(arr[i])) {
             //     keepBots.remove(arr[i]);
@@ -56,14 +55,15 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
             if (keepBotExists[arr[i]].isActive) {
                 // keepBotExists[arr[i]].isActive = false;
-                delete keepBotExists[arr[i]];
-                keepBotSizes[keepNetWorks[i]] =
-                    keepBotSizes[keepNetWorks[i]] -
+
+                keepBotSizes[keepBotExists[arr[i]].keepNetWork] =
+                    keepBotSizes[keepBotExists[arr[i]].keepNetWork] -
                     1;
+                delete keepBotExists[arr[i]];
             }
         }
 
-        emit RemoveBatchKeeper(msg.sender, arr, keepNetWorks);
+        emit RemoveBatchKeeper(msg.sender, arr);
     }
 
     function addBatchKeeper(
@@ -85,7 +85,10 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
                 // require(keepBots.contains(_keeper), "keeper exist");
                 // keepBots.add(_keeper);
-                keepBotExists[arr[i]].isActive == true;
+                keepBotExists[arr[i]] = KeepStuct(true, keepNetWorks[i]);
+
+                // stuct.isActive == true;
+                // keepBotExists[arr[i]].keepNetWork == keepNetWorks[i];
                 keepBotSizes[keepNetWorks[i]] =
                     keepBotSizes[keepNetWorks[i]] +
                     1;
@@ -95,17 +98,16 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit AddBatchKeeper(msg.sender, arr, keepNetWorks);
     }
 
-    function removeKeeper(address _keeper, KeepNetWork keepNetWork)
-        external
-        override
-    {
+    function removeKeeper(address _keeper) external override {
         require(tx.origin == owner(), "only owner can add keeper");
         require(keepBotExists[_keeper].isActive, "keeper not exist");
+
+        KeepNetWork _keepNetWork = keepBotExists[_keeper].keepNetWork;
+        keepBotSizes[_keepNetWork] = keepBotSizes[_keepNetWork] - 1;
         delete keepBotExists[_keeper];
-        keepBotSizes[keepNetWork] = keepBotSizes[keepNetWork] - 1;
         // require(!keepBots.contains(_keeper), "keeper not exist");
         // keepBots.remove(_keeper);
-        emit RemoveKeeper(msg.sender, _keeper, keepNetWork);
+        emit RemoveKeeper(msg.sender, _keeper);
     }
 
     function isKeeper(address _query) external view override returns (bool) {
@@ -127,14 +129,14 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         return control == add;
     }
 
-    function keepBotSize(KeepNetWork keepNetWork)
-        external
-        view
-        override
-        returns (uint32)
-    {
-        return keepBotSizes[keepNetWork];
-    }
+    // function keepBotSizes(KeepNetWork keepNetWork)
+    //     external
+    //     view
+    //     override
+    //     returns (uint32)
+    // {
+    //     return keepBotSizes[keepNetWork];
+    // }
 
     // function getAllKeepBots()
     //     external

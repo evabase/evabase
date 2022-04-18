@@ -7,8 +7,7 @@ import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {EvaFlowChecker} from "../EvaFlowChecker.sol";
 import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
-import {Utils} from "../lib/Utils.sol";
-import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
@@ -25,21 +24,20 @@ contract EvaBaseServerBot is
     constructor(
         address _config,
         address _evaFlowChecker,
-        address _evaFlowControler,
         KeepNetWork keepNetWork
     ) {
-        require(_evaFlowControler != address(0), "addess is 0x");
+        // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         require(_evaFlowChecker != address(0), "addess is 0x");
 
-        evaFlowControler = IEvaFlowControler(_evaFlowControler);
+        // evaFlowControler = IEvaFlowControler(_evaFlowControler);
         config = IEvabaseConfig(_config);
         evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
         // execAddress = _execAddress;
         config = IEvabaseConfig(_config);
         keeps[msg.sender] = true;
         config.addKeeper(address(this), keepNetWork);
-        keepBotId = config.keepBotSize(keepNetWork);
+        keepBotId = config.keepBotSizes(keepNetWork);
     }
 
     function checkUpkeep(bytes calldata checkData)
@@ -71,7 +69,10 @@ contract EvaBaseServerBot is
 
         require(keeps[tx.origin], "not active chianlink active");
 
-        evaFlowControler.batchExecFlow(_data, EXEC_GAS_LIMIT);
+        IEvaFlowControler(config.control()).batchExecFlow(
+            _data,
+            EXEC_GAS_LIMIT
+        );
     }
 
     function setEBSKeepStatus(address keep, bool status) external onlyOwner {
@@ -79,29 +80,27 @@ contract EvaBaseServerBot is
         emit SetEBSKeepStatus(keep, status);
     }
 
-    // function encodeUints(uint256[] memory _uint)
-    //     public
-    //     pure
-    //     returns (bytes memory)
-    // {
-    //     return (abi.encode(_uint));
-    // }
+    function encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return (abi.encode(_uint, _bytes));
+    }
 
-    // function decodeUints(bytes memory data)
-    //     public
-    //     pure
-    //     returns (uint256[] memory _uint2)
-    // {
-    //     _uint2 = abi.decode(data, (uint256[]));
-    // }
+    function encodeUintAndBytes(uint256 _value, bytes memory _bytes)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return (abi.encode(_value, _bytes));
+    }
 
-    // function registerTask(bytes memory checkData)
-    //     external
-    //     onlyOwner
-    //     returns (uint256 thirdId)
-    // {
-    //     config.addKeeper(address(this));
-    //     keepBotId = config.keepBotSize() + 1;
-    //     return keepBotId;
-    // }
+    function encodeUints(uint256[] memory _uint)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return (abi.encode(_uint));
+    }
 }

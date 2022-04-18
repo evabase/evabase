@@ -33,24 +33,24 @@ contract EvaFlowChainLinkKeeperBot is
     constructor(
         address _config,
         address _evaFlowChecker,
-        address _evaFlowControler,
         address _keeperRegistry,
         KeepNetWork keepNetWork
     ) {
-        require(_evaFlowControler != address(0), "addess is 0x");
+        // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         require(_evaFlowChecker != address(0), "addess is 0x");
         // require(_linkToken != address(0), "addess is 0x");
         require(_keeperRegistry != address(0), "addess is 0x");
         // require(_regiesterRequest != address(0), "addess is 0x");
-        evaFlowControler = IEvaFlowControler(_evaFlowControler);
+
         config = IEvabaseConfig(_config);
+        // evaFlowControler = IEvaFlowControler(_evaFlowControler);
         evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
         // linkToken = _linkToken;
         keeperRegistry = KeeperRegistryInterface(_keeperRegistry);
         // regiesterRequest = _regiesterRequest;
         config.addKeeper(address(this), keepNetWork);
-        keepBotId = config.keepBotSize(keepNetWork);
+        keepBotId = config.keepBotSizes(keepNetWork);
         lastMoveTime = block.timestamp;
     }
 
@@ -101,7 +101,10 @@ contract EvaFlowChainLinkKeeperBot is
             .getKeeperInfo(keeper);
         require(active, "not active chianlink active");
 
-        evaFlowControler.batchExecFlow(_data, EXEC_GAS_LIMIT);
+        IEvaFlowControler(config.control()).batchExecFlow(
+            _data,
+            EXEC_GAS_LIMIT
+        );
     }
 
     function setLastMoveTime() public {

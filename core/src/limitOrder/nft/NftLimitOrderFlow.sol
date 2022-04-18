@@ -21,7 +21,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
     );
 
     event OrderCancel(address indexed user, Order order);
-    event OrderCreated(address indexed user, Order order);
+    event OrderCreated(address indexed user, bytes32 _byte32, Order order);
     struct Order {
         address owner; //拥有人
         address assetToken; //资产合约地址
@@ -66,7 +66,8 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
     }
 
     function ownerWalletSafes() public view override returns (address) {
-        return evaSafesFactory.calcSafes(msg.sender);
+        // return evaSafesFactory.calcSafes(msg.sender);
+        return evaSafesFactory.get(msg.sender);
     }
 
     function check(bytes memory checkData)
@@ -113,7 +114,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         require(tx.origin == order.owner, "only owner can cancel order");
         require(orderExists[hashOrder(order)].exist, "order not exist");
         require(
-            evaSafesFactory.calcSafes(order.owner) != address(0),
+            evaSafesFactory.get(order.owner) != address(0),
             "Safes not exist"
         );
         orderExists[hashOrder(order)].exist = false;
@@ -128,9 +129,10 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
                 remainEth
             );
 
-            bytes memory result = evaSafesFactory
-                .calcSafes(order.owner)
-                .functionCall(data, "CallFailed");
+            bytes memory result = evaSafesFactory.get(order.owner).functionCall(
+                data,
+                "CallFailed"
+            );
             require(
                 !Utils.hashCompareInternal(result, bytes("CallFailed")),
                 "cancel Order failed"
@@ -153,7 +155,8 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
         require(_order.expireTime >= block.timestamp, "order time is end");
         require(
-            msg.sender == evaSafesFactory.calcSafes(_order.owner),
+            msg.sender == evaSafesFactory.get(msg.sender),
+            // msg.sender == evaSafesFactory.calcSafes(_order.owner),
             " should exected by safes"
         );
 
@@ -217,17 +220,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         require(order.price > 0, "price must be greater than 0");
         require(order.owner != address(0), "owner is 0x");
         require(order.assetToken != address(0), "owner is 0x");
-
-        // Order memory order = Order(
-        //     _owner,
-        //     _assetToken,
-        //     _assetType,
-        //     _amount,
-        //     _price,
-        //     block.timestamp,
-        //     duration
-        // );
-        // orders[nonce++] = order;
+        require(order.expireTime > block.timestamp, "order time is end");
 
         unchecked {
             uint256 total = order.amount * order.price;
@@ -239,17 +232,18 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
         require(!orderExists[hashOrder(order)].exist, "order exist");
         require(
-            evaSafesFactory.calcSafes(order.owner) != address(0),
+            evaSafesFactory.get(order.owner) != address(0),
             "Safes not exist"
         );
         bytes32 hash = hashOrder(order);
-        orderExists[hash].exist = true;
+        orderExists[hash] = OrderExist({exist: true, amount: 0});
+
         //transfer(order.owner, total);
-        address safes = evaSafesFactory.calcSafes(order.owner);
+        address safes = evaSafesFactory.get(order.owner);
         (bool succeed, ) = safes.call{value: msg.value}("");
         require(succeed, "Failed to transfer Ether");
 
-        emit OrderCreated(_owner, order);
+        emit OrderCreated(_owner, hash, order);
         return hash;
     }
 
@@ -289,9 +283,5 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             );
         // return
         //     Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
-    }
-
-    function get() public view returns (address) {
-        return address(this);
     }
 }
