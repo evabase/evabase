@@ -6,7 +6,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {TransferHelper} from "../lib/TransferHelper.sol";
-
 import {IEvaSafes} from "../interfaces/IEvaSafes.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 
@@ -100,7 +99,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     function refundETH(uint256 amount) external override {
         require(tx.origin == owner, "only owner can refund");
         if (amount >= 0) {
-            TransferHelper.safeTransferETH(_msgSender(), amount);
+            TransferHelper.safeTransferETH(tx.origin, amount);
         }
     }
 

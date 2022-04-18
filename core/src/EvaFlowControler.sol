@@ -174,11 +174,12 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
 
         //vaild flow
-        vaildFlows.add(flowMetas.length - 1);
+        uint256 flowId = flowMetas.length - 1;
+        vaildFlows.add(flowid);
 
-        emit FlowCreated(msg.sender, flowMetas.length, addr);
+        emit FlowCreated(msg.sender, flowId, addr);
 
-        return (flowMetas.length, addr);
+        return (flowId, addr);
     }
 
     function createEvaSafes(address user) external override {
@@ -334,7 +335,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                     Utils.toUint120(amount);
 
                 IERC20(tokenAdress).safeTransferFrom(
-                    msg.sender,
+                    user,
                     address(this),
                     amount
                 );

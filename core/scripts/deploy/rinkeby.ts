@@ -84,6 +84,7 @@ async function main() {
 
   const factory = evaSafesFactory.address;
   const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [
+    evabaseConfig.address,
     factory,
     "EVABASE",
     "1",

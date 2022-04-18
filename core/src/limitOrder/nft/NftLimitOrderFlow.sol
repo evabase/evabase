@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import "../../interfaces/IEvaFlow.sol";
 import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
+import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
+import {IEvaFlowControler} from "../../interfaces/IEvaFlowControler.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -36,6 +38,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
         );
     IEvaSafesFactory public evaSafesFactory;
+    IEvabaseConfig public config;
     address public _owner;
     bool isInitialized;
 
@@ -48,6 +51,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
     mapping(bytes32 => OrderExist) public orderExists;
 
     function initialize(
+        address _config,
         address _evaSafesFactory,
         string memory name,
         string memory version
@@ -55,7 +59,9 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         // constructor(address _evaSafesFactory) {
         require(isInitialized == false, "Already initialized");
         require(_evaSafesFactory != address(0), "addess is 0x");
+        require(_config != address(0), "addess is 0x");
         isInitialized = true;
+        config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         _owner = msg.sender;
         init(name, version);
@@ -215,15 +221,19 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         emit OrderExecute(msg.sender, _order, _data.length, total);
     }
 
-    function newOrder(Order memory order) external payable returns (bytes32) {
+    function newOrder(Order memory order, uint256 fee)
+        external
+        payable
+        returns (bytes32)
+    {
         require(order.amount > 0, "amount must be greater than 0");
         require(order.price > 0, "price must be greater than 0");
-        require(order.owner != address(0), "owner is 0x");
-        require(order.assetToken != address(0), "owner is 0x");
+        require(msg.sender == order.owner, "owner should be msg.sender");
+        require(order.assetToken != address(0), "assetToken is 0x");
         require(order.expireTime > block.timestamp, "order time is end");
 
         unchecked {
-            uint256 total = order.amount * order.price;
+            uint256 total = order.amount * order.price + fee;
             require(
                 total <= msg.value,
                 "order amount*price must be less than or equal to msg.value"
@@ -242,6 +252,24 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         address safes = evaSafesFactory.get(order.owner);
         (bool succeed, ) = safes.call{value: msg.value}("");
         require(succeed, "Failed to transfer Ether");
+
+        //addFundByUser( address tokenAdress, uint256 amount,address user
+        bytes memory data = abi.encodeWithSelector(
+            IEvaFlowControler.addFundByUser.selector,
+            address(0),
+            fee,
+            order.owner
+        );
+
+        bytes memory result = config.control().functionCallWithValue(
+            data,
+            fee,
+            "CallFailed"
+        );
+        require(
+            !Utils.hashCompareInternal(result, bytes("CallFailed")),
+            "cancel Order failed"
+        );
 
         emit OrderCreated(_owner, hash, order);
         return hash;
