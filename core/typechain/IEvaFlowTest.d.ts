@@ -22,15 +22,25 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface IEvaFlowTestInterface extends ethers.utils.Interface {
   functions: {
     "check(bytes)": FunctionFragment;
-    "destroy()": FunctionFragment;
+    "create(uint256,bytes)": FunctionFragment;
+    "destroy(uint256,bytes)": FunctionFragment;
     "execute(bytes)": FunctionFragment;
     "multicall(bytes)": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerWalletSafes()": FunctionFragment;
+    "pause(uint256,bytes)": FunctionFragment;
+    "start(uint256,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "check", values: [BytesLike]): string;
-  encodeFunctionData(functionFragment: "destroy", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "create",
+    values: [BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "destroy",
+    values: [BigNumberish, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "execute", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "multicall",
@@ -41,8 +51,17 @@ interface IEvaFlowTestInterface extends ethers.utils.Interface {
     functionFragment: "ownerWalletSafes",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "pause",
+    values: [BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "start",
+    values: [BigNumberish, BytesLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "check", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "create", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "destroy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "execute", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
@@ -51,6 +70,8 @@ interface IEvaFlowTestInterface extends ethers.utils.Interface {
     functionFragment: "ownerWalletSafes",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "start", data: BytesLike): Result;
 
   events: {};
 }
@@ -106,7 +127,15 @@ export class IEvaFlowTest extends BaseContract {
       [boolean, string] & { needExecute: boolean; executeData: string }
     >;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -123,6 +152,18 @@ export class IEvaFlowTest extends BaseContract {
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<[string]>;
+
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   check(
@@ -130,7 +171,15 @@ export class IEvaFlowTest extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[boolean, string] & { needExecute: boolean; executeData: string }>;
 
+  create(
+    flowId: BigNumberish,
+    extraData: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   destroy(
+    flowId: BigNumberish,
+    extraData: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -148,6 +197,18 @@ export class IEvaFlowTest extends BaseContract {
 
   ownerWalletSafes(overrides?: CallOverrides): Promise<string>;
 
+  pause(
+    flowId: BigNumberish,
+    extraData: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  start(
+    flowId: BigNumberish,
+    extraData: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     check(
       checkData: BytesLike,
@@ -156,7 +217,17 @@ export class IEvaFlowTest extends BaseContract {
       [boolean, string] & { needExecute: boolean; executeData: string }
     >;
 
-    destroy(overrides?: CallOverrides): Promise<void>;
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     execute(executeData: BytesLike, overrides?: CallOverrides): Promise<void>;
 
@@ -165,6 +236,18 @@ export class IEvaFlowTest extends BaseContract {
     owner(overrides?: CallOverrides): Promise<string>;
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<string>;
+
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {};
@@ -172,7 +255,15 @@ export class IEvaFlowTest extends BaseContract {
   estimateGas: {
     check(checkData: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -189,6 +280,18 @@ export class IEvaFlowTest extends BaseContract {
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<BigNumber>;
+
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -197,7 +300,15 @@ export class IEvaFlowTest extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -214,5 +325,17 @@ export class IEvaFlowTest extends BaseContract {
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
   };
 }

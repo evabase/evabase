@@ -16,5 +16,15 @@ interface IEvaFlow {
 
     function execute(bytes memory executeData) external;
 
-    function destroy() external;
+    // function destroy() external;
+
+    function create(uint256 flowId, bytes memory extraData)
+        external
+        returns (bytes memory checkData);
+
+    function pause(uint256 flowId, bytes memory extraData) external;
+
+    function start(uint256 flowId, bytes memory extraData) external;
+
+    function destroy(uint256 flowId, bytes memory extraData) external;
 }

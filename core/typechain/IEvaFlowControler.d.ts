@@ -25,16 +25,16 @@ interface IEvaFlowControlerInterface extends ethers.utils.Interface {
     "addFundByUser(address,uint256,address)": FunctionFragment;
     "batchExecFlow(bytes,uint256)": FunctionFragment;
     "createEvaSafes(address)": FunctionFragment;
-    "createFlow(string,uint8,bytes)": FunctionFragment;
-    "destroyFlow(uint256)": FunctionFragment;
+    "createFlow(string,uint8,address,bytes,uint256)": FunctionFragment;
+    "destroyFlow(uint256,bytes)": FunctionFragment;
     "execFlow(uint256,bytes)": FunctionFragment;
-    "getAllVaildFlowSize()": FunctionFragment;
+    "getAllVaildFlowSize(uint8)": FunctionFragment;
     "getFlowMetas(uint256)": FunctionFragment;
-    "getIndexVaildFlow(uint256)": FunctionFragment;
+    "getIndexVaildFlow(uint256,uint8)": FunctionFragment;
     "getSafes(address)": FunctionFragment;
-    "getVaildFlowRange(uint256,uint256)": FunctionFragment;
-    "pauseFlow(uint256)": FunctionFragment;
-    "startFlow(uint256)": FunctionFragment;
+    "getVaildFlowRange(uint256,uint256,uint8)": FunctionFragment;
+    "pauseFlow(uint256,bytes)": FunctionFragment;
+    "startFlow(uint256,bytes)": FunctionFragment;
     "updateFlow(uint256,string,bytes)": FunctionFragment;
     "withdrawFundByUser(address,uint256)": FunctionFragment;
     "withdrawPayment(address,uint256)": FunctionFragment;
@@ -54,11 +54,11 @@ interface IEvaFlowControlerInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "createFlow",
-    values: [string, BigNumberish, BytesLike]
+    values: [string, BigNumberish, string, BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "destroyFlow",
-    values: [BigNumberish]
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "execFlow",
@@ -66,7 +66,7 @@ interface IEvaFlowControlerInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getAllVaildFlowSize",
-    values?: undefined
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getFlowMetas",
@@ -74,20 +74,20 @@ interface IEvaFlowControlerInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getIndexVaildFlow",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "getSafes", values: [string]): string;
   encodeFunctionData(
     functionFragment: "getVaildFlowRange",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "pauseFlow",
-    values: [BigNumberish]
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "startFlow",
-    values: [BigNumberish]
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "updateFlow",
@@ -284,12 +284,15 @@ export class IEvaFlowControler extends BaseContract {
     createFlow(
       flowName: string,
       keepNetWork: BigNumberish,
+      flowAddress: string,
       flowCode: BytesLike,
+      gasFee: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     destroyFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -300,6 +303,7 @@ export class IEvaFlowControler extends BaseContract {
     ): Promise<ContractTransaction>;
 
     getAllVaildFlowSize(
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { size: BigNumber }>;
 
@@ -316,6 +320,7 @@ export class IEvaFlowControler extends BaseContract {
           string,
           BigNumber,
           BigNumber,
+          string,
           string
         ] & {
           flowStatus: number;
@@ -326,12 +331,14 @@ export class IEvaFlowControler extends BaseContract {
           lastExecNumber: BigNumber;
           maxVaildBlockNumber: BigNumber;
           flowName: string;
+          checkData: string;
         }
       ]
     >;
 
     getIndexVaildFlow(
       _index: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { value: BigNumber }>;
 
@@ -340,16 +347,19 @@ export class IEvaFlowControler extends BaseContract {
     getVaildFlowRange(
       fromIndex: BigNumberish,
       endIndex: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber[]] & { arr: BigNumber[] }>;
 
     pauseFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     startFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -394,12 +404,15 @@ export class IEvaFlowControler extends BaseContract {
   createFlow(
     flowName: string,
     keepNetWork: BigNumberish,
+    flowAddress: string,
     flowCode: BytesLike,
+    gasFee: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   destroyFlow(
     _flowId: BigNumberish,
+    flowCode: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -409,13 +422,26 @@ export class IEvaFlowControler extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  getAllVaildFlowSize(overrides?: CallOverrides): Promise<BigNumber>;
+  getAllVaildFlowSize(
+    _keepNetWork: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   getFlowMetas(
     index: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, string, string, string, BigNumber, BigNumber, string] & {
+    [
+      number,
+      number,
+      string,
+      string,
+      string,
+      BigNumber,
+      BigNumber,
+      string,
+      string
+    ] & {
       flowStatus: number;
       keepNetWork: number;
       admin: string;
@@ -424,11 +450,13 @@ export class IEvaFlowControler extends BaseContract {
       lastExecNumber: BigNumber;
       maxVaildBlockNumber: BigNumber;
       flowName: string;
+      checkData: string;
     }
   >;
 
   getIndexVaildFlow(
     _index: BigNumberish,
+    _keepNetWork: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -437,16 +465,19 @@ export class IEvaFlowControler extends BaseContract {
   getVaildFlowRange(
     fromIndex: BigNumberish,
     endIndex: BigNumberish,
+    _keepNetWork: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber[]>;
 
   pauseFlow(
     _flowId: BigNumberish,
+    flowCode: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   startFlow(
     _flowId: BigNumberish,
+    flowCode: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -488,12 +519,15 @@ export class IEvaFlowControler extends BaseContract {
     createFlow(
       flowName: string,
       keepNetWork: BigNumberish,
+      flowAddress: string,
       flowCode: BytesLike,
+      gasFee: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber, string] & { _flowId: BigNumber; add: string }>;
 
     destroyFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -503,13 +537,26 @@ export class IEvaFlowControler extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    getAllVaildFlowSize(overrides?: CallOverrides): Promise<BigNumber>;
+    getAllVaildFlowSize(
+      _keepNetWork: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getFlowMetas(
       index: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, number, string, string, string, BigNumber, BigNumber, string] & {
+      [
+        number,
+        number,
+        string,
+        string,
+        string,
+        BigNumber,
+        BigNumber,
+        string,
+        string
+      ] & {
         flowStatus: number;
         keepNetWork: number;
         admin: string;
@@ -518,11 +565,13 @@ export class IEvaFlowControler extends BaseContract {
         lastExecNumber: BigNumber;
         maxVaildBlockNumber: BigNumber;
         flowName: string;
+        checkData: string;
       }
     >;
 
     getIndexVaildFlow(
       _index: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -531,12 +580,21 @@ export class IEvaFlowControler extends BaseContract {
     getVaildFlowRange(
       fromIndex: BigNumberish,
       endIndex: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber[]>;
 
-    pauseFlow(_flowId: BigNumberish, overrides?: CallOverrides): Promise<void>;
+    pauseFlow(
+      _flowId: BigNumberish,
+      flowCode: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
-    startFlow(_flowId: BigNumberish, overrides?: CallOverrides): Promise<void>;
+    startFlow(
+      _flowId: BigNumberish,
+      flowCode: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     updateFlow(
       _flowId: BigNumberish,
@@ -746,12 +804,15 @@ export class IEvaFlowControler extends BaseContract {
     createFlow(
       flowName: string,
       keepNetWork: BigNumberish,
+      flowAddress: string,
       flowCode: BytesLike,
+      gasFee: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     destroyFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -761,7 +822,10 @@ export class IEvaFlowControler extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    getAllVaildFlowSize(overrides?: CallOverrides): Promise<BigNumber>;
+    getAllVaildFlowSize(
+      _keepNetWork: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getFlowMetas(
       index: BigNumberish,
@@ -770,6 +834,7 @@ export class IEvaFlowControler extends BaseContract {
 
     getIndexVaildFlow(
       _index: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -778,16 +843,19 @@ export class IEvaFlowControler extends BaseContract {
     getVaildFlowRange(
       fromIndex: BigNumberish,
       endIndex: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     pauseFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     startFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -833,12 +901,15 @@ export class IEvaFlowControler extends BaseContract {
     createFlow(
       flowName: string,
       keepNetWork: BigNumberish,
+      flowAddress: string,
       flowCode: BytesLike,
+      gasFee: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     destroyFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -849,6 +920,7 @@ export class IEvaFlowControler extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getAllVaildFlowSize(
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -859,6 +931,7 @@ export class IEvaFlowControler extends BaseContract {
 
     getIndexVaildFlow(
       _index: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -870,16 +943,19 @@ export class IEvaFlowControler extends BaseContract {
     getVaildFlowRange(
       fromIndex: BigNumberish,
       endIndex: BigNumberish,
+      _keepNetWork: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     pauseFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     startFlow(
       _flowId: BigNumberish,
+      flowCode: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

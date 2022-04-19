@@ -276,9 +276,19 @@ const _abi = [
         type: "uint8",
       },
       {
+        internalType: "address",
+        name: "flowAddress",
+        type: "address",
+      },
+      {
         internalType: "bytes",
         name: "flowCode",
         type: "bytes",
+      },
+      {
+        internalType: "uint256",
+        name: "gasFee",
+        type: "uint256",
       },
     ],
     name: "createFlow",
@@ -303,6 +313,11 @@ const _abi = [
         internalType: "uint256",
         name: "_flowId",
         type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "flowCode",
+        type: "bytes",
       },
     ],
     name: "destroyFlow",
@@ -329,7 +344,13 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "enum KeepNetWork",
+        name: "_keepNetWork",
+        type: "uint8",
+      },
+    ],
     name: "getAllVaildFlowSize",
     outputs: [
       {
@@ -393,6 +414,11 @@ const _abi = [
             name: "flowName",
             type: "string",
           },
+          {
+            internalType: "bytes",
+            name: "checkData",
+            type: "bytes",
+          },
         ],
         internalType: "struct IEvaFlowControler.EvaFlowMeta",
         name: "",
@@ -408,6 +434,11 @@ const _abi = [
         internalType: "uint256",
         name: "_index",
         type: "uint256",
+      },
+      {
+        internalType: "enum KeepNetWork",
+        name: "_keepNetWork",
+        type: "uint8",
       },
     ],
     name: "getIndexVaildFlow",
@@ -452,6 +483,11 @@ const _abi = [
         name: "endIndex",
         type: "uint256",
       },
+      {
+        internalType: "enum KeepNetWork",
+        name: "_keepNetWork",
+        type: "uint8",
+      },
     ],
     name: "getVaildFlowRange",
     outputs: [
@@ -471,6 +507,11 @@ const _abi = [
         name: "_flowId",
         type: "uint256",
       },
+      {
+        internalType: "bytes",
+        name: "flowCode",
+        type: "bytes",
+      },
     ],
     name: "pauseFlow",
     outputs: [],
@@ -483,6 +524,11 @@ const _abi = [
         internalType: "uint256",
         name: "_flowId",
         type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "flowCode",
+        type: "bytes",
       },
     ],
     name: "startFlow",

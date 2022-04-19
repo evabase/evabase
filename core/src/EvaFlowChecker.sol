@@ -25,15 +25,15 @@ contract EvaFlowChecker {
 
     function check(
         uint256 keepbotId,
-        uint256 checkGasLimit,
-        bytes memory checkdata,
+        // uint256 checkGasLimit,
+        // bytes memory checkdata,
         uint256 lastMoveTime,
         KeepNetWork keepNetWork
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
         uint32 keepBotSize = config.keepBotSizes(keepNetWork);
         uint256 allVaildSize = IEvaFlowControler(config.control())
-            .getAllVaildFlowSize();
+            .getAllVaildFlowSize(keepNetWork);
         uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
         (uint256 start, uint256 end) = _getAvailCircle(
             allVaildSize,
@@ -59,14 +59,15 @@ contract EvaFlowChecker {
         //     execData = Utils._encodeTwoArr(tmp, executeDataArray);
         // }
         // return (needExec, execData);
-        return _ring(start, end, allVaildSize, checkdata);
+        return _ring(start, end, allVaildSize, keepNetWork);
     }
 
     function _ring(
         uint256 _start,
         uint256 _end,
         uint256 _allVaildSize,
-        bytes memory _checkdata
+        // bytes memory _checkdata,
+        KeepNetWork keepNetWork
     ) internal view returns (bool needExec, bytes memory execData) {
         uint256 j = 0;
         uint256 length = 0;
@@ -83,8 +84,9 @@ contract EvaFlowChecker {
                 _allVaildSize,
                 tmp,
                 executeDataArray,
-                _checkdata,
-                j
+                // _checkdata,
+                j,
+                keepNetWork
             );
             // 0 - end
             (tmp, j, executeDataArray) = _addVaildFlowIndex(
@@ -92,8 +94,9 @@ contract EvaFlowChecker {
                 _end,
                 tmp,
                 executeDataArray,
-                _checkdata,
-                j
+                // _checkdata,
+                j,
+                keepNetWork
             );
         } else {
             length = _end - _start;
@@ -104,8 +107,8 @@ contract EvaFlowChecker {
                 _end,
                 tmp,
                 executeDataArray,
-                _checkdata,
-                j
+                j,
+                keepNetWork
             );
         }
 
@@ -124,8 +127,9 @@ contract EvaFlowChecker {
         uint256 _end,
         uint256[] memory _tmp,
         bytes[] memory _executeDataArray,
-        bytes memory _checkdata,
-        uint256 j
+        // bytes memory _checkdata,
+        uint256 j,
+        KeepNetWork keepNetWork
     )
         internal
         view
@@ -139,15 +143,25 @@ contract EvaFlowChecker {
         for (uint256 i = _start; i < _end; i++) {
             uint256 beforGas = gasleft();
             uint256 index = IEvaFlowControler(config.control())
-                .getIndexVaildFlow(i);
+                .getIndexVaildFlow(i, keepNetWork);
 
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
+                // address flowAdd = IEvaFlowControler(config.control())
+                //     .getFlowMetas(index)
+                //     .lastVersionflow;
+                // bytes memory _checkdata = IEvaFlowControler(config.control())
+                //     .getFlowMetas(index)
+                //     .checkData;
                 (bool needExec, bytes memory executeData) = IEvaFlow(
                     IEvaFlowControler(config.control())
                         .getFlowMetas(index)
                         .lastVersionflow
-                ).check(_checkdata);
+                ).check(
+                        IEvaFlowControler(config.control())
+                            .getFlowMetas(index)
+                            .checkData
+                    );
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
                 if (totalGas > GAS_LIMIT || afterGas < checkGasLimitMin) {

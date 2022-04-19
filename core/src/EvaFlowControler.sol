@@ -4,6 +4,7 @@ import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
 import {Utils} from "./lib/Utils.sol";
+import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
 import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
@@ -13,7 +14,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -25,15 +25,14 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
     ////need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
-    EvabaseHelper.UintSet vaildFlows;
+    mapping(KeepNetWork => EvabaseHelper.UintSet) vaildFlows;
+    // EvabaseHelper.UintSet vaildFlows;
     uint256 private constant REGISTRY_GAS_OVERHEAD = 80_000;
     // using LibSingleList for LibSingleList.List;
     // using LibSingleList for LibSingleList.Iterate;
     // LibSingleList.List vaildFlows;
 
     uint256 public constant MAX_INT = 2 ^ (256 - 1);
-
-    uint256 public lastKeepIndex;
 
     //可提取的手续费
     uint256 public paymentEthAmount;
@@ -57,7 +56,8 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                 lastKeeper: address(0),
                 lastExecNumber: block.number,
                 lastVersionflow: address(0),
-                flowName: "init"
+                flowName: "init",
+                checkData: ""
             })
         );
     }
@@ -127,7 +127,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     function createFlow(
         string memory _flowName,
         KeepNetWork _keepNetWork,
-        bytes memory _flowCode
+        address _flowAddress,
+        bytes memory _flowCode,
+        uint256 gasFee
     )
         external
         payable
@@ -136,23 +138,62 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         returns (uint256 flowid, address add)
     {
         _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
-        if (msg.value > 0) {
-            userMetaMap[msg.sender].ethBal =
-                userMetaMap[msg.sender].ethBal +
-                Utils.toUint120(msg.value);
-        }
 
         checkEnoughGas();
-        //create
-        address addr;
-        uint256 size;
-        assembly {
-            addr := create(0, add(_flowCode, 0x20), mload(_flowCode))
-            size := extcodesize(addr)
-            if iszero(extcodesize(addr)) {
-                revert(0, 0)
+        require(gasFee <= msg.value, "gasFee < value");
+        uint256 _value = msg.value - gasFee;
+        bytes memory _checkdata;
+        // uint256 gasFee = msg.value;
+        // address addr;
+        if (_flowAddress == address(0)) {
+            //create
+            uint256 size;
+            assembly {
+                _flowAddress := create(
+                    0,
+                    add(_flowCode, 0x20),
+                    mload(_flowCode)
+                )
+                size := extcodesize(_flowAddress)
+                if iszero(extcodesize(_flowAddress)) {
+                    revert(0, 0)
+                }
+            }
+        } else {
+            require(
+                Address.isContract(_flowAddress),
+                "_flowAddress should be contract"
+            );
+
+            unchecked {
+                // bytes memory input = abi.encodeWithSelector(
+                //     IEvaFlow.create.selector,
+                //     flowMetas.length,
+                //     abi.encode(_value, _flowCode)
+                // );
+
+                // (bool success, bytes memory returndata) = _flowAddress.call{
+                //     value: 0
+                // }(input);
+
+                // require(success, "call flow fail");
+                //   _checkdata = returndata;
+                bytes memory input = abi.encode(_flowCode, _value);
+                _checkdata = IEvaFlow(_flowAddress).create(
+                    flowMetas.length,
+                    input
+                );
             }
         }
+
+        //transfer(order.owner, total);
+        address safes = evaSafesFactory.get(msg.sender);
+        (bool succeed, ) = safes.call{value: _value}("");
+        require(succeed, "Failed to transfer Ether");
+
+        userMetaMap[msg.sender].ethBal =
+            userMetaMap[msg.sender].ethBal +
+            Utils.toUint120(gasFee);
 
         flowMetas.push(
             EvaFlowMeta({
@@ -162,8 +203,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                 admin: msg.sender,
                 lastKeeper: address(0),
                 lastExecNumber: block.number,
-                lastVersionflow: addr,
-                flowName: _flowName
+                lastVersionflow: _flowAddress,
+                flowName: _flowName,
+                checkData: _checkdata
             })
         );
 
@@ -175,11 +217,12 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
         //vaild flow
         uint256 flowId = flowMetas.length - 1;
-        vaildFlows.add(flowid);
+        // vaildFlows.add(flowid);
+        vaildFlows[_keepNetWork].add(flowId);
 
-        emit FlowCreated(msg.sender, flowId, addr);
+        emit FlowCreated(msg.sender, flowId, _flowAddress);
 
-        return (flowId, addr);
+        return (flowId, _flowAddress);
     }
 
     function createEvaSafes(address user) external override {
@@ -209,7 +252,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             "flow's status is error"
         );
 
-        _beforeCreateFlow(_flowName, flowMetas[_flowId].keepNetWork, _flowCode);
+        KeepNetWork _keepNetWork = flowMetas[_flowId].keepNetWork;
+
+        _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
         //create
         address addr;
         uint256 size;
@@ -220,17 +265,22 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                 revert(0, 0)
             }
         }
-        vaildFlows.remove(_flowId);
+        // vaildFlows.remove(_flowId);
+        vaildFlows[_keepNetWork].remove(_flowId);
         flowMetas[_flowId].flowName = _flowName;
         flowMetas[_flowId].lastKeeper = address(0);
         flowMetas[_flowId].lastExecNumber = block.number;
         flowMetas[_flowId].lastVersionflow = addr;
-        vaildFlows.add(_flowId);
+        // vaildFlows.add(_flowId);
+        vaildFlows[_keepNetWork].add(_flowId);
 
         emit FlowUpdated(msg.sender, _flowId, addr);
     }
 
-    function pauseFlow(uint256 _flowId) external override {
+    function pauseFlow(uint256 _flowId, bytes memory _flowCode)
+        external
+        override
+    {
         require(_flowId < flowMetas.length, "over bound");
         require(
             userMetaMap[msg.sender].vaildFlowsNum > 0,
@@ -254,13 +304,20 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
 
         if (flowMetas[_flowId].lastVersionflow != address(0)) {
-            vaildFlows.remove(_flowId);
+            // vaildFlows.remove(_flowId);
+            KeepNetWork _keepNetWork = flowMetas[_flowId].keepNetWork;
+            vaildFlows[_keepNetWork].remove(_flowId);
         }
+        //pause flow IEvaFlow
+        IEvaFlow(flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
 
         emit FlowPaused(msg.sender, _flowId);
     }
 
-    function startFlow(uint256 _flowId) external override {
+    function startFlow(uint256 _flowId, bytes memory _flowCode)
+        external
+        override
+    {
         require(_flowId < flowMetas.length, "over bound");
 
         require(
@@ -281,13 +338,21 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
 
         if (flowMetas[_flowId].lastVersionflow != address(0)) {
-            vaildFlows.add(_flowId);
+            // vaildFlows.add(_flowId);
+            KeepNetWork _keepNetWork = flowMetas[_flowId].keepNetWork;
+            vaildFlows[_keepNetWork].add(_flowId);
         }
+
+        //start flow IEvaFlow
+        IEvaFlow(flowMetas[_flowId].lastVersionflow).start(_flowId, _flowCode);
 
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId) external override {
+    function destroyFlow(uint256 _flowId, bytes memory _flowCode)
+        external
+        override
+    {
         require(_flowId < flowMetas.length, "over bound");
         require(
             msg.sender == flowMetas[_flowId].admin || msg.sender == owner(),
@@ -298,7 +363,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             "vaildFlowsNum should gt 0"
         );
         if (flowMetas[_flowId].lastVersionflow != address(0)) {
-            vaildFlows.remove(_flowId);
+            // vaildFlows.remove(_flowId);
+            KeepNetWork _keepNetWork = flowMetas[_flowId].keepNetWork;
+            vaildFlows[_keepNetWork].remove(_flowId);
         }
 
         flowMetas[_flowId].lastExecNumber = block.number;
@@ -310,7 +377,10 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                 1;
         }
         //destroy flow IEvaFlow
-        IEvaFlow(flowMetas[_flowId].lastVersionflow).destroy();
+        IEvaFlow(flowMetas[_flowId].lastVersionflow).destroy(
+            _flowId,
+            _flowCode
+        );
         emit FlowDestroyed(msg.sender, _flowId);
     }
 
@@ -318,7 +388,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         address tokenAdress,
         uint256 amount,
         address user
-    ) external payable override nonReentrant {
+    ) public payable override nonReentrant {
         require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
 
         unchecked {
@@ -391,8 +461,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     {
         if (tokenAdress == address(0)) {
             require(paymentEthAmount >= amount, "");
-            (bool sent, ) = msg.sender.call{value: amount}("");
-            require(sent, "Failed to send Ether");
+            TransferHelper.safeTransferETH(msg.sender, amount);
+            // (bool sent, ) = msg.sender.call{value: amount}("");
+            // require(sent, "Failed to send Ether");
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(paymentGasAmount >= amount, "");
@@ -400,31 +471,30 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
     }
 
-    function getIndexVaildFlow(uint256 _index)
+    function getIndexVaildFlow(uint256 _index, KeepNetWork _keepNetWork)
         external
         view
         override
         returns (uint256 value)
     {
-        return vaildFlows.get(_index);
+        return vaildFlows[_keepNetWork].get(_index);
     }
 
-    function getVaildFlowRange(uint256 fromIndex, uint256 endIndex)
-        external
-        view
-        override
-        returns (uint256[] memory arr)
-    {
-        return vaildFlows.getRange(fromIndex, endIndex);
+    function getVaildFlowRange(
+        uint256 fromIndex,
+        uint256 endIndex,
+        KeepNetWork _keepNetWork
+    ) external view override returns (uint256[] memory arr) {
+        return vaildFlows[_keepNetWork].getRange(fromIndex, endIndex);
     }
 
-    function getAllVaildFlowSize()
+    function getAllVaildFlowSize(KeepNetWork _keepNetWork)
         external
         view
         override
         returns (uint256 size)
     {
-        return vaildFlows.getSize();
+        return vaildFlows[_keepNetWork].getSize();
     }
 
     function getFlowMetas(uint256 index)
@@ -473,16 +543,15 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
             //keeep is self
             (msg.sender != flowMeta.lastKeeper ||
                 flowMeta.keepNetWork != KeepNetWork.ChainLink) &&
-            flowMeta.maxVaildBlockNumber >= block.number &&
-            flowMeta.lastExecNumber >= block.number + 10
+            flowMeta.maxVaildBlockNumber >= block.number
+            // flowMeta.lastExecNumber + 10 >= block.number
         ) {
             //IEvaFlow(flowMeta.lastVersionflow);
 
             address admin = flowMeta.admin;
             address safesAdd = evaSafesFactory.get(admin);
             if (safesAdd != address(0)) {
-                (uint256 ethValue, bytes memory needExecutedDsata) = Utils
-                    ._decodeUintAndBytes(_inputData);
+                (, uint256 ethValue) = Utils._decodeUintAndBytes(_inputData);
                 bytes[] memory data = new bytes[](1);
                 //todo ETH.value>0
                 if (ethValue == 0) {
@@ -496,7 +565,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
                     try IEvaSafes(safesAdd).multicall(_flowId, data) returns (
                         bytes[] memory results
-                    ) {} catch {
+                    ) {
+                        _sucess = true;
+                    } catch {
                         _sucess = false;
                     }
                 } else {
@@ -515,6 +586,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
                         // update
                         // flowMetas[_flowId].lastExecNumber = block.number;
                         // flowMetas[_flowId].lastKeeper = msg.sender;
+                        _sucess = true;
                     } catch {
                         _sucess = false;
                     }
@@ -522,11 +594,9 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
                 // update
                 flowMetas[_flowId].lastExecNumber = block.number;
-                if (flowMeta.keepNetWork != KeepNetWork.ChainLink) {
-                    flowMetas[_flowId].lastKeeper = msg.sender;
-                }
-
-                // IEvaSafes(safesAdd).multicall(_flowId, data);
+                // if (flowMeta.keepNetWork != KeepNetWork.ChainLink) {
+                flowMetas[_flowId].lastKeeper = msg.sender;
+                // }
 
                 uint256 payAmountByETH = 0;
                 uint256 payAmountByFeeToken = 0;
@@ -640,23 +710,25 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     //     }
     // }
 
-    function addEvabaseFlowByOwner(
-        address evabaseFlowAdd,
-        KeepNetWork _keepNetWork,
-        string memory name
-    ) external onlyOwner {
-        flowMetas.push(
-            EvaFlowMeta({
-                flowStatus: FlowStatus.Active,
-                keepNetWork: _keepNetWork,
-                maxVaildBlockNumber: MAX_INT,
-                admin: msg.sender,
-                lastKeeper: address(0),
-                lastExecNumber: block.number,
-                lastVersionflow: evabaseFlowAdd,
-                flowName: name
-            })
-        );
-        emit FlowCreated(msg.sender, flowMetas.length, evabaseFlowAdd);
-    }
+    // function addEvabaseFlowByOwner(
+    //     address evabaseFlowAdd,
+    //     KeepNetWork _keepNetWork,
+    //     string memory name,
+    //     bytes memory _checkdata
+    // ) external onlyOwner {
+    //     flowMetas.push(
+    //         EvaFlowMeta({
+    //             flowStatus: FlowStatus.Active,
+    //             keepNetWork: _keepNetWork,
+    //             maxVaildBlockNumber: MAX_INT,
+    //             admin: msg.sender,
+    //             lastKeeper: address(0),
+    //             lastExecNumber: block.number,
+    //             lastVersionflow: evabaseFlowAdd,
+    //             flowName: name,
+    //             checkData: _checkdata
+    //         })
+    //     );
+    //     emit FlowCreated(msg.sender, flowMetas.length - 1, evabaseFlowAdd);
+    // }
 }

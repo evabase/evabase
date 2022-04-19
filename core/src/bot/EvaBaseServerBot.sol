@@ -61,16 +61,12 @@ contract EvaBaseServerBot is
     }
 
     function _exec(bytes memory _execdata) internal override {
-        _batchExec(_execdata);
-    }
+        require(_execdata.length > 0, "exec data should not null");
 
-    function _batchExec(bytes memory _data) internal {
-        require(_data.length > 0, "exec data should not null");
-
-        require(keeps[tx.origin], "not active chianlink active");
+        require(keeps[msg.sender], "not active EvaBase bot");
 
         IEvaFlowControler(config.control()).batchExecFlow(
-            _data,
+            _execdata,
             EXEC_GAS_LIMIT
         );
     }
@@ -88,12 +84,12 @@ contract EvaBaseServerBot is
         return (abi.encode(_uint, _bytes));
     }
 
-    function encodeUintAndBytes(uint256 _value, bytes memory _bytes)
+    function encodeUintAndBytes(bytes memory _bytes, uint256 _value)
         external
         pure
         returns (bytes memory)
     {
-        return (abi.encode(_value, _bytes));
+        return (abi.encode(_bytes, _value));
     }
 
     function encodeUints(uint256[] memory _uint)

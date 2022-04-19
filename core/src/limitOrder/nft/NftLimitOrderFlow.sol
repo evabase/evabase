@@ -22,8 +22,20 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         uint256 value
     );
 
-    event OrderCancel(address indexed user, Order order);
-    event OrderCreated(address indexed user, bytes32 _byte32, Order order);
+    event OrderCancel(
+        address indexed user,
+        uint256 indexed flowId,
+        Order order
+    );
+
+    event OrderPause(address indexed user, uint256 indexed flowId, Order order);
+    event OrderStart(address indexed user, uint256 indexed flowId, Order order);
+    event OrderCreated(
+        address indexed user,
+        uint256 indexed flowId,
+        bytes32 _byte32,
+        Order order
+    );
     struct Order {
         address owner; //拥有人
         address assetToken; //资产合约地址
@@ -110,13 +122,99 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         _atomicMatch(order, signature, data);
     }
 
-    function destroy() external override {
-        require(_owner == msg.sender, "only owner can call this function");
-        // selfdestruct(payable(msg.sender));
-        return;
+    function create(uint256 flowId, bytes memory extraData)
+        external
+        override
+        returns (bytes memory checkData)
+    {
+        require(extraData.length > 0, "extraData size >0");
+        require(
+            config.isActiveControler(msg.sender),
+            "sender is  active controler"
+        );
+        //bytes memory input = abi.encode(_flowCode, _value);
+        (bytes memory _input, uint256 _value) = abi.decode(
+            extraData,
+            (bytes, uint256)
+        );
+        require(_input.length > 0, "_input size >0");
+        Order memory order = abi.decode(_input, (Order));
+        require(tx.origin == order.owner, "only owner can cancel order");
+
+        require(order.amount > 0, "amount must be greater than 0");
+        require(order.price > 0, "price must be greater than 0");
+
+        require(order.assetToken != address(0), "assetToken is 0x");
+        require(order.expireTime > block.timestamp, "order time is end");
+
+        unchecked {
+            uint256 total = order.amount * order.price;
+            require(
+                total <= _value,
+                "order amount*price must be less than or equal to msg.value"
+            );
+        }
+
+        require(!orderExists[hashOrder(order)].exist, "order exist");
+        require(
+            evaSafesFactory.get(order.owner) != address(0),
+            "Safes not exist"
+        );
+        bytes32 hash = hashOrder(order);
+        orderExists[hash] = OrderExist({exist: true, amount: 0});
+
+        //addFundByUser( address tokenAdress, uint256 amount,address user
+        // bytes memory data = abi.encodeWithSelector(
+        //     IEvaFlowControler.addFundByUser.selector,
+        //     address(0),
+        //     fee,
+        //     order.owner
+        // );
+
+        // bytes memory result = config.control().functionCallWithValue(
+        //     data,
+        //     fee,
+        //     "CallFailed"
+        // );
+        // require(
+        //     !Utils.hashCompareInternal(result, bytes("CallFailed")),
+        //     "cancel Order failed"
+        // );
+
+        emit OrderCreated(_owner, flowId, hash, order);
+        return abi.encodePacked(hash);
     }
 
-    function cancelOrder(Order memory order) external {
+    function pause(uint256 flowId, bytes memory extraData) external override {
+        require(extraData.length > 0, "extraData size >0");
+        require(
+            config.isActiveControler(msg.sender),
+            "sender is  active controler"
+        );
+        Order memory order = abi.decode(extraData, (Order));
+        require(tx.origin == order.owner, "only owner can cancel order");
+        emit OrderPause(msg.sender, flowId, order);
+    }
+
+    function start(uint256 flowId, bytes memory extraData) external override {
+        require(extraData.length > 0, "extraData size >0");
+        require(
+            config.isActiveControler(msg.sender),
+            "sender is  active controler"
+        );
+        Order memory order = abi.decode(extraData, (Order));
+        require(tx.origin == order.owner, "only owner can cancel order");
+        emit OrderStart(msg.sender, flowId, order);
+    }
+
+    function destroy(uint256 flowId, bytes memory extraData) external override {
+        require(extraData.length > 0, "extraData size >0");
+        require(
+            config.isActiveControler(msg.sender),
+            "sender is  active controler"
+        );
+
+        Order memory order = abi.decode(extraData, (Order));
         require(tx.origin == order.owner, "only owner can cancel order");
         require(orderExists[hashOrder(order)].exist, "order not exist");
         require(
@@ -145,8 +243,12 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             );
         }
 
-        emit OrderCancel(msg.sender, order);
+        emit OrderCancel(msg.sender, flowId, order);
     }
+
+    // function cancelOrder(Order memory order) external {
+
+    // }
 
     function _atomicMatch(
         Order memory _order,
@@ -172,108 +274,60 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
                     _order.amount - orderExists[hashOrder(_order)].amount,
                 "Exceeded purchase"
             );
-        }
 
-        results = new bytes[](_data.length);
-        uint256 total = 0;
-        for (uint256 i = 0; i < _data.length; i++) {
-            (address target, bytes memory input, uint256 value) = abi.decode(
-                _data[i],
-                (address, bytes, uint256)
-            );
-            require(target != address(this), "FORBIDDEN safes address");
-            require(target != msg.sender, "FORBIDDEN self");
-            results[i] = target.functionCallWithValue(
-                // target,
-                input,
-                value,
-                "CallFailed"
-            );
-            require(
-                !Utils.hashCompareInternal(results[i], bytes("CallFailed")),
-                "_atomicMatch failed"
-            );
-            unchecked {
+            results = new bytes[](_data.length);
+            uint256 total = 0;
+            for (uint256 i = 0; i < _data.length; i++) {
+                (address target, bytes memory input, uint256 value) = abi
+                    .decode(_data[i], (address, bytes, uint256));
+                require(target != address(this), "FORBIDDEN safes address");
+                require(target != msg.sender, "FORBIDDEN self");
+                results[i] = target.functionCallWithValue(
+                    // target,
+                    input,
+                    value,
+                    "CallFailed"
+                );
+                require(
+                    !Utils.hashCompareInternal(results[i], bytes("CallFailed")),
+                    "_atomicMatch failed"
+                );
+
                 total += value;
+
+                //     if (_order.assetType == AssetType.ERC721) {
+                //         IERC721(_order.assetToken).safeTransferFrom(
+                //             address(this),
+                //             _order.owner,
+                //             _assetTokenIds[i]
+                //         );
+                //     } else if (_order.assetType == AssetType.ERC1155) {}
+                //     //withdarw erc721/erc1155
+                //     IERC1155(_order.assetToken).safeTransferFrom(
+                //         address(this),
+                //         _order.owner,
+                //         _assetTokenIds[i],
+                //         IERC1155(_order.assetToken).balanceOf(
+                //             address(this),
+                //             _assetTokenIds[i]
+                //         ),
+                //         ""
+                //     );
             }
-            //     if (_order.assetType == AssetType.ERC721) {
-            //         IERC721(_order.assetToken).safeTransferFrom(
-            //             address(this),
-            //             _order.owner,
-            //             _assetTokenIds[i]
-            //         );
-            //     } else if (_order.assetType == AssetType.ERC1155) {}
-            //     //withdarw erc721/erc1155
-            //     IERC1155(_order.assetToken).safeTransferFrom(
-            //         address(this),
-            //         _order.owner,
-            //         _assetTokenIds[i],
-            //         IERC1155(_order.assetToken).balanceOf(
-            //             address(this),
-            //             _assetTokenIds[i]
-            //         ),
-            //         ""
-            //     );
+
+            orderExists[hashOrder(_order)].amount =
+                _order.amount -
+                _data.length;
+
+            emit OrderExecute(msg.sender, _order, _data.length, total);
         }
-
-        orderExists[hashOrder(_order)].amount = _order.amount - _data.length;
-
-        emit OrderExecute(msg.sender, _order, _data.length, total);
     }
 
-    function newOrder(Order memory order, uint256 fee)
-        external
-        payable
-        returns (bytes32)
-    {
-        require(order.amount > 0, "amount must be greater than 0");
-        require(order.price > 0, "price must be greater than 0");
-        require(msg.sender == order.owner, "owner should be msg.sender");
-        require(order.assetToken != address(0), "assetToken is 0x");
-        require(order.expireTime > block.timestamp, "order time is end");
-
-        unchecked {
-            uint256 total = order.amount * order.price + fee;
-            require(
-                total <= msg.value,
-                "order amount*price must be less than or equal to msg.value"
-            );
-        }
-
-        require(!orderExists[hashOrder(order)].exist, "order exist");
-        require(
-            evaSafesFactory.get(order.owner) != address(0),
-            "Safes not exist"
-        );
-        bytes32 hash = hashOrder(order);
-        orderExists[hash] = OrderExist({exist: true, amount: 0});
-
-        //transfer(order.owner, total);
-        address safes = evaSafesFactory.get(order.owner);
-        (bool succeed, ) = safes.call{value: msg.value}("");
-        require(succeed, "Failed to transfer Ether");
-
-        //addFundByUser( address tokenAdress, uint256 amount,address user
-        bytes memory data = abi.encodeWithSelector(
-            IEvaFlowControler.addFundByUser.selector,
-            address(0),
-            fee,
-            order.owner
-        );
-
-        bytes memory result = config.control().functionCallWithValue(
-            data,
-            fee,
-            "CallFailed"
-        );
-        require(
-            !Utils.hashCompareInternal(result, bytes("CallFailed")),
-            "cancel Order failed"
-        );
-
-        emit OrderCreated(_owner, hash, order);
-        return hash;
-    }
+    // function newOrder(Order memory order, uint256 fee)
+    //     external
+    //     payable
+    //     returns (bytes32)
+    // {}
 
     function hashOrder(Order memory order) public pure returns (bytes32) {
         return

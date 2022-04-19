@@ -12,7 +12,6 @@ import {
   BaseContract,
   ContractTransaction,
   Overrides,
-  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -23,41 +22,35 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
   functions: {
     "_owner()": FunctionFragment;
-    "cancelOrder((address,address,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
     "check(bytes)": FunctionFragment;
     "config()": FunctionFragment;
-    "destroy()": FunctionFragment;
+    "create(uint256,bytes)": FunctionFragment;
+    "destroy(uint256,bytes)": FunctionFragment;
     "evaSafesFactory()": FunctionFragment;
     "execute(bytes)": FunctionFragment;
     "hashOrder((address,address,uint256,uint256,uint256,uint256,uint256))": FunctionFragment;
     "initialize(address,address,string,string)": FunctionFragment;
     "multicall(bytes)": FunctionFragment;
-    "newOrder((address,address,uint256,uint256,uint256,uint256,uint256),uint256)": FunctionFragment;
     "orderExists(bytes32)": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerWalletSafes()": FunctionFragment;
+    "pause(uint256,bytes)": FunctionFragment;
     "setFactory()": FunctionFragment;
+    "start(uint256,bytes)": FunctionFragment;
     "verifyOrder((address,address,uint256,uint256,uint256,uint256,uint256),bytes)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "_owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "cancelOrder",
-    values: [
-      {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      }
-    ]
-  ): string;
   encodeFunctionData(functionFragment: "check", values: [BytesLike]): string;
   encodeFunctionData(functionFragment: "config", values?: undefined): string;
-  encodeFunctionData(functionFragment: "destroy", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "create",
+    values: [BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "destroy",
+    values: [BigNumberish, BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "evaSafesFactory",
     values?: undefined
@@ -86,21 +79,6 @@ interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "newOrder",
-    values: [
-      {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      BigNumberish
-    ]
-  ): string;
-  encodeFunctionData(
     functionFragment: "orderExists",
     values: [BytesLike]
   ): string;
@@ -110,8 +88,16 @@ interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "pause",
+    values: [BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setFactory",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "start",
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyOrder",
@@ -130,12 +116,9 @@ interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "_owner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "cancelOrder",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "check", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "config", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "create", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "destroy", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "evaSafesFactory",
@@ -145,7 +128,6 @@ interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "hashOrder", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "newOrder", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "orderExists",
     data: BytesLike
@@ -155,26 +137,33 @@ interface NftLimitOrderFlowInterface extends ethers.utils.Interface {
     functionFragment: "ownerWalletSafes",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setFactory", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "start", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "verifyOrder",
     data: BytesLike
   ): Result;
 
   events: {
-    "OrderCancel(address,tuple)": EventFragment;
-    "OrderCreated(address,bytes32,tuple)": EventFragment;
+    "OrderCancel(address,uint256,tuple)": EventFragment;
+    "OrderCreated(address,uint256,bytes32,tuple)": EventFragment;
     "OrderExecute(address,tuple,uint256,uint256)": EventFragment;
+    "OrderPause(address,uint256,tuple)": EventFragment;
+    "OrderStart(address,uint256,tuple)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "OrderCancel"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OrderCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OrderExecute"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OrderPause"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OrderStart"): EventFragment;
 }
 
 export type OrderCancelEvent = TypedEvent<
   [
     string,
+    BigNumber,
     [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       owner: string;
       assetToken: string;
@@ -186,6 +175,7 @@ export type OrderCancelEvent = TypedEvent<
     }
   ] & {
     user: string;
+    flowId: BigNumber;
     order: [
       string,
       string,
@@ -209,6 +199,7 @@ export type OrderCancelEvent = TypedEvent<
 export type OrderCreatedEvent = TypedEvent<
   [
     string,
+    BigNumber,
     string,
     [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
       owner: string;
@@ -221,6 +212,7 @@ export type OrderCreatedEvent = TypedEvent<
     }
   ] & {
     user: string;
+    flowId: BigNumber;
     _byte32: string;
     order: [
       string,
@@ -280,6 +272,78 @@ export type OrderExecuteEvent = TypedEvent<
   }
 >;
 
+export type OrderPauseEvent = TypedEvent<
+  [
+    string,
+    BigNumber,
+    [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      owner: string;
+      assetToken: string;
+      amount: BigNumber;
+      price: BigNumber;
+      expireTime: BigNumber;
+      tokenId: BigNumber;
+      salt: BigNumber;
+    }
+  ] & {
+    user: string;
+    flowId: BigNumber;
+    order: [
+      string,
+      string,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
+      owner: string;
+      assetToken: string;
+      amount: BigNumber;
+      price: BigNumber;
+      expireTime: BigNumber;
+      tokenId: BigNumber;
+      salt: BigNumber;
+    };
+  }
+>;
+
+export type OrderStartEvent = TypedEvent<
+  [
+    string,
+    BigNumber,
+    [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      owner: string;
+      assetToken: string;
+      amount: BigNumber;
+      price: BigNumber;
+      expireTime: BigNumber;
+      tokenId: BigNumber;
+      salt: BigNumber;
+    }
+  ] & {
+    user: string;
+    flowId: BigNumber;
+    order: [
+      string,
+      string,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
+      owner: string;
+      assetToken: string;
+      amount: BigNumber;
+      price: BigNumber;
+      expireTime: BigNumber;
+      tokenId: BigNumber;
+      salt: BigNumber;
+    };
+  }
+>;
+
 export class NftLimitOrderFlow extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
@@ -326,19 +390,6 @@ export class NftLimitOrderFlow extends BaseContract {
   functions: {
     _owner(overrides?: CallOverrides): Promise<[string]>;
 
-    cancelOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     check(
       checkData: BytesLike,
       overrides?: CallOverrides
@@ -348,7 +399,15 @@ export class NftLimitOrderFlow extends BaseContract {
 
     config(overrides?: CallOverrides): Promise<[string]>;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -385,20 +444,6 @@ export class NftLimitOrderFlow extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    newOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      fee: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     orderExists(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -408,7 +453,19 @@ export class NftLimitOrderFlow extends BaseContract {
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<[string]>;
 
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setFactory(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -429,19 +486,6 @@ export class NftLimitOrderFlow extends BaseContract {
 
   _owner(overrides?: CallOverrides): Promise<string>;
 
-  cancelOrder(
-    order: {
-      owner: string;
-      assetToken: string;
-      amount: BigNumberish;
-      price: BigNumberish;
-      expireTime: BigNumberish;
-      tokenId: BigNumberish;
-      salt: BigNumberish;
-    },
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   check(
     checkData: BytesLike,
     overrides?: CallOverrides
@@ -449,7 +493,15 @@ export class NftLimitOrderFlow extends BaseContract {
 
   config(overrides?: CallOverrides): Promise<string>;
 
+  create(
+    flowId: BigNumberish,
+    extraData: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   destroy(
+    flowId: BigNumberish,
+    extraData: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -486,20 +538,6 @@ export class NftLimitOrderFlow extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  newOrder(
-    order: {
-      owner: string;
-      assetToken: string;
-      amount: BigNumberish;
-      price: BigNumberish;
-      expireTime: BigNumberish;
-      tokenId: BigNumberish;
-      salt: BigNumberish;
-    },
-    fee: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   orderExists(
     arg0: BytesLike,
     overrides?: CallOverrides
@@ -509,7 +547,19 @@ export class NftLimitOrderFlow extends BaseContract {
 
   ownerWalletSafes(overrides?: CallOverrides): Promise<string>;
 
+  pause(
+    flowId: BigNumberish,
+    extraData: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setFactory(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  start(
+    flowId: BigNumberish,
+    extraData: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -530,19 +580,6 @@ export class NftLimitOrderFlow extends BaseContract {
   callStatic: {
     _owner(overrides?: CallOverrides): Promise<string>;
 
-    cancelOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     check(
       checkData: BytesLike,
       overrides?: CallOverrides
@@ -552,7 +589,17 @@ export class NftLimitOrderFlow extends BaseContract {
 
     config(overrides?: CallOverrides): Promise<string>;
 
-    destroy(overrides?: CallOverrides): Promise<void>;
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     evaSafesFactory(overrides?: CallOverrides): Promise<string>;
 
@@ -581,20 +628,6 @@ export class NftLimitOrderFlow extends BaseContract {
 
     multicall(data: BytesLike, overrides?: CallOverrides): Promise<void>;
 
-    newOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      fee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     orderExists(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -604,7 +637,19 @@ export class NftLimitOrderFlow extends BaseContract {
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<string>;
 
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setFactory(overrides?: CallOverrides): Promise<void>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     verifyOrder(
       order: {
@@ -622,12 +667,14 @@ export class NftLimitOrderFlow extends BaseContract {
   };
 
   filters: {
-    "OrderCancel(address,tuple)"(
+    "OrderCancel(address,uint256,tuple)"(
       user?: string | null,
+      flowId?: BigNumberish | null,
       order?: null
     ): TypedEventFilter<
       [
         string,
+        BigNumber,
         [
           string,
           string,
@@ -648,6 +695,7 @@ export class NftLimitOrderFlow extends BaseContract {
       ],
       {
         user: string;
+        flowId: BigNumber;
         order: [
           string,
           string,
@@ -670,10 +718,12 @@ export class NftLimitOrderFlow extends BaseContract {
 
     OrderCancel(
       user?: string | null,
+      flowId?: BigNumberish | null,
       order?: null
     ): TypedEventFilter<
       [
         string,
+        BigNumber,
         [
           string,
           string,
@@ -694,6 +744,7 @@ export class NftLimitOrderFlow extends BaseContract {
       ],
       {
         user: string;
+        flowId: BigNumber;
         order: [
           string,
           string,
@@ -714,13 +765,15 @@ export class NftLimitOrderFlow extends BaseContract {
       }
     >;
 
-    "OrderCreated(address,bytes32,tuple)"(
+    "OrderCreated(address,uint256,bytes32,tuple)"(
       user?: string | null,
+      flowId?: BigNumberish | null,
       _byte32?: null,
       order?: null
     ): TypedEventFilter<
       [
         string,
+        BigNumber,
         string,
         [
           string,
@@ -742,6 +795,7 @@ export class NftLimitOrderFlow extends BaseContract {
       ],
       {
         user: string;
+        flowId: BigNumber;
         _byte32: string;
         order: [
           string,
@@ -765,11 +819,13 @@ export class NftLimitOrderFlow extends BaseContract {
 
     OrderCreated(
       user?: string | null,
+      flowId?: BigNumberish | null,
       _byte32?: null,
       order?: null
     ): TypedEventFilter<
       [
         string,
+        BigNumber,
         string,
         [
           string,
@@ -791,6 +847,7 @@ export class NftLimitOrderFlow extends BaseContract {
       ],
       {
         user: string;
+        flowId: BigNumber;
         _byte32: string;
         order: [
           string,
@@ -915,29 +972,220 @@ export class NftLimitOrderFlow extends BaseContract {
         value: BigNumber;
       }
     >;
+
+    "OrderPause(address,uint256,tuple)"(
+      user?: string | null,
+      flowId?: BigNumberish | null,
+      order?: null
+    ): TypedEventFilter<
+      [
+        string,
+        BigNumber,
+        [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        }
+      ],
+      {
+        user: string;
+        flowId: BigNumber;
+        order: [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        };
+      }
+    >;
+
+    OrderPause(
+      user?: string | null,
+      flowId?: BigNumberish | null,
+      order?: null
+    ): TypedEventFilter<
+      [
+        string,
+        BigNumber,
+        [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        }
+      ],
+      {
+        user: string;
+        flowId: BigNumber;
+        order: [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        };
+      }
+    >;
+
+    "OrderStart(address,uint256,tuple)"(
+      user?: string | null,
+      flowId?: BigNumberish | null,
+      order?: null
+    ): TypedEventFilter<
+      [
+        string,
+        BigNumber,
+        [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        }
+      ],
+      {
+        user: string;
+        flowId: BigNumber;
+        order: [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        };
+      }
+    >;
+
+    OrderStart(
+      user?: string | null,
+      flowId?: BigNumberish | null,
+      order?: null
+    ): TypedEventFilter<
+      [
+        string,
+        BigNumber,
+        [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        }
+      ],
+      {
+        user: string;
+        flowId: BigNumber;
+        order: [
+          string,
+          string,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber,
+          BigNumber
+        ] & {
+          owner: string;
+          assetToken: string;
+          amount: BigNumber;
+          price: BigNumber;
+          expireTime: BigNumber;
+          tokenId: BigNumber;
+          salt: BigNumber;
+        };
+      }
+    >;
   };
 
   estimateGas: {
     _owner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    cancelOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     check(checkData: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
 
     config(overrides?: CallOverrides): Promise<BigNumber>;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -974,27 +1222,25 @@ export class NftLimitOrderFlow extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    newOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      fee: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     orderExists(arg0: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<BigNumber>;
 
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setFactory(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1016,19 +1262,6 @@ export class NftLimitOrderFlow extends BaseContract {
   populateTransaction: {
     _owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    cancelOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     check(
       checkData: BytesLike,
       overrides?: CallOverrides
@@ -1036,7 +1269,15 @@ export class NftLimitOrderFlow extends BaseContract {
 
     config(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    create(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     destroy(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1073,20 +1314,6 @@ export class NftLimitOrderFlow extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    newOrder(
-      order: {
-        owner: string;
-        assetToken: string;
-        amount: BigNumberish;
-        price: BigNumberish;
-        expireTime: BigNumberish;
-        tokenId: BigNumberish;
-        salt: BigNumberish;
-      },
-      fee: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     orderExists(
       arg0: BytesLike,
       overrides?: CallOverrides
@@ -1096,7 +1323,19 @@ export class NftLimitOrderFlow extends BaseContract {
 
     ownerWalletSafes(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    pause(
+      flowId: BigNumberish,
+      extraData: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setFactory(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    start(
+      flowId: BigNumberish,
+      extraData: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

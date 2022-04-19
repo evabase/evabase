@@ -94,12 +94,61 @@ async function main() {
   console.log("NftLimitOrderFlow deployed to:", upgrade.address);
   store.set("NftLimitOrderFlow", upgrade.address);
 
-  await evaFlowControler.addEvabaseFlowByOwner(
-    upgrade.address,
-    1, // KeepNetWork.Evabase
-    "NFTLimitOrderFlow"
+  await evaFlowControler.createEvaSafes(ownerO[0].address);
+
+  // const Order = [
+  //   { name: "owner", type: "addess" },
+  //   { name: "assetToken", type: "addess" },
+  //   { name: "amount", type: "uint256" },
+  //   { name: "price", type: "uint256" },
+  //   { name: "expireTime", type: "uint256" },
+  //   { name: "tokenId", type: "uint256" },
+  //   { name: "salt", type: "uint256" },
+  // ];
+
+  const myStructData = ethers.utils.AbiCoder.prototype.encode(
+    [
+      "address",
+      "address",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+    ],
+    [ownerO[0].address, ownerO[0].address, 100, 1, 16803555107, 342905, 1899909]
   );
 
+  // const tx = await myContract.myFunction(myStructData, {
+  //   gasLimit: ethers.utils.parseUnits("1000000", "wei"),
+  // });
+
+  // const order = {
+  //   owner: ownerO[0].address,
+  //   assetToken: ownerO[0].address,
+  //   amount: "1000",
+  //   price: "1",
+  //   expireTime: "1680355507",
+  //   tokenId: 342905,
+  //   salt: "1899909",
+  // };
+
+  // const data = ethers.utils.defaultAbiCoder.encode(["Order"], [order]);
+
+  // console.log(`data: ${myStructData}`);
+
+  await evaFlowControler.createFlow(
+    "ACE",
+    1, // evabaseKeep
+    upgrade.address,
+    myStructData,
+    200000,
+    {
+      value: ethers.utils.parseEther("0.01"),
+    }
+  );
+  await evaFlowControler.pauseFlow(1, myStructData);
+  await evaFlowControler.startFlow(1, myStructData);
   // 7 evabase bot
   const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
   const evaBaseServerBot = await EvaBaseServerBot.deploy(

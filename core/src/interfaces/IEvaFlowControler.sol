@@ -14,6 +14,7 @@ interface IEvaFlowControler {
         uint256 lastExecNumber;
         uint256 maxVaildBlockNumber;
         string flowName;
+        bytes checkData;
     }
 
     struct EvaUserMeta {
@@ -62,7 +63,9 @@ interface IEvaFlowControler {
     function createFlow(
         string memory flowName,
         KeepNetWork keepNetWork,
-        bytes memory flowCode
+        address flowAddress,
+        bytes memory flowCode,
+        uint256 gasFee
     ) external payable returns (uint256 _flowId, address add);
 
     function updateFlow(
@@ -71,9 +74,11 @@ interface IEvaFlowControler {
         bytes memory flowCode
     ) external;
 
-    function pauseFlow(uint256 _flowId) external;
+    function startFlow(uint256 _flowId, bytes memory flowCode) external;
 
-    function destroyFlow(uint256 _flowId) external;
+    function pauseFlow(uint256 _flowId, bytes memory flowCode) external;
+
+    function destroyFlow(uint256 _flowId, bytes memory flowCode) external;
 
     function createEvaSafes(address user) external;
 
@@ -89,17 +94,21 @@ interface IEvaFlowControler {
 
     function withdrawPayment(address tokenAdress, uint256 amount) external;
 
-    function getVaildFlowRange(uint256 fromIndex, uint256 endIndex)
-        external
-        view
-        returns (uint256[] memory arr);
+    function getVaildFlowRange(
+        uint256 fromIndex,
+        uint256 endIndex,
+        KeepNetWork _keepNetWork
+    ) external view returns (uint256[] memory arr);
 
-    function getIndexVaildFlow(uint256 _index)
+    function getIndexVaildFlow(uint256 _index, KeepNetWork _keepNetWork)
         external
         view
         returns (uint256 value);
 
-    function getAllVaildFlowSize() external view returns (uint256 size);
+    function getAllVaildFlowSize(KeepNetWork _keepNetWork)
+        external
+        view
+        returns (uint256 size);
 
     function getFlowMetas(uint256 index)
         external
@@ -107,8 +116,6 @@ interface IEvaFlowControler {
         returns (EvaFlowMeta memory);
 
     function batchExecFlow(bytes memory _data, uint256 gasLimit) external;
-
-    function startFlow(uint256 _flowId) external;
 
     function getSafes(address user) external view returns (address);
 }

@@ -24,7 +24,6 @@ interface EvaFlowChainLinkKeeperBotInterface extends ethers.utils.Interface {
     "checkUpkeep(bytes)": FunctionFragment;
     "config()": FunctionFragment;
     "evaFlowChecker()": FunctionFragment;
-    "keepBotId()": FunctionFragment;
     "lastMoveTime()": FunctionFragment;
     "owner()": FunctionFragment;
     "performUpkeep(bytes)": FunctionFragment;
@@ -42,7 +41,6 @@ interface EvaFlowChainLinkKeeperBotInterface extends ethers.utils.Interface {
     functionFragment: "evaFlowChecker",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "keepBotId", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "lastMoveTime",
     values?: undefined
@@ -74,7 +72,6 @@ interface EvaFlowChainLinkKeeperBotInterface extends ethers.utils.Interface {
     functionFragment: "evaFlowChecker",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "keepBotId", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "lastMoveTime",
     data: BytesLike
@@ -161,8 +158,6 @@ export class EvaFlowChainLinkKeeperBot extends BaseContract {
 
     evaFlowChecker(overrides?: CallOverrides): Promise<[string]>;
 
-    keepBotId(overrides?: CallOverrides): Promise<[number]>;
-
     lastMoveTime(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
@@ -194,8 +189,6 @@ export class EvaFlowChainLinkKeeperBot extends BaseContract {
   config(overrides?: CallOverrides): Promise<string>;
 
   evaFlowChecker(overrides?: CallOverrides): Promise<string>;
-
-  keepBotId(overrides?: CallOverrides): Promise<number>;
 
   lastMoveTime(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -230,8 +223,6 @@ export class EvaFlowChainLinkKeeperBot extends BaseContract {
     config(overrides?: CallOverrides): Promise<string>;
 
     evaFlowChecker(overrides?: CallOverrides): Promise<string>;
-
-    keepBotId(overrides?: CallOverrides): Promise<number>;
 
     lastMoveTime(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -280,8 +271,6 @@ export class EvaFlowChainLinkKeeperBot extends BaseContract {
 
     evaFlowChecker(overrides?: CallOverrides): Promise<BigNumber>;
 
-    keepBotId(overrides?: CallOverrides): Promise<BigNumber>;
-
     lastMoveTime(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
@@ -314,8 +303,6 @@ export class EvaFlowChainLinkKeeperBot extends BaseContract {
     config(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     evaFlowChecker(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    keepBotId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     lastMoveTime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

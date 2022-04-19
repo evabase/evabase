@@ -2,7 +2,7 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0xae3F29b8782DB1132aD8D4505075830f96E584b2",
-    "txHash": "0x63992ed4fd149113f8296c30b0acfe9413ddd7c8a5559ac50bbbbe32879c0651"
+    "txHash": "0xe324b4a4d08017ace9445e0079d4ecbaa9b6079a5e46bc7ceec42a713db2e207"
   },
   "proxies": [
     {
@@ -66,13 +66,78 @@
       "kind": "transparent"
     },
     {
-      "address": "0x5Ed08920f04382Aa11130B2C2ED5656Ea674395F",
-      "txHash": "0xf743e16f5f907d265c04a4c16315bc68d3b6c0ba5e5a5fedcb013be8b36441c2",
+      "address": "0x601d086ee8F66192523F6D47dA9E453daA75Bb9e",
+      "txHash": "0x43102a6a98899e5e62d271b9246c37ad91cbb85e6be790a98f8eef0c87f17198",
       "kind": "transparent"
     },
     {
-      "address": "0x601d086ee8F66192523F6D47dA9E453daA75Bb9e",
-      "txHash": "0x84c09e2956615f5254fb97a8883acbe436838c4bfcd0022018260bc0fe8fa0a5",
+      "address": "0x6dF8650a3ba32ad04F19C92f833536D0ad91df7A",
+      "txHash": "0x8de8d9ff9c370f29248f76f60f8cc20b83b24dc41abb27ecb982df88bd72d9b5",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x99e97b2F39Cf7461bBB5589B7c9d7d6D2948F4e4",
+      "txHash": "0xae66947f1e7fdf91c8970116a97313acb84c1170236f2b54807e04ad673eb98a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x56E9412B73621b2bE7Dc06Bbe9D1957950939a14",
+      "txHash": "0x07a0887290e0ecc199b5d93cf137a256f3642c51791fe2989057be2fbbf913f2",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xf51fa61dB4252e5A6089672a18d4705Bf512772D",
+      "txHash": "0x2afcd29cce5f09d133b2f3197c892d8792d00e01f625bcc4c516811158e96c1f",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xDf60ad9A9C9832F7389A36db28E27c159273BE4A",
+      "txHash": "0xadc742a06b76298bd209f3cb90f947fb79328b4b0b46a9a18ef1c79017e9d185",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xB7143f564f09eCAcc4BABa8cD69e653E28f992A6",
+      "txHash": "0xfef2d0b34199f1d4393b39d3c34bd5fb91265f5905d41a9fb50def9ee4559acb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xA1B79fef14089D240f415dc46c26F70CA83D62aB",
+      "txHash": "0x776e9152d4e12f6750ec66dcb62d561d1615f41afdd65685ce38e45654e39ae5",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xFd7b14b49bc9843a355cd313B4Cd841C67F401E9",
+      "txHash": "0x619d1d63844f063e0b29507db6ee8850c88918bc6fbd97a25b75c3ba57812bc6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x77223Fc2ebDA1319A4E3c407F598bBb1a5E96dF6",
+      "txHash": "0x136ea7fbb58b824586734c02f57bf1e6205fb6114bcbb21d892718ea149b212a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x9dd049D75aa55719c5bF2fFcdb33fF243CE0959e",
+      "txHash": "0xa30734e8baa02fc65c58515c0c4be657c13329bbf18d958ab1e83204221c4621",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5Ed08920f04382Aa11130B2C2ED5656Ea674395F",
+      "txHash": "0xb8b6d46b2b160240e186cd1f64da6b8323149cdec7e2783062d68f79354cfe91",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x96D1A1D92c3077274D9f6b7203403791cF4D5689",
+      "txHash": "0x61f108a10b7f534a30f8418034bd0dfb2ee1ab0c40f3b57168814d54e0c9c278",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x95267a632E2991c5A7886C0645Dd03C032a11A5F",
+      "txHash": "0xc3afa5428b2eaaa563558a69c29a5cdf449a70acc1999a197aa14ca43e451bb9",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0fB7E9DA0fA7Da80c29aa495234d2d78aB5FE8Af",
+      "txHash": "0x79fd1252a7d6dc2a60e28aca714859fa5b874bc93f891a23f5cd7cdfcd3ee785",
       "kind": "transparent"
     }
   ],
@@ -601,9 +666,9 @@
         }
       }
     },
-    "d4590fb6f9cbbb3a5d12ff31bdcec70ff70ef2a2306f165cb2dcc0e36b47beb9": {
+    "5a0af31c2cbc3b6ef33b75a9c26307ae3a9da08a275e5b4d46b4ca845a62c8cf": {
       "address": "0x8e4763E76c106C699903796818AA786d687f9fA3",
-      "txHash": "0x12501cc157e0581ed55d31d7d7182432cb2756a9d36a5d5b2b9121b3498ff042",
+      "txHash": "0xa8791ac20c37492c8ef479581d3c89be21ba415c54aee7387096736f7211e4a8",
       "layout": {
         "storage": [
           {
@@ -650,33 +715,41 @@
             "label": "evaSafesFactory",
             "offset": 0,
             "slot": "5",
-            "type": "t_contract(IEvaSafesFactory)5876",
+            "type": "t_contract(IEvaSafesFactory)6156",
             "contract": "NftLimitOrderFlow",
-            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:39"
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:53"
+          },
+          {
+            "label": "config",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IEvabaseConfig)6277",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:54"
           },
           {
             "label": "_owner",
             "offset": 0,
-            "slot": "6",
+            "slot": "7",
             "type": "t_address",
             "contract": "NftLimitOrderFlow",
-            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:40"
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:55"
           },
           {
             "label": "isInitialized",
             "offset": 20,
-            "slot": "6",
+            "slot": "7",
             "type": "t_bool",
             "contract": "NftLimitOrderFlow",
-            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:42"
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:57"
           },
           {
             "label": "orderExists",
             "offset": 0,
-            "slot": "7",
-            "type": "t_mapping(t_bytes32,t_struct(OrderExist)6944_storage)",
+            "slot": "8",
+            "type": "t_mapping(t_bytes32,t_struct(OrderExist)7204_storage)",
             "contract": "NftLimitOrderFlow",
-            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:50"
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:65"
           }
         ],
         "types": {
@@ -692,15 +765,291 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(IEvaSafesFactory)5876": {
+          "t_contract(IEvaSafesFactory)6156": {
             "label": "contract IEvaSafesFactory",
             "numberOfBytes": "20"
           },
-          "t_mapping(t_bytes32,t_struct(OrderExist)6944_storage)": {
+          "t_contract(IEvabaseConfig)6277": {
+            "label": "contract IEvabaseConfig",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_struct(OrderExist)7204_storage)": {
             "label": "mapping(bytes32 => struct NftLimitOrderFlow.OrderExist)",
             "numberOfBytes": "32"
           },
-          "t_struct(OrderExist)6944_storage": {
+          "t_struct(OrderExist)7204_storage": {
+            "label": "struct NftLimitOrderFlow.OrderExist",
+            "members": [
+              {
+                "label": "exist",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "40579a1712f628d9cda2ef3acc1a8bdb9a9db71910d380985bd37c5c36db228a": {
+      "address": "0xB368eB8CFaB4c751832DBFCB11d3ac0016B58FC6",
+      "txHash": "0x470d0594964fa13b6f82ce822751ea463c3bb8b436c4d3e2099d551c24c07b02",
+      "layout": {
+        "storage": [
+          {
+            "label": "_CACHED_DOMAIN_SEPARATOR",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:26"
+          },
+          {
+            "label": "_CACHED_CHAIN_ID",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:27"
+          },
+          {
+            "label": "_HASHED_NAME",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:29"
+          },
+          {
+            "label": "_HASHED_VERSION",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:30"
+          },
+          {
+            "label": "_TYPE_HASH",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:31"
+          },
+          {
+            "label": "evaSafesFactory",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_contract(IEvaSafesFactory)6160",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:53"
+          },
+          {
+            "label": "config",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IEvabaseConfig)6281",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:54"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_address",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:55"
+          },
+          {
+            "label": "isInitialized",
+            "offset": 20,
+            "slot": "7",
+            "type": "t_bool",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:57"
+          },
+          {
+            "label": "orderExists",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_bytes32,t_struct(OrderExist)7208_storage)",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:65"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IEvaSafesFactory)6160": {
+            "label": "contract IEvaSafesFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IEvabaseConfig)6281": {
+            "label": "contract IEvabaseConfig",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_struct(OrderExist)7208_storage)": {
+            "label": "mapping(bytes32 => struct NftLimitOrderFlow.OrderExist)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrderExist)7208_storage": {
+            "label": "struct NftLimitOrderFlow.OrderExist",
+            "members": [
+              {
+                "label": "exist",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "369dceb308880f8cc91873c6d00aa2058ea29eb262bc6032ff0edcdeaa82d9db": {
+      "address": "0x228D8eC62E7D698A9B0b9980Fd6531F297f7aCd7",
+      "txHash": "0x07dff43e56b1b8c6acb97c1c54719ff7cbba7aef79babcaec314a8207ba89b93",
+      "layout": {
+        "storage": [
+          {
+            "label": "_CACHED_DOMAIN_SEPARATOR",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:26"
+          },
+          {
+            "label": "_CACHED_CHAIN_ID",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:27"
+          },
+          {
+            "label": "_HASHED_NAME",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:29"
+          },
+          {
+            "label": "_HASHED_VERSION",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:30"
+          },
+          {
+            "label": "_TYPE_HASH",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32",
+            "contract": "EIP712",
+            "src": "src/interfaces/EIP712.sol:31"
+          },
+          {
+            "label": "evaSafesFactory",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_contract(IEvaSafesFactory)6140",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:53"
+          },
+          {
+            "label": "config",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_contract(IEvabaseConfig)6261",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:54"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_address",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:55"
+          },
+          {
+            "label": "isInitialized",
+            "offset": 20,
+            "slot": "7",
+            "type": "t_bool",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:57"
+          },
+          {
+            "label": "orderExists",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_bytes32,t_struct(OrderExist)7188_storage)",
+            "contract": "NftLimitOrderFlow",
+            "src": "src/limitOrder/nft/NftLimitOrderFlow.sol:65"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IEvaSafesFactory)6140": {
+            "label": "contract IEvaSafesFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IEvabaseConfig)6261": {
+            "label": "contract IEvabaseConfig",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_struct(OrderExist)7188_storage)": {
+            "label": "mapping(bytes32 => struct NftLimitOrderFlow.OrderExist)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrderExist)7188_storage": {
             "label": "struct NftLimitOrderFlow.OrderExist",
             "members": [
               {

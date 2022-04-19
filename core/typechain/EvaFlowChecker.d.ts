@@ -20,14 +20,14 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface EvaFlowCheckerInterface extends ethers.utils.Interface {
   functions: {
-    "check(uint256,uint256,bytes,uint256,uint8)": FunctionFragment;
+    "check(uint256,uint256,uint8)": FunctionFragment;
     "checkGasLimitMin()": FunctionFragment;
     "config()": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "check",
-    values: [BigNumberish, BigNumberish, BytesLike, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "checkGasLimitMin",
@@ -91,8 +91,6 @@ export class EvaFlowChecker extends BaseContract {
   functions: {
     check(
       keepbotId: BigNumberish,
-      checkGasLimit: BigNumberish,
-      checkdata: BytesLike,
       lastMoveTime: BigNumberish,
       keepNetWork: BigNumberish,
       overrides?: CallOverrides
@@ -105,8 +103,6 @@ export class EvaFlowChecker extends BaseContract {
 
   check(
     keepbotId: BigNumberish,
-    checkGasLimit: BigNumberish,
-    checkdata: BytesLike,
     lastMoveTime: BigNumberish,
     keepNetWork: BigNumberish,
     overrides?: CallOverrides
@@ -119,8 +115,6 @@ export class EvaFlowChecker extends BaseContract {
   callStatic: {
     check(
       keepbotId: BigNumberish,
-      checkGasLimit: BigNumberish,
-      checkdata: BytesLike,
       lastMoveTime: BigNumberish,
       keepNetWork: BigNumberish,
       overrides?: CallOverrides
@@ -136,8 +130,6 @@ export class EvaFlowChecker extends BaseContract {
   estimateGas: {
     check(
       keepbotId: BigNumberish,
-      checkGasLimit: BigNumberish,
-      checkdata: BytesLike,
       lastMoveTime: BigNumberish,
       keepNetWork: BigNumberish,
       overrides?: CallOverrides
@@ -151,8 +143,6 @@ export class EvaFlowChecker extends BaseContract {
   populateTransaction: {
     check(
       keepbotId: BigNumberish,
-      checkGasLimit: BigNumberish,
-      checkdata: BytesLike,
       lastMoveTime: BigNumberish,
       keepNetWork: BigNumberish,
       overrides?: CallOverrides

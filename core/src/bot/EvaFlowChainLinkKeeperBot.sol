@@ -21,7 +21,7 @@ contract EvaFlowChainLinkKeeperBot is
     uint32 private constant CHECK_GAS_LIMIT = 2_000_000;
     uint32 private constant EXEC_GAS_LIMIT = 2_000_000;
     // KeeperRegistryInterface private immutable keeperRegistryInterface;
-    uint32 public keepBotId;
+    // uint32 public keepBotId;
     uint256 public lastMoveTime;
     // uint256 public chainLinkKeepId;
     // address public linkToken;
@@ -50,7 +50,7 @@ contract EvaFlowChainLinkKeeperBot is
         keeperRegistry = KeeperRegistryInterface(_keeperRegistry);
         // regiesterRequest = _regiesterRequest;
         config.addKeeper(address(this), keepNetWork);
-        keepBotId = config.keepBotSizes(keepNetWork);
+        // keepBotId = config.keepBotSizes(keepNetWork);
         lastMoveTime = block.timestamp;
     }
 
@@ -77,10 +77,11 @@ contract EvaFlowChainLinkKeeperBot is
         override
         returns (bool needExec, bytes memory execdata)
     {
+        uint32 keepBotId = abi.decode(_checkdata, (uint32));
         (bool needExec, bytes memory execData) = evaFlowChecker.check(
             keepBotId,
-            CHECK_GAS_LIMIT,
-            _checkdata,
+            // CHECK_GAS_LIMIT,
+            // _checkdata,
             lastMoveTime,
             KeepNetWork.ChainLink
         );

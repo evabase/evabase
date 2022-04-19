@@ -24,7 +24,7 @@ interface EvaBaseServerBotInterface extends ethers.utils.Interface {
     "checkUpkeep(bytes)": FunctionFragment;
     "config()": FunctionFragment;
     "encodeTwoArr(uint256[],bytes[])": FunctionFragment;
-    "encodeUintAndBytes(uint256,bytes)": FunctionFragment;
+    "encodeUintAndBytes(bytes,uint256)": FunctionFragment;
     "encodeUints(uint256[])": FunctionFragment;
     "evaFlowChecker()": FunctionFragment;
     "keepBotId()": FunctionFragment;
@@ -47,7 +47,7 @@ interface EvaBaseServerBotInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "encodeUintAndBytes",
-    values: [BigNumberish, BytesLike]
+    values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "encodeUints",
@@ -193,8 +193,8 @@ export class EvaBaseServerBot extends BaseContract {
     ): Promise<[string]>;
 
     encodeUintAndBytes(
-      _value: BigNumberish,
       _bytes: BytesLike,
+      _value: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -246,8 +246,8 @@ export class EvaBaseServerBot extends BaseContract {
   ): Promise<string>;
 
   encodeUintAndBytes(
-    _value: BigNumberish,
     _bytes: BytesLike,
+    _value: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -301,8 +301,8 @@ export class EvaBaseServerBot extends BaseContract {
     ): Promise<string>;
 
     encodeUintAndBytes(
-      _value: BigNumberish,
       _bytes: BytesLike,
+      _value: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -381,8 +381,8 @@ export class EvaBaseServerBot extends BaseContract {
     ): Promise<BigNumber>;
 
     encodeUintAndBytes(
-      _value: BigNumberish,
       _bytes: BytesLike,
+      _value: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -435,8 +435,8 @@ export class EvaBaseServerBot extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     encodeUintAndBytes(
-      _value: BigNumberish,
       _bytes: BytesLike,
+      _value: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

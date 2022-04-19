@@ -5,12 +5,8 @@
 // Runtime Environment's members available in the global scope.
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
-// import { ethers } from "hardhat";
 const store = require("data-store")({
   // path: process.cwd() + "/deployInfo.json",
-  // process.argv;
-  // console.log(`process.argv: ${process.argv}`);
-
   path: process.cwd() + "/scripts/deploy/localhost.json",
 });
 
@@ -23,9 +19,6 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  // console.log(process.argv);
-  console.log(`process.argv: ${process.argv}`);
-  console.log(`process: ${process}`);
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
   // 1 config
@@ -54,7 +47,10 @@ async function main() {
   console.log(`evaFlowControler: ${evaFlowControler.address}`);
   // 4 EvaFlowChecker
   const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
-  const evaFlowChecker = await EvaFlowChecker.deploy(evabaseConfig.address);
+  const evaFlowChecker = await EvaFlowChecker.deploy(
+    evabaseConfig.address
+    // evaFlowControler.address
+  );
   await evaFlowChecker.deployed();
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   store.set("evaFlowChecker", evaFlowChecker.address);
@@ -66,9 +62,10 @@ async function main() {
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
+    // evaFlowControler.address,
     // store.get("linkToken"),
     store.get("chainlinkKeeperRegistry"),
-    1
+    0
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
@@ -82,12 +79,8 @@ async function main() {
     "NftLimitOrderFlow"
   );
 
-  // const nftLimitOrderFlow = await NftLimitOrderFlow.deploy(
-  //   evaSafesFactory.address
-  // );
-
-  // console.log("NftLimitOrderFlow deployed to:", nftLimitOrderFlow.address);
-  // store.set("NftLimitOrderFlow", nftLimitOrderFlow.address);
+  // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
+  // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
 
   const factory = evaSafesFactory.address;
   const upgrade = await upgrades.deployProxy(NftLimitOrderFlow, [
@@ -98,21 +91,70 @@ async function main() {
   ]);
 
   await upgrade.deployed();
-  console.log("Upgrade NftLimitOrderFlow deployed to:", upgrade.address);
-  store.set("Upgrade NftLimitOrderFlow", upgrade.address);
+  console.log("NftLimitOrderFlow deployed to:", upgrade.address);
+  store.set("NftLimitOrderFlow", upgrade.address);
 
-  await evaFlowControler.addEvabaseFlowByOwner(
-    upgrade.address,
-    // nftLimitOrderFlow.address,
-    1, // KeepNetWork.Evabase
-    "NFTLimitOrderFlow"
+  await evaFlowControler.createEvaSafes(ownerO[0].address);
+
+  // const Order = [
+  //   { name: "owner", type: "addess" },
+  //   { name: "assetToken", type: "addess" },
+  //   { name: "amount", type: "uint256" },
+  //   { name: "price", type: "uint256" },
+  //   { name: "expireTime", type: "uint256" },
+  //   { name: "tokenId", type: "uint256" },
+  //   { name: "salt", type: "uint256" },
+  // ];
+
+  const myStructData = ethers.utils.AbiCoder.prototype.encode(
+    [
+      "address",
+      "address",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+    ],
+    [ownerO[0].address, ownerO[0].address, 100, 1, 16803555107, 342905, 1899909]
   );
 
+  // const tx = await myContract.myFunction(myStructData, {
+  //   gasLimit: ethers.utils.parseUnits("1000000", "wei"),
+  // });
+
+  // const order = {
+  //   owner: ownerO[0].address,
+  //   assetToken: ownerO[0].address,
+  //   amount: "1000",
+  //   price: "1",
+  //   expireTime: "1680355507",
+  //   tokenId: 342905,
+  //   salt: "1899909",
+  // };
+
+  // const data = ethers.utils.defaultAbiCoder.encode(["Order"], [order]);
+
+  // console.log(`data: ${myStructData}`);
+
+  await evaFlowControler.createFlow(
+    "ACE",
+    1, // evabaseKeep
+    upgrade.address,
+    myStructData,
+    200000,
+    {
+      value: ethers.utils.parseEther("0.01"),
+    }
+  );
+  await evaFlowControler.pauseFlow(1, myStructData);
+  await evaFlowControler.startFlow(1, myStructData);
   // 7 evabase bot
   const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
+    // evaFlowControler.address,
     1 // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();

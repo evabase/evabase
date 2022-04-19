@@ -22,9 +22,9 @@ library Utils {
     function _decodeUintAndBytes(bytes memory data)
         internal
         pure
-        returns (uint256 _arr, bytes memory _byte)
+        returns (bytes memory _byte, uint256 _arr)
     {
-        (_arr, _byte) = abi.decode(data, (uint256, bytes));
+        (_byte, _arr) = abi.decode(data, (bytes, uint256));
     }
 
     function _encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes)
