@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../interfaces/IEvaFlow.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract IEvaFlowTest is IEvaFlow {
+contract IEvaFlowTest is IEvaFlowExtra {
     address private _owner;
 
     constructor() {
