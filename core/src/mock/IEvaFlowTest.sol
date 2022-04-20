@@ -36,8 +36,18 @@ contract IEvaFlowTest is IEvaFlow {
         return;
     }
 
-    function destroy() external override {
-        address payable addr = payable(address(this));
-        selfdestruct(addr);
-    }
+    function create(uint256 flowId, bytes memory extraData)
+        external
+        override
+        returns (bytes memory checkData)
+    {}
+
+    function pause(uint256 flowId, bytes memory extraData) external override {}
+
+    function start(uint256 flowId, bytes memory extraData) external override {}
+
+    function destroy(uint256 flowId, bytes memory extraData)
+        external
+        override
+    {}
 }

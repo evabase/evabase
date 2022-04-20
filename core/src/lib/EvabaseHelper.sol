@@ -16,7 +16,7 @@ enum FlowStatus {
     Paused,
     Destroyed,
     Expired,
-    Empty,
+    Completed,
     Unknown
 }
 

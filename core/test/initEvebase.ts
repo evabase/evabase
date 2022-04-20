@@ -33,8 +33,7 @@ export const initEvebase = async function initEvebase() {
     // 4
     const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
     const evaFlowChecker = await EvaFlowChecker.deploy(
-        evabaseConfig.address,
-        evaFlowControler.address
+        evabaseConfig.address
     );
     await evaFlowChecker.deployed();
     console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
@@ -46,10 +45,11 @@ export const initEvebase = async function initEvebase() {
     const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
         evabaseConfig.address,
         evaFlowChecker.address,
-        evaFlowControler.address,
-        store.get("linkToken"),
+        // evaFlowControler.address,
+        // store.get("linkToken"),
         store.get("chainlinkKeeperRegistry"),
-        store.get("chainlinkUpkeepRegistrationRequests")
+        0
+        // store.get("chainlinkUpkeepRegistrationRequests")
     );
     await evaFlowChainLinkKeeperBot.deployed();
     console.log(

@@ -1,11 +1,20 @@
 //SPDX-License-Identifier: MIT
 //Create by evabase.network core team.
 pragma solidity ^0.8.0;
+import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
 interface IEvabaseConfig {
-    event AddKeeper(address indexed user, address keeper);
+    event AddKeeper(
+        address indexed user,
+        address keeper,
+        KeepNetWork keepNetWork
+    );
     event RemoveKeeper(address indexed user, address keeper);
-    event AddBatchKeeper(address indexed user, address[] keeper);
+    event AddBatchKeeper(
+        address indexed user,
+        address[] keeper,
+        KeepNetWork[] keepNetWork
+    );
     event RemoveBatchKeeper(address indexed user, address[] keeper);
 
     // event SetMinGasTokenBal(address indexed user, uint256 amount);
@@ -26,11 +35,14 @@ interface IEvabaseConfig {
 
     function isKeeper(address query) external view returns (bool);
 
-    function addKeeper(address keeper) external;
+    function addKeeper(address keeper, KeepNetWork keepNetWork) external;
 
     function removeKeeper(address keeper) external;
 
-    function addBatchKeeper(address[] memory arr) external;
+    function addBatchKeeper(
+        address[] memory arr,
+        KeepNetWork[] memory keepNetWork
+    ) external;
 
     function removeBatchKeeper(address[] memory arr) external;
 
@@ -38,7 +50,12 @@ interface IEvabaseConfig {
 
     function batchFlowNum() external view returns (uint32);
 
-    function keepBotSize() external view returns (uint32);
+    function keepBotSizes(KeepNetWork keepNetWork)
+        external
+        view
+        returns (uint32);
+
+    function isActiveControler(address add) external view returns (bool);
 
     // function getKeepBotSize() external view returns (uint32);
 

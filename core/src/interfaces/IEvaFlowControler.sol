@@ -8,17 +8,18 @@ interface IEvaFlowControler {
     struct EvaFlowMeta {
         FlowStatus flowStatus;
         KeepNetWork keepNetWork;
-        uint256 maxVaildBlockNumber;
         address admin;
         address lastKeeper;
-        uint256 lastExecNumber;
         address lastVersionflow;
+        uint256 lastExecNumber;
+        uint256 maxVaildBlockNumber;
         string flowName;
+        bytes checkData;
     }
 
     struct EvaUserMeta {
-        uint256 ethBal;
-        uint256 gasTokenbal;
+        uint120 ethBal;
+        uint120 gasTokenBal;
         uint8 vaildFlowsNum;
     }
 
@@ -31,16 +32,22 @@ interface IEvaFlowControler {
         uint16 blockCountPerTurn;
     }
 
-    event FlowCreated(address indexed user, uint256 _flowId, address flowAdd);
+    event FlowCreated(
+        address indexed user,
+        uint256 indexed _flowId,
+        address flowAdd
+    );
     event FlowUpdated(address indexed user, uint256 _flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 _flowId);
+    event FlowStart(address indexed user, uint256 _flowId);
     event FlowDestroyed(address indexed user, uint256 _flowId);
     event FlowExecuted(
         address indexed user,
         uint256 _flowId,
         bool sucesss,
         uint256 payAmountByETH,
-        uint256 payAmountByFeeToken
+        uint256 payAmountByFeeToken,
+        uint256 gasUsed
     );
 
     event SetMinConfig(
@@ -56,7 +63,9 @@ interface IEvaFlowControler {
     function createFlow(
         string memory flowName,
         KeepNetWork keepNetWork,
-        bytes memory flowCode
+        address flowAddress,
+        bytes memory flowCode,
+        uint256 gasFee
     ) external payable returns (uint256 _flowId, address add);
 
     function updateFlow(
@@ -65,13 +74,15 @@ interface IEvaFlowControler {
         bytes memory flowCode
     ) external;
 
-    function pauseFlow(uint256 _flowId) external;
+    function startFlow(uint256 _flowId, bytes memory flowCode) external;
 
-    function destroyFlow(uint256 _flowId) external;
+    function pauseFlow(uint256 _flowId, bytes memory flowCode) external;
+
+    function destroyFlow(uint256 _flowId, bytes memory flowCode) external;
 
     function createEvaSafes(address user) external;
 
-    function execFlow(uint256 _flowId) external;
+    function execFlow(uint256 _flowId, bytes memory _inputData) external;
 
     function addFundByUser(
         address tokenAdress,
@@ -83,20 +94,28 @@ interface IEvaFlowControler {
 
     function withdrawPayment(address tokenAdress, uint256 amount) external;
 
-    function getVaildFlowRange(uint256 fromIndex, uint256 endIndex)
-        external
-        view
-        returns (uint256[] memory arr);
+    function getVaildFlowRange(
+        uint256 fromIndex,
+        uint256 endIndex,
+        KeepNetWork _keepNetWork
+    ) external view returns (uint256[] memory arr);
 
-    function getIndexVaildFlow(uint256 _index)
+    function getIndexVaildFlow(uint256 _index, KeepNetWork _keepNetWork)
         external
         view
         returns (uint256 value);
 
-    function getAllVaildFlowSize() external view returns (uint256 size);
+    function getAllVaildFlowSize(KeepNetWork _keepNetWork)
+        external
+        view
+        returns (uint256 size);
 
     function getFlowMetas(uint256 index)
         external
         view
         returns (EvaFlowMeta memory);
+
+    function batchExecFlow(bytes memory _data, uint256 gasLimit) external;
+
+    function getSafes(address user) external view returns (address);
 }
