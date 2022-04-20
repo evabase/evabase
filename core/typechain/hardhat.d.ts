@@ -41,6 +41,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EvabaseConfig__factory>;
     getContractFactory(
+      name: "EvaFlowChainLinkKeeperBot",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.EvaFlowChainLinkKeeperBot__factory>;
+    getContractFactory(
       name: "EvaFlowChecker",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.EvaFlowChecker__factory>;
@@ -101,6 +105,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IEvaFlowTest__factory>;
     getContractFactory(
+      name: "LibSingleListTest",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.LibSingleListTest__factory>;
+    getContractFactory(
       name: "UintLibSingleListTest",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.UintLibSingleListTest__factory>;
@@ -148,6 +156,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.EvabaseConfig>;
+    getContractAt(
+      name: "EvaFlowChainLinkKeeperBot",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.EvaFlowChainLinkKeeperBot>;
     getContractAt(
       name: "EvaFlowChecker",
       address: string,
@@ -223,6 +236,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IEvaFlowTest>;
+    getContractAt(
+      name: "LibSingleListTest",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.LibSingleListTest>;
     getContractAt(
       name: "UintLibSingleListTest",
       address: string,

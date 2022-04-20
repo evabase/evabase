@@ -2,6 +2,7 @@
   "name": "evabase",
   "scripts": {
     "lint": "eslint . --ext js,jsx,ts,tsx --fix",
+    "compile": "npx hardhat compile",
     "rinkeby": "npx hardhat run --network rinkeby scripts/deploy/rinkeby.ts",
     "bsctest": "npx hardhat run --network bscTest scripts/deploy/bsctest.ts",
     "local": "npx hardhat run --network localhost scripts/deploy/localhost.ts"
