@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
-import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "./interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
 import {Utils} from "./lib/Utils.sol";
@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
+contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     EvaFlowMeta[] public flowMetas;
@@ -370,7 +370,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
         flowMetas[_flowId].lastExecNumber = block.number;
         flowMetas[_flowId].flowStatus = FlowStatus.Destroyed;
-        flowMetas[_flowId].lastVersionflow = address(0);
+        // flowMetas[_flowId].lastVersionflow = address(0);
         unchecked {
             userMetaMap[msg.sender].vaildFlowsNum =
                 userMetaMap[msg.sender].vaildFlowsNum -

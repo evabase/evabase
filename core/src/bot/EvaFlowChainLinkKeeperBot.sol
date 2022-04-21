@@ -6,7 +6,7 @@ import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInt
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {EvaFlowChecker} from "../EvaFlowChecker.sol";
-import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import {UpkeepRegistrationRequestsInterface} from "../keeper/chainlink/UpkeepRegistrationRequestsInterface.sol";
@@ -102,7 +102,7 @@ contract EvaFlowChainLinkKeeperBot is
             .getKeeperInfo(keeper);
         require(active, "not active chianlink active");
 
-        IEvaFlowControler(config.control()).batchExecFlow(
+        IEvaFlowController(config.control()).batchExecFlow(
             _data,
             EXEC_GAS_LIMIT
         );

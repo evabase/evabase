@@ -6,7 +6,7 @@ import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
-import {IEvaFlowControler} from "../../interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -165,7 +165,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
         //addFundByUser( address tokenAdress, uint256 amount,address user
         // bytes memory data = abi.encodeWithSelector(
-        //     IEvaFlowControler.addFundByUser.selector,
+        //     IEvaFlowController.addFundByUser.selector,
         //     address(0),
         //     fee,
         //     order.owner
@@ -181,7 +181,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         //     "cancel Order failed"
         // );
 
-        emit OrderCreated(_owner, flowId, hash, order);
+        emit OrderCreated(msg.sender, flowId, hash, order);
         return abi.encodePacked(hash);
     }
 

@@ -6,7 +6,7 @@ import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInt
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {EvaFlowChecker} from "../EvaFlowChecker.sol";
-import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
@@ -65,7 +65,7 @@ contract EvaBaseServerBot is
 
         require(keeps[msg.sender], "not active EvaBase bot");
 
-        IEvaFlowControler(config.control()).batchExecFlow(
+        IEvaFlowController(config.control()).batchExecFlow(
             _execdata,
             EXEC_GAS_LIMIT
         );

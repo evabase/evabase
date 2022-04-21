@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import {FlowStatus, KeepNetWork} from "../lib/EvabaseHelper.sol";
 
-interface IEvaFlowControler {
+interface IEvaFlowController {
     //struct
     struct EvaFlowMeta {
         FlowStatus flowStatus;

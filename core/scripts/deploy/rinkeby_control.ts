@@ -22,13 +22,15 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  // EvaFlowControler
-  const EvaFlowControler = await ethers.getContractFactory("EvaFlowControler");
-  const evaFlowControler = await EvaFlowControler.deploy(
+  // EvaFlowController
+  const EvaFlowController = await ethers.getContractFactory(
+    "EvaFlowController"
+  );
+  const evaFlowController = await EvaFlowController.deploy(
     store.get("evabaseConfig"),
     store.get("evaSafesFactory")
   );
-  await evaFlowControler.deployed();
+  await evaFlowController.deployed();
   // const Order = [
   //   { name: "owner", type: "addess" },
   //   { name: "assetToken", type: "addess" },
@@ -70,7 +72,7 @@ async function main() {
 
   console.log(`data: ${myStructData}`);
 
-  await evaFlowControler.createFlow(
+  await evaFlowController.createFlow(
     "ACE",
     1, // evabaseKeep
     store.get("NftLimitOrderFlow"),
@@ -81,17 +83,17 @@ async function main() {
     }
   );
 
-  await evaFlowControler.pauseFlow(1, myStructData);
-  await evaFlowControler.startFlow(1, myStructData);
-  // await evabaseConfig.setControl(evaFlowControler.address);
-  // await evaFlowControler.addEvabaseFlowByOwner(
+  await evaFlowController.pauseFlow(1, myStructData);
+  await evaFlowController.startFlow(1, myStructData);
+  // await evabaseConfig.setControl(evaFlowController.address);
+  // await evaFlowController.addEvabaseFlowByOwner(
   //   store.get("NftLimitOrderFlow"),
   //   1, // KeepNetWork.Evabase
   //   "NFTLimitOrderFlow"
   // );
 
-  store.set("evaFlowControler", evaFlowControler.address);
-  console.log(`evaFlowControler: ${evaFlowControler.address}`);
+  store.set("evaFlowController", evaFlowController.address);
+  console.log(`evaFlowController: ${evaFlowController.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
