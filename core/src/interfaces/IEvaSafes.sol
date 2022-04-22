@@ -3,11 +3,7 @@
 pragma solidity ^0.8.0;
 
 interface IEvaSafes {
-    function initialize(
-        address admin,
-        address agent,
-        address _control
-    ) external;
+    function initialize(address admin, address agent) external;
 
     function owner() external returns (address);
 
@@ -23,5 +19,8 @@ interface IEvaSafes {
 
     function setRevoke(bool revoke) external;
 
-    function setControl(address add, bool revoke) external;
+    function refund(address token, uint256 amount) external;
+
+    function refundETH(uint256 amount) external;
+    // function setControl(address add, bool revoke) external;
 }

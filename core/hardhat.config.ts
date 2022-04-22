@@ -6,7 +6,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-
+import "@openzeppelin/hardhat-upgrades";
 dotenv.config();
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -42,6 +42,11 @@ const config: HardhatUserConfig = {
     timeout: 40000,
   },
   networks: {
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      accounts:
+        process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
+    },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
       accounts:
@@ -51,6 +56,12 @@ const config: HardhatUserConfig = {
       url: process.env.BSCTEST_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    rinkeby: {
+      url: process.env.RINKEBY_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gas: 10000000,
     },
   },
   gasReporter: {

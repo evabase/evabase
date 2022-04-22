@@ -1,0 +1,10 @@
+{
+  "chainlinkKeeperRegistry": "0xA3E3026562a3ADAF7A761B10a45217c400a4054A",
+  "evabaseConfig": "0x4BC54109bb72d836445930d9F3488b0ddb279aD5",
+  "evaSafesFactory": "0xF87Dc1fd17da98aec0c50935F81739A1131203cB",
+  "evaFlowController": "0x1C17ebDE85bE4Ad6bc3A75a891Df46bD0d226375",
+  "evaFlowChecker": "0x75CA001EBfcD4DA311dfc15aeb7746c1a104aa3d",
+  "evaFlowChainLinkKeeperBot": "0x78A39d0c2c4B89806deF03034470844c0d969ea3",
+  "evaBaseServerBot": "0x1a21dD1CA94AAF151a07f0d8A87E9Aa6fa472fa4",
+  "NftLimitOrderFlow": "0x9F35fE34eA76807CA4ba5977b6d0a6C710764898"
+}

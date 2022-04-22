@@ -1,0 +1,8 @@
+{
+  "chainlinkKeeperRegistry": "0xA3E3026562a3ADAF7A761B10a45217c400a4054A",
+  "evabaseConfig": "0x3ac0E8f9853e39aC3527FA7CF2A23859bF7a35c3",
+  "evaSafesFactory": "0x2f4d4e3b3F34837e8bd2EB68E91A220da68129A8",
+  "evaFlowController": "0xdaCA3DEc872eaA6659cf88A046e9cF72495ce516",
+  "evaFlowChecker": "0xe2f9736791B23E515ab8C77995D0a1E7F39B4737",
+  "evaFlowChainLinkKeeperBot": "0xAf5441d8e5BB5733C11649DF199975506Fa42Ed1"
+}
