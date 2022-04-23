@@ -3,35 +3,35 @@
 pragma solidity ^0.8.0;
 import {FlowStatus, KeepNetWork} from "../lib/EvabaseHelper.sol";
 
+//struct
+struct EvaFlowMeta {
+    FlowStatus flowStatus;
+    KeepNetWork keepNetWork;
+    address admin;
+    address lastKeeper;
+    address lastVersionflow;
+    uint256 lastExecNumber;
+    uint256 maxVaildBlockNumber;
+    string flowName;
+    bytes checkData;
+}
+
+struct EvaUserMeta {
+    uint120 ethBal;
+    uint120 gasTokenBal;
+    uint8 vaildFlowsNum;
+}
+
+struct MinConfig {
+    address feeRecived;
+    address feeToken;
+    uint64 minGasFundForUser;
+    uint64 minGasFundOneFlow;
+    uint16 PPB;
+    uint16 blockCountPerTurn;
+}
+
 interface IEvaFlowController {
-    //struct
-    struct EvaFlowMeta {
-        FlowStatus flowStatus;
-        KeepNetWork keepNetWork;
-        address admin;
-        address lastKeeper;
-        address lastVersionflow;
-        uint256 lastExecNumber;
-        uint256 maxVaildBlockNumber;
-        string flowName;
-        bytes checkData;
-    }
-
-    struct EvaUserMeta {
-        uint120 ethBal;
-        uint120 gasTokenBal;
-        uint8 vaildFlowsNum;
-    }
-
-    struct MinConfig {
-        address feeRecived;
-        address feeToken;
-        uint64 minGasFundForUser;
-        uint64 minGasFundOneFlow;
-        uint16 PPB;
-        uint16 blockCountPerTurn;
-    }
-
     event FlowCreated(
         address indexed user,
         uint256 indexed _flowId,
@@ -41,13 +41,20 @@ interface IEvaFlowController {
     event FlowPaused(address indexed user, uint256 _flowId);
     event FlowStart(address indexed user, uint256 _flowId);
     event FlowDestroyed(address indexed user, uint256 _flowId);
-    event FlowExecuted(
+    event FlowExecuteSuccess(
         address indexed user,
-        uint256 _flowId,
-        bool sucesss,
-        uint256 payAmountByETH,
-        uint256 payAmountByFeeToken,
+        uint256 indexed flowId,
+        uint120 payAmountByETH,
+        uint120 payAmountByFeeToken,
         uint256 gasUsed
+    );
+    event FlowExecuteFailed(
+        address indexed user,
+        uint256 indexed flowId,
+        uint120 payAmountByETH,
+        uint120 payAmountByFeeToken,
+        uint256 gasUsed,
+        string reason
     );
 
     event SetMinConfig(
@@ -59,6 +66,13 @@ interface IEvaFlowController {
         uint16 PPB,
         uint16 blockCountPerTurn
     );
+
+    function registerTask(
+        string memory name,
+        KeepNetWork keepNetWork,
+        address flow,
+        bytes memory checkData
+    ) external payable returns (uint256 flowId);
 
     function createFlow(
         string memory flowName,
@@ -82,7 +96,11 @@ interface IEvaFlowController {
 
     function createEvaSafes(address user) external;
 
-    function execFlow(uint256 _flowId, bytes memory _inputData) external;
+    function execFlow(
+        address keeper,
+        uint256 _flowId,
+        bytes memory _inputData
+    ) external;
 
     function addFundByUser(
         address tokenAdress,
@@ -115,7 +133,11 @@ interface IEvaFlowController {
         view
         returns (EvaFlowMeta memory);
 
-    function batchExecFlow(bytes memory _data, uint256 gasLimit) external;
+    function batchExecFlow(
+        address keeper,
+        bytes memory _data,
+        uint256 gasLimit
+    ) external;
 
     function getSafes(address user) external view returns (address);
 }

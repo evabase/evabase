@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
 import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
-import {IEvaFlowController} from "./interfaces/IEvaFlowController.sol";
+import {IEvaFlowController, EvaFlowMeta} from "./interfaces/IEvaFlowController.sol";
 import {Utils} from "./lib/Utils.sol";
 import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 
@@ -140,41 +140,35 @@ contract EvaFlowChecker {
         )
     {
         uint256 totalGas;
+        bytes[] memory datas = _executeDataArray;
+        uint256[] memory tmp = _tmp;
+        uint256 jj = j;
+
+        IEvaFlowController ctr = IEvaFlowController(config.control());
         for (uint256 i = _start; i < _end; i++) {
             uint256 beforGas = gasleft();
-            uint256 index = IEvaFlowController(config.control())
-                .getIndexVaildFlow(i, keepNetWork);
+            uint256 index = ctr.getIndexVaildFlow(i, keepNetWork);
 
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
-                // address flowAdd = IEvaFlowController(config.control())
-                //     .getFlowMetas(index)
-                //     .lastVersionflow;
-                // bytes memory _checkdata = IEvaFlowController(config.control())
-                //     .getFlowMetas(index)
-                //     .checkData;
+                EvaFlowMeta memory meta = ctr.getFlowMetas(index);
                 (bool needExec, bytes memory executeData) = IEvaFlow(
-                    IEvaFlowController(config.control())
-                        .getFlowMetas(index)
-                        .lastVersionflow
-                ).check(
-                        IEvaFlowController(config.control())
-                            .getFlowMetas(index)
-                            .checkData
-                    );
+                    meta.lastVersionflow
+                ).check(meta.checkData);
+
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
                 if (totalGas > GAS_LIMIT || afterGas < checkGasLimitMin) {
-                    return (_tmp, j, _executeDataArray);
+                    return (tmp, jj, datas);
                 }
                 if (needExec) {
-                    _tmp[j++] = index;
-                    _executeDataArray[j++] = executeData;
+                    tmp[jj++] = index;
+                    datas[jj++] = executeData;
                 }
             }
         }
 
-        return (_tmp, j, _executeDataArray);
+        return (tmp, jj, datas);
     }
 
     function _getAvailCircle(
