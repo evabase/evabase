@@ -119,7 +119,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         userMetaMap[msg.sender].ethBal += Utils.toUint120(amount);
     }
 
-    function registerTask(
+    function registerFlow(
         string memory name,
         KeepNetWork network,
         address flow,
@@ -146,119 +146,6 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         flowId = flowMetas.length - 1;
         vaildFlows[network].add(flowId);
         emit FlowCreated(msg.sender, flowId, flow);
-    }
-
-    function createFlow(
-        string memory _flowName,
-        KeepNetWork _keepNetWork,
-        address _flowAddress,
-        bytes memory _flowCode,
-        uint256 gasFee
-    )
-        external
-        payable
-        override
-        nonReentrant
-        returns (uint256 flowid, address add)
-    {
-        _beforeCreateFlow(_keepNetWork);
-
-        // TODO: 先存储 gasFee 再checkGas
-        checkEnoughGas();
-        require(gasFee <= msg.value, "gasFee < value");
-        uint256 _value = msg.value - gasFee;
-        bytes memory _checkdata;
-        // uint256 gasFee = msg.value;
-        // address addr;
-        if (_flowAddress == address(0)) {
-            //create
-            uint256 size;
-            assembly {
-                _flowAddress := create(
-                    0,
-                    add(_flowCode, 0x20),
-                    mload(_flowCode)
-                )
-                size := extcodesize(_flowAddress)
-                if iszero(extcodesize(_flowAddress)) {
-                    revert(0, 0)
-                }
-            }
-        } else {
-            require(
-                Address.isContract(_flowAddress),
-                "_flowAddress should be contract"
-            );
-
-            unchecked {
-                // bytes memory input = abi.encodeWithSelector(
-                //     IEvaFlow.create.selector,
-                //     flowMetas.length,
-                //     abi.encode(_value, _flowCode)
-                // );
-
-                // (bool success, bytes memory returndata) = _flowAddress.call{
-                //     value: 0
-                // }(input);
-
-                // require(success, "call flow fail");
-                //   _checkdata = returndata;
-                bytes memory input = abi.encode(_flowCode, _value);
-                _checkdata = IEvaFlow(_flowAddress).create(
-                    flowMetas.length,
-                    input
-                );
-            }
-        }
-
-        //transfer(order.owner, total);
-        address safes = evaSafesFactory.get(msg.sender);
-        (bool succeed, ) = safes.call{value: _value}("");
-        require(succeed, "Failed to transfer Ether");
-
-        userMetaMap[msg.sender].ethBal =
-            userMetaMap[msg.sender].ethBal +
-            Utils.toUint120(gasFee);
-
-        flowMetas.push(
-            EvaFlowMeta({
-                flowStatus: FlowStatus.Active,
-                keepNetWork: _keepNetWork,
-                maxVaildBlockNumber: MAX_INT,
-                admin: msg.sender,
-                lastKeeper: address(0),
-                lastExecNumber: block.number,
-                lastVersionflow: _flowAddress,
-                flowName: _flowName,
-                checkData: _checkdata
-            })
-        );
-
-        unchecked {
-            userMetaMap[msg.sender].vaildFlowsNum =
-                userMetaMap[msg.sender].vaildFlowsNum +
-                1;
-        }
-
-        //vaild flow
-        uint256 flowId = flowMetas.length - 1;
-        // vaildFlows.add(flowid);
-        vaildFlows[_keepNetWork].add(flowId);
-
-        emit FlowCreated(msg.sender, flowId, _flowAddress);
-
-        return (flowId, _flowAddress);
-    }
-
-    function createEvaSafes(address user) external override {
-        require(user != address(0), "zero address");
-        evaSafesFactory.create(user);
-
-        // userMetaMap[user] = EvaUserMeta({
-        //     ethBal: 0,
-        //     gasTokenBal: 0,
-        //     vaildFlowsNum: 0
-        // });
     }
 
     function updateFlow(
@@ -575,7 +462,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         bool success;
         string memory failedReason;
-        try safes.execTask(flow.lastVersionflow, execData) {
+        try safes.execFlow(flow.lastVersionflow, execData) {
             success = true;
         } catch Error(string memory reason) {
             failedReason = reason; // revert or require

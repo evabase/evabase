@@ -14,7 +14,7 @@ interface IEvaSafes {
         address dest,
         HowToCall howToCall,
         bytes memory data
-    ) external returns (bytes memory);
+    ) external payable returns (bytes memory);
 
-    function execTask(address flow, bytes calldata execData) external;
+    function execFlow(address flow, bytes calldata execData) external;
 }

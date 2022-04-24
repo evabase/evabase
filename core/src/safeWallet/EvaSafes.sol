@@ -19,14 +19,14 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     bool public revoked;
 
     modifier onlyOwner() {
-        require(owner == _msgSender(), "only owner can exec.");
+        require(owner == _msgSender(), "forbidden");
         _;
     }
 
     modifier onlyController() {
         require(
-            IEvabaseConfig(config).isActiveControler(msg.sender) && revoked,
-            "only call by Controller"
+            !revoked && IEvabaseConfig(config).isActiveControler(msg.sender),
+            "forbidden"
         );
         _;
     }
@@ -37,9 +37,9 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         override
         initializer
     {
+        require(owner == address(0), "forbidden");
         owner = _admin;
         config = _config;
-        revoked = true;
     }
 
     function setRevoke(bool revoke) external onlyOwner {
@@ -51,9 +51,9 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         address dest,
         HowToCall howToCall,
         bytes memory data
-    ) external override onlyOwner returns (bytes memory ret) {
+    ) external payable override onlyOwner returns (bytes memory ret) {
         if (howToCall == HowToCall.Call) {
-            ret = dest.functionCall(data);
+            ret = dest.functionCallWithValue(data, msg.value);
         } else if (howToCall == HowToCall.DelegateCall) {
             ret = dest.functionDelegateCall(data);
         } else {
@@ -61,7 +61,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         }
     }
 
-    function execTask(address flow, bytes calldata execData)
+    function execFlow(address flow, bytes calldata execData)
         external
         override
         onlyController
@@ -69,12 +69,12 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         flow.functionCall(abi.encodeWithSignature("execute(bytes)", execData));
     }
 
-    function refund(address token, uint256 amount) external onlyOwner {
-        TransferHelper.safeTransfer(token, msg.sender, amount);
-    }
-
-    function refundETH(uint256 amount) external onlyOwner {
-        TransferHelper.safeTransferETH(msg.sender, amount);
+    function withdraw(address token, uint256 amount) external onlyOwner {
+        if (token == address(0)) {
+            TransferHelper.safeTransferETH(msg.sender, amount);
+        } else {
+            TransferHelper.safeTransfer(token, msg.sender, amount);
+        }
     }
 
     /**

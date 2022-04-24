@@ -67,20 +67,12 @@ interface IEvaFlowController {
         uint16 blockCountPerTurn
     );
 
-    function registerTask(
+    function registerFlow(
         string memory name,
         KeepNetWork keepNetWork,
         address flow,
-        bytes memory checkData
+        bytes memory checkdata
     ) external payable returns (uint256 flowId);
-
-    function createFlow(
-        string memory flowName,
-        KeepNetWork keepNetWork,
-        address flowAddress,
-        bytes memory flowCode,
-        uint256 gasFee
-    ) external payable returns (uint256 _flowId, address add);
 
     function updateFlow(
         uint256 _flowId,
