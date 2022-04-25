@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
-import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
+import "./interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
 import {Utils} from "./lib/Utils.sol";
@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
+contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     EvaFlowMeta[] public flowMetas;
@@ -76,6 +76,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
     }
 
     function checkEnoughGas() internal view {
+        //TODO: 需要修正
         bool isEnoughGas = true;
         unchecked {
             if (minConfig.feeToken == address(0)) {
@@ -98,142 +99,53 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         require(isEnoughGas, "gas balance is not enough");
     }
 
-    function _beforeCreateFlow(
-        string memory _flowName,
-        KeepNetWork _keepNetWork,
-        bytes memory _input
-    ) internal {
-        //check size
-        require(_input.length > 0, "flowCode can't null");
+    function _beforeCreateFlow(KeepNetWork _keepNetWork) internal {
         //check SafeWallet
         require(
             evaSafesFactory.get(msg.sender) != address(0),
             "safe wallet is 0x"
         );
-
-        require(bytes(_flowName).length > 0, "flowName is empty");
-
-        require(
-            uint256(_keepNetWork) >= uint256(KeepNetWork.ChainLink),
-            "Illegal keepNetWork >"
-        );
-
         require(
             uint256(_keepNetWork) <= uint256(KeepNetWork.Others),
-            "Illegal keepNetWork <"
+            "invalid netWork"
         );
     }
 
-    function createFlow(
-        string memory _flowName,
-        KeepNetWork _keepNetWork,
-        address _flowAddress,
-        bytes memory _flowCode,
-        uint256 gasFee
-    )
-        external
-        payable
-        override
-        nonReentrant
-        returns (uint256 flowid, address add)
-    {
-        _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
+    function isValidFlow(address flow) public returns (bool) {
+        return true; //TODO: 需要维护合法Flow清单
+    }
 
-        checkEnoughGas();
-        require(gasFee <= msg.value, "gasFee < value");
-        uint256 _value = msg.value - gasFee;
-        bytes memory _checkdata;
-        // uint256 gasFee = msg.value;
-        // address addr;
-        if (_flowAddress == address(0)) {
-            //create
-            uint256 size;
-            assembly {
-                _flowAddress := create(
-                    0,
-                    add(_flowCode, 0x20),
-                    mload(_flowCode)
-                )
-                size := extcodesize(_flowAddress)
-                if iszero(extcodesize(_flowAddress)) {
-                    revert(0, 0)
-                }
-            }
-        } else {
-            require(
-                Address.isContract(_flowAddress),
-                "_flowAddress should be contract"
-            );
+    function _appendFee(address acct, uint256 amount) private {
+        userMetaMap[msg.sender].ethBal += Utils.toUint120(amount);
+    }
 
-            unchecked {
-                // bytes memory input = abi.encodeWithSelector(
-                //     IEvaFlow.create.selector,
-                //     flowMetas.length,
-                //     abi.encode(_value, _flowCode)
-                // );
-
-                // (bool success, bytes memory returndata) = _flowAddress.call{
-                //     value: 0
-                // }(input);
-
-                // require(success, "call flow fail");
-                //   _checkdata = returndata;
-                bytes memory input = abi.encode(_flowCode, _value);
-                _checkdata = IEvaFlow(_flowAddress).create(
-                    flowMetas.length,
-                    input
-                );
-            }
-        }
-
-        //transfer(order.owner, total);
-        address safes = evaSafesFactory.get(msg.sender);
-        (bool succeed, ) = safes.call{value: _value}("");
-        require(succeed, "Failed to transfer Ether");
-
-        userMetaMap[msg.sender].ethBal =
-            userMetaMap[msg.sender].ethBal +
-            Utils.toUint120(gasFee);
-
+    function registerFlow(
+        string memory name,
+        KeepNetWork network,
+        address flow,
+        bytes memory checkdata
+    ) external payable override returns (uint256 flowId) {
+        require(isValidFlow(flow), "invalid flow");
+        require(network <= KeepNetWork.Others, "invalid netWork");
+        _appendFee(msg.sender, msg.value);
+        userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // 如果溢出则报错
+        //TODO: 检查Gas费余额
         flowMetas.push(
             EvaFlowMeta({
                 flowStatus: FlowStatus.Active,
-                keepNetWork: _keepNetWork,
+                keepNetWork: network,
                 maxVaildBlockNumber: MAX_INT,
                 admin: msg.sender,
                 lastKeeper: address(0),
-                lastExecNumber: block.number,
-                lastVersionflow: _flowAddress,
-                flowName: _flowName,
-                checkData: _checkdata
+                lastExecNumber: 0,
+                lastVersionflow: flow,
+                flowName: name,
+                checkData: checkdata
             })
         );
-
-        unchecked {
-            userMetaMap[msg.sender].vaildFlowsNum =
-                userMetaMap[msg.sender].vaildFlowsNum +
-                1;
-        }
-
-        //vaild flow
-        uint256 flowId = flowMetas.length - 1;
-        // vaildFlows.add(flowid);
-        vaildFlows[_keepNetWork].add(flowId);
-
-        emit FlowCreated(msg.sender, flowId, _flowAddress);
-
-        return (flowId, _flowAddress);
-    }
-
-    function createEvaSafes(address user) external override {
-        require(user != address(0), "zero address");
-        evaSafesFactory.create(user);
-
-        // userMetaMap[user] = EvaUserMeta({
-        //     ethBal: 0,
-        //     gasTokenBal: 0,
-        //     vaildFlowsNum: 0
-        // });
+        flowId = flowMetas.length - 1;
+        vaildFlows[network].add(flowId);
+        emit FlowCreated(msg.sender, flowId, flow);
     }
 
     function updateFlow(
@@ -254,7 +166,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
         KeepNetWork _keepNetWork = flowMetas[_flowId].keepNetWork;
 
-        _beforeCreateFlow(_flowName, _keepNetWork, _flowCode);
+        _beforeCreateFlow(_keepNetWork);
         //create
         address addr;
         uint256 size;
@@ -370,7 +282,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
 
         flowMetas[_flowId].lastExecNumber = block.number;
         flowMetas[_flowId].flowStatus = FlowStatus.Destroyed;
-        flowMetas[_flowId].lastVersionflow = address(0);
+        // flowMetas[_flowId].lastVersionflow = address(0);
         unchecked {
             userMetaMap[msg.sender].vaildFlowsNum =
                 userMetaMap[msg.sender].vaildFlowsNum -
@@ -506,10 +418,11 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         return flowMetas[index];
     }
 
-    function batchExecFlow(bytes memory _data, uint256 gasLimit)
-        external
-        override
-    {
+    function batchExecFlow(
+        address keeper,
+        bytes memory _data,
+        uint256 gasLimit
+    ) external override {
         uint256 gasTotal = 0;
         // uint256[] memory arr = Utils.decodeUints(_data);
         (uint256[] memory arr, bytes[] memory executeDataArray) = Utils
@@ -520,7 +433,7 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < arr.length; i++) {
             if (arr[i] > 0) {
                 uint256 before = gasleft();
-                execFlow(arr[i], executeDataArray[i]);
+                execFlow(keeper, arr[i], executeDataArray[i]);
                 if (gasTotal + before - gasleft() > gasLimit) {
                     return;
                 }
@@ -528,102 +441,77 @@ contract EvaFlowControler is IEvaFlowControler, Ownable, ReentrancyGuard {
         }
     }
 
-    function execFlow(uint256 _flowId, bytes memory _inputData)
-        public
-        override
-        nonReentrant
-    {
+    function execFlow(
+        address keeper,
+        uint256 flowId,
+        bytes memory execData
+    ) public override nonReentrant {
         require(config.isKeeper(msg.sender), "exect keeper is not whitelist");
+
         uint256 before = gasleft();
-        EvaFlowMeta memory flowMeta = flowMetas[_flowId];
-        bool _sucess;
-        if (
-            flowMeta.lastVersionflow != address(0) &&
-            flowMeta.flowStatus == FlowStatus.Active &&
-            //keeep is self
-            (msg.sender != flowMeta.lastKeeper ||
-                flowMeta.keepNetWork != KeepNetWork.ChainLink) &&
-            flowMeta.maxVaildBlockNumber >= block.number
-            // flowMeta.lastExecNumber + 10 >= block.number
-        ) {
-            //IEvaFlow(flowMeta.lastVersionflow);
 
-            address admin = flowMeta.admin;
-            address safesAdd = evaSafesFactory.get(admin);
-            if (safesAdd != address(0)) {
-                (, uint256 ethValue) = Utils._decodeUintAndBytes(_inputData);
-                bytes[] memory data = new bytes[](1);
-                //todo ETH.value>0
-                if (ethValue == 0) {
-                    data[0] = abi.encode(
-                        flowMeta.lastVersionflow,
-                        abi.encodeWithSelector(
-                            IEvaFlow.execute.selector,
-                            _inputData
-                        )
-                    );
+        EvaFlowMeta memory flow = flowMetas[flowId];
 
-                    try IEvaSafes(safesAdd).multicall(_flowId, data) returns (
-                        bytes[] memory results
-                    ) {
-                        _sucess = true;
-                    } catch {
-                        _sucess = false;
-                    }
-                } else {
-                    data[0] = abi.encode(
-                        flowMeta.lastVersionflow,
-                        abi.encodeWithSelector(
-                            IEvaFlow.execute.selector,
-                            _inputData
-                        ),
-                        ethValue
-                    );
+        require(flow.admin != address(0), "task not found");
+        require(flow.flowStatus == FlowStatus.Active, "task is not active");
+        require(keeper != flow.lastKeeper, "expect next keeper");
+        require(flow.maxVaildBlockNumber >= block.number, "invalid task");
+        // TODO: 检查是否 flow 的网络是否和 keeper 匹配
 
-                    try
-                        IEvaSafes(safesAdd).multicallWithValue(_flowId, data)
-                    returns (bytes[] memory results) {
-                        // update
-                        // flowMetas[_flowId].lastExecNumber = block.number;
-                        // flowMetas[_flowId].lastKeeper = msg.sender;
-                        _sucess = true;
-                    } catch {
-                        _sucess = false;
-                    }
-                }
+        IEvaSafes safes = IEvaSafes(evaSafesFactory.get(flow.admin));
 
-                // update
-                flowMetas[_flowId].lastExecNumber = block.number;
-                // if (flowMeta.keepNetWork != KeepNetWork.ChainLink) {
-                flowMetas[_flowId].lastKeeper = msg.sender;
-                // }
+        bool success;
+        string memory failedReason;
+        try safes.execFlow(flow.lastVersionflow, execData) {
+            success = true;
+        } catch Error(string memory reason) {
+            failedReason = reason; // revert or require
+        } catch {
+            failedReason = "F"; //assert
+        }
 
-                uint256 payAmountByETH = 0;
-                uint256 payAmountByFeeToken = 0;
+        // update
+        flowMetas[flowId].lastExecNumber = block.number;
+        flowMetas[flowId].lastKeeper = keeper;
 
-                unchecked {
-                    uint256 usedGas = before - gasleft();
-                    if (minConfig.feeToken == address(0)) {
-                        payAmountByETH = calculatePaymentAmount(usedGas);
+        uint256 usedGas = before - gasleft();
 
-                        require(payAmountByETH < userMetaMap[admin].ethBal);
-                        userMetaMap[admin].ethBal =
-                            userMetaMap[admin].ethBal -
-                            Utils.toUint120(payAmountByETH);
-                    } else {
-                        //todo
-                    }
+        uint120 payAmountByETH = 0;
+        uint120 payAmountByFeeToken = 0;
 
-                    emit FlowExecuted(
-                        msg.sender,
-                        _flowId,
-                        _sucess,
-                        payAmountByETH,
-                        payAmountByFeeToken,
-                        usedGas
-                    );
-                }
+        if (minConfig.feeToken == address(0)) {
+            payAmountByETH = Utils.toUint120(calculatePaymentAmount(usedGas));
+            uint120 bal = userMetaMap[flow.admin].ethBal;
+
+            if (tx.origin == address(0)) {
+                //是默认交易，在check完成后将模拟调用
+                require(bal >= payAmountByETH, "insufficient fund");
             }
+
+            userMetaMap[flow.admin].ethBal = bal < payAmountByETH
+                ? 0
+                : bal - payAmountByETH;
+        } else {
+            revert("TODO");
+        }
+
+        if (success) {
+            emit FlowExecuteSuccess(
+                flow.admin,
+                flowId,
+                payAmountByETH,
+                payAmountByFeeToken,
+                usedGas
+            );
+        } else {
+            emit FlowExecuteFailed(
+                flow.admin,
+                flowId,
+                payAmountByETH,
+                payAmountByFeeToken,
+                usedGas,
+                failedReason
+            );
         }
     }
 

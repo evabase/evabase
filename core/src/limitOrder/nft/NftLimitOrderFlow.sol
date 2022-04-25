@@ -6,7 +6,7 @@ import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
-import {IEvaFlowControler} from "../../interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -83,11 +83,6 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         return _owner;
     }
 
-    function ownerWalletSafes() public view override returns (address) {
-        // return evaSafesFactory.calcSafes(msg.sender);
-        return evaSafesFactory.get(msg.sender);
-    }
-
     function check(bytes memory checkData)
         external
         view
@@ -97,16 +92,14 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         return (false, bytes(""));
     }
 
-    function multicall(bytes memory data) external override {
+    function multicall(address target, bytes memory callData)
+        external
+        override
+    {
         require(_owner == msg.sender, "only owner can call this function");
-        (address target, bytes memory input) = abi.decode(
-            data,
-            (address, bytes)
-        );
         require(target != address(this), "FORBIDDEN safes address");
         require(target != _owner, "FORBIDDEN self");
-        target.functionCall(input, "CallFailed");
-
+        target.functionCall(callData, "CallFailed");
         return;
     }
 
@@ -124,7 +117,6 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
     function create(uint256 flowId, bytes memory extraData)
         external
-        override
         returns (bytes memory checkData)
     {
         require(extraData.length > 0, "extraData size >0");
@@ -165,7 +157,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
         //addFundByUser( address tokenAdress, uint256 amount,address user
         // bytes memory data = abi.encodeWithSelector(
-        //     IEvaFlowControler.addFundByUser.selector,
+        //     IEvaFlowController.addFundByUser.selector,
         //     address(0),
         //     fee,
         //     order.owner
@@ -181,7 +173,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         //     "cancel Order failed"
         // );
 
-        emit OrderCreated(_owner, flowId, hash, order);
+        emit OrderCreated(msg.sender, flowId, hash, order);
         return abi.encodePacked(hash);
     }
 

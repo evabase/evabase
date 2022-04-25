@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
 import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
-import {IEvaFlowControler} from "./interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController, EvaFlowMeta} from "./interfaces/IEvaFlowController.sol";
 import {Utils} from "./lib/Utils.sol";
 import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 
@@ -17,7 +17,7 @@ contract EvaFlowChecker {
         // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
 
-        // IEvaFlowControler(config.control()) = IEvaFlowControler(
+        // IEvaFlowController(config.control()) = IEvaFlowController(
         //     _evaFlowControler
         // );
         config = IEvabaseConfig(_config);
@@ -32,7 +32,7 @@ contract EvaFlowChecker {
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
         uint32 keepBotSize = config.keepBotSizes(keepNetWork);
-        uint256 allVaildSize = IEvaFlowControler(config.control())
+        uint256 allVaildSize = IEvaFlowController(config.control())
             .getAllVaildFlowSize(keepNetWork);
         uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
         (uint256 start, uint256 end) = _getAvailCircle(
@@ -140,41 +140,35 @@ contract EvaFlowChecker {
         )
     {
         uint256 totalGas;
+        bytes[] memory datas = _executeDataArray;
+        uint256[] memory tmp = _tmp;
+        uint256 jj = j;
+
+        IEvaFlowController ctr = IEvaFlowController(config.control());
         for (uint256 i = _start; i < _end; i++) {
             uint256 beforGas = gasleft();
-            uint256 index = IEvaFlowControler(config.control())
-                .getIndexVaildFlow(i, keepNetWork);
+            uint256 index = ctr.getIndexVaildFlow(i, keepNetWork);
 
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
-                // address flowAdd = IEvaFlowControler(config.control())
-                //     .getFlowMetas(index)
-                //     .lastVersionflow;
-                // bytes memory _checkdata = IEvaFlowControler(config.control())
-                //     .getFlowMetas(index)
-                //     .checkData;
+                EvaFlowMeta memory meta = ctr.getFlowMetas(index);
                 (bool needExec, bytes memory executeData) = IEvaFlow(
-                    IEvaFlowControler(config.control())
-                        .getFlowMetas(index)
-                        .lastVersionflow
-                ).check(
-                        IEvaFlowControler(config.control())
-                            .getFlowMetas(index)
-                            .checkData
-                    );
+                    meta.lastVersionflow
+                ).check(meta.checkData);
+
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
                 if (totalGas > GAS_LIMIT || afterGas < checkGasLimitMin) {
-                    return (_tmp, j, _executeDataArray);
+                    return (tmp, jj, datas);
                 }
                 if (needExec) {
-                    _tmp[j++] = index;
-                    _executeDataArray[j++] = executeData;
+                    tmp[jj++] = index;
+                    datas[jj++] = executeData;
                 }
             }
         }
 
-        return (_tmp, j, _executeDataArray);
+        return (tmp, jj, datas);
     }
 
     function _getAvailCircle(

@@ -35,21 +35,23 @@ async function main() {
   await evaSafesFactory.deployed();
   store.set("evaSafesFactory", evaSafesFactory.address);
   console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
-  // 3 EvaFlowControler
-  const EvaFlowControler = await ethers.getContractFactory("EvaFlowControler");
-  const evaFlowControler = await EvaFlowControler.deploy(
+  // 3 EvaFlowController
+  const EvaFlowController = await ethers.getContractFactory(
+    "EvaFlowController"
+  );
+  const evaFlowController = await EvaFlowController.deploy(
     evabaseConfig.address,
     evaSafesFactory.address
   );
-  await evaFlowControler.deployed();
-  await evabaseConfig.setControl(evaFlowControler.address);
-  store.set("evaFlowControler", evaFlowControler.address);
-  console.log(`evaFlowControler: ${evaFlowControler.address}`);
+  await evaFlowController.deployed();
+  await evabaseConfig.setControl(evaFlowController.address);
+  store.set("evaFlowController", evaFlowController.address);
+  console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4 EvaFlowChecker
   const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
   const evaFlowChecker = await EvaFlowChecker.deploy(
     evabaseConfig.address
-    // evaFlowControler.address
+    // evaFlowController.address
   );
   await evaFlowChecker.deployed();
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
@@ -62,7 +64,7 @@ async function main() {
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    // evaFlowControler.address,
+    // evaFlowController.address,
     // store.get("linkToken"),
     store.get("chainlinkKeeperRegistry"),
     0
@@ -94,7 +96,7 @@ async function main() {
   console.log("NftLimitOrderFlow deployed to:", upgrade.address);
   store.set("NftLimitOrderFlow", upgrade.address);
 
-  await evaFlowControler.createEvaSafes(ownerO[0].address);
+  await evaFlowController.createEvaSafes(ownerO[0].address);
 
   // const Order = [
   //   { name: "owner", type: "addess" },
@@ -137,7 +139,7 @@ async function main() {
 
   // console.log(`data: ${myStructData}`);
 
-  await evaFlowControler.createFlow(
+  await evaFlowController.createFlow(
     "ACE",
     1, // evabaseKeep
     upgrade.address,
@@ -147,14 +149,16 @@ async function main() {
       value: ethers.utils.parseEther("0.01"),
     }
   );
-  await evaFlowControler.pauseFlow(1, myStructData);
-  await evaFlowControler.startFlow(1, myStructData);
+  await evaFlowController.pauseFlow(1, myStructData);
+  await evaFlowController.startFlow(1, myStructData);
+
+  await evaFlowController.destroyFlow(1, myStructData);
   // 7 evabase bot
   const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    // evaFlowControler.address,
+    // evaFlowController.address,
     1 // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();

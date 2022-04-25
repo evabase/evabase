@@ -6,7 +6,7 @@ import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInt
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {EvaFlowChecker} from "../EvaFlowChecker.sol";
-import {IEvaFlowControler} from "../interfaces/IEvaFlowControler.sol";
+import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import {UpkeepRegistrationRequestsInterface} from "../keeper/chainlink/UpkeepRegistrationRequestsInterface.sol";
@@ -97,12 +97,12 @@ contract EvaFlowChainLinkKeeperBot is
 
     function _batchExec(bytes memory _data) internal {
         require(_data.length > 0, "exec data should not null");
-        address keeper = tx.origin;
-        (address payee, bool active, uint96 balance) = keeperRegistry
-            .getKeeperInfo(keeper);
+        address keeper = msg.sender;
+        (, bool active, ) = keeperRegistry.getKeeperInfo(keeper);
         require(active, "not active chianlink active");
 
-        IEvaFlowControler(config.control()).batchExecFlow(
+        IEvaFlowController(config.control()).batchExecFlow(
+            keeper,
             _data,
             EXEC_GAS_LIMIT
         );
