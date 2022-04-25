@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "../interfaces/IEvaFlow.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract IEvaFlowTest is IEvaFlowExtra {
+contract IEvaFlowTest is IEvaFlow {
     address private _owner;
 
     constructor() {
         _owner = msg.sender;
     }
 
-    function owner() public view override returns (address) {
+    function owner() public view returns (address) {
         return _owner;
     }
 
@@ -31,13 +31,4 @@ contract IEvaFlowTest is IEvaFlowExtra {
     function execute(bytes memory executeData) external override {
         return;
     }
-
-    function pause(uint256 flowId, bytes memory extraData) external override {}
-
-    function start(uint256 flowId, bytes memory extraData) external override {}
-
-    function destroy(uint256 flowId, bytes memory extraData)
-        external
-        override
-    {}
 }

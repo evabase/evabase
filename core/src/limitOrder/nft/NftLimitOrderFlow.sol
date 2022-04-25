@@ -79,7 +79,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         init(name, version);
     }
 
-    function owner() public view override returns (address) {
+    function owner() public view returns (address) {
         return _owner;
     }
 
@@ -177,7 +177,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         return abi.encodePacked(hash);
     }
 
-    function pause(uint256 flowId, bytes memory extraData) external override {
+    function pause(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -188,7 +188,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         emit OrderPause(msg.sender, flowId, order);
     }
 
-    function start(uint256 flowId, bytes memory extraData) external override {
+    function start(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -199,7 +199,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         emit OrderStart(msg.sender, flowId, order);
     }
 
-    function destroy(uint256 flowId, bytes memory extraData) external override {
+    function destroy(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -220,19 +220,19 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             require(remain > 0, "remain Nft amount not enough");
             uint256 remainEth = remain * order.price;
             //withdraw ETH
-            bytes memory data = abi.encodeWithSelector(
-                IEvaSafes.refundETH.selector,
-                remainEth
-            );
+            // bytes memory data = abi.encodeWithSelector(
+            //     IEvaSafes.refundETH.selector,
+            //     remainEth
+            // );
 
-            bytes memory result = evaSafesFactory.get(order.owner).functionCall(
-                data,
-                "CallFailed"
-            );
-            require(
-                !Utils.hashCompareInternal(result, bytes("CallFailed")),
-                "cancel Order failed"
-            );
+            // bytes memory result = evaSafesFactory.get(order.owner).functionCall(
+            //     data,
+            //     "CallFailed"
+            // );
+            // require(
+            //     !Utils.hashCompareInternal(result, bytes("CallFailed")),
+            //     "cancel Order failed"
+            // );
         }
 
         emit OrderCancel(msg.sender, flowId, order);

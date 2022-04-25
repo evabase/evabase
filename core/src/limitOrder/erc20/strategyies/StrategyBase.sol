@@ -2,11 +2,11 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 
-import "../interfaces/IUniswapV2Router02.sol";
 import "../../../lib/TransferHelper.sol";
 
-import "../interfaces/IUniswapV2Factory.sol";
-import "../interfaces/IUniswapV2Pair.sol";
+import "./uniswapv2/IUniswapV2Router02.sol";
+import "./uniswapv2/IUniswapV2Factory.sol";
+import "./uniswapv2/IUniswapV2Pair.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";

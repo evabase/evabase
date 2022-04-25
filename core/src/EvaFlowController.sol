@@ -221,7 +221,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             vaildFlows[_keepNetWork].remove(_flowId);
         }
         //pause flow IEvaFlow
-        IEvaFlow(flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
+        // IEvaFlow(flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
 
         emit FlowPaused(msg.sender, _flowId);
     }
@@ -255,9 +255,6 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             vaildFlows[_keepNetWork].add(_flowId);
         }
 
-        //start flow IEvaFlow
-        IEvaFlow(flowMetas[_flowId].lastVersionflow).start(_flowId, _flowCode);
-
         emit FlowStart(msg.sender, _flowId);
     }
 
@@ -288,11 +285,6 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
                 userMetaMap[msg.sender].vaildFlowsNum -
                 1;
         }
-        //destroy flow IEvaFlow
-        IEvaFlow(flowMetas[_flowId].lastVersionflow).destroy(
-            _flowId,
-            _flowCode
-        );
         emit FlowDestroyed(msg.sender, _flowId);
     }
 
@@ -535,13 +527,14 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         return evaSafesFactory.get(user);
     }
 
-    function getFlowCheckData(uint256 flowId)
+    function getFlowCheckInfo(uint256 flowId)
         external
         view
         override
-        returns (bytes memory)
+        returns (address flow, bytes memory checkData)
     {
-        return flowMetas[flowId].checkData;
+        flow = flowMetas[flowId].lastVersionflow;
+        checkData = flowMetas[flowId].checkData;
     }
 
     // function execNftLimitOrderFlow(
