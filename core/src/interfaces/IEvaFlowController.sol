@@ -132,4 +132,9 @@ interface IEvaFlowController {
     ) external;
 
     function getSafes(address user) external view returns (address);
+
+    function getFlowCheckData(uint256 flowId)
+        external
+        view
+        returns (bytes memory);
 }

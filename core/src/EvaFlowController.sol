@@ -535,6 +535,15 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         return evaSafesFactory.get(user);
     }
 
+    function getFlowCheckData(uint256 flowId)
+        external
+        view
+        override
+        returns (bytes memory)
+    {
+        return flowMetas[flowId].checkData;
+    }
+
     // function execNftLimitOrderFlow(
     //     uint256 _flowId,
     //     uint256 _orderId,
