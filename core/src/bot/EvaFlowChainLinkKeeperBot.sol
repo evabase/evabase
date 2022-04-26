@@ -97,12 +97,12 @@ contract EvaFlowChainLinkKeeperBot is
 
     function _batchExec(bytes memory _data) internal {
         require(_data.length > 0, "exec data should not null");
-        address keeper = tx.origin;
-        (address payee, bool active, uint96 balance) = keeperRegistry
-            .getKeeperInfo(keeper);
+        address keeper = msg.sender;
+        (, bool active, ) = keeperRegistry.getKeeperInfo(keeper);
         require(active, "not active chianlink active");
 
         IEvaFlowController(config.control()).batchExecFlow(
+            keeper,
             _data,
             EXEC_GAS_LIMIT
         );
