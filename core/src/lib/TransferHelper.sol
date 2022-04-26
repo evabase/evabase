@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library TransferHelper {
+    address internal constant ETH_ADDRESS =
+        address(0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
+
     /// @notice Transfers tokens from the targeted address to the given destination
     /// @notice Errors with 'STF' if transfer fails
     /// @param token The contract address of the token to be transferred
@@ -76,5 +79,39 @@ library TransferHelper {
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(success, "STE");
+    }
+
+    /**
+     * @notice Get the account's balance of token or ETH
+     * @param token - Address of the token
+     * @param addr - Address of the account
+     * @return uint256 - Account's balance of token or ETH
+     */
+    function balanceOf(address token, address addr)
+        internal
+        view
+        returns (uint256)
+    {
+        if (ETH_ADDRESS == address(token)) {
+            return addr.balance;
+        }
+        return IERC20(token).balanceOf(addr);
+    }
+
+    /// @notice Transfers tokens from msg.sender to a recipient
+    /// @dev Errors with ST if transfer fails
+    /// @param token The contract address of the token which will be transferred
+    /// @param to The recipient of the transfer
+    /// @param value The value of the transfer
+    function safeTransferTokenOrETH(
+        address token,
+        address to,
+        uint256 value
+    ) internal {
+        if (ETH_ADDRESS == token) {
+            safeTransferETH(to, value);
+            return;
+        }
+        safeTransfer(token, to, value);
     }
 }

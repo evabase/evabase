@@ -11,12 +11,8 @@ contract IEvaFlowTest is IEvaFlow {
         _owner = msg.sender;
     }
 
-    function owner() public view override returns (address) {
+    function owner() public view returns (address) {
         return _owner;
-    }
-
-    function ownerWalletSafes() external view override returns (address) {
-        return msg.sender;
     }
 
     function check(bytes memory checkData)
@@ -28,26 +24,11 @@ contract IEvaFlowTest is IEvaFlow {
         return (true, bytes(""));
     }
 
-    function multicall(bytes memory data) external override {
-        return;
+    function multicall(address, bytes memory) external override {
+        revert("F");
     }
 
     function execute(bytes memory executeData) external override {
         return;
     }
-
-    function create(uint256 flowId, bytes memory extraData)
-        external
-        override
-        returns (bytes memory checkData)
-    {}
-
-    function pause(uint256 flowId, bytes memory extraData) external override {}
-
-    function start(uint256 flowId, bytes memory extraData) external override {}
-
-    function destroy(uint256 flowId, bytes memory extraData)
-        external
-        override
-    {}
 }

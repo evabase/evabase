@@ -79,13 +79,8 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         init(name, version);
     }
 
-    function owner() public view override returns (address) {
+    function owner() public view returns (address) {
         return _owner;
-    }
-
-    function ownerWalletSafes() public view override returns (address) {
-        // return evaSafesFactory.calcSafes(msg.sender);
-        return evaSafesFactory.get(msg.sender);
     }
 
     function check(bytes memory checkData)
@@ -97,16 +92,14 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         return (false, bytes(""));
     }
 
-    function multicall(bytes memory data) external override {
+    function multicall(address target, bytes memory callData)
+        external
+        override
+    {
         require(_owner == msg.sender, "only owner can call this function");
-        (address target, bytes memory input) = abi.decode(
-            data,
-            (address, bytes)
-        );
         require(target != address(this), "FORBIDDEN safes address");
         require(target != _owner, "FORBIDDEN self");
-        target.functionCall(input, "CallFailed");
-
+        target.functionCall(callData, "CallFailed");
         return;
     }
 
@@ -124,7 +117,6 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
 
     function create(uint256 flowId, bytes memory extraData)
         external
-        override
         returns (bytes memory checkData)
     {
         require(extraData.length > 0, "extraData size >0");
@@ -185,7 +177,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         return abi.encodePacked(hash);
     }
 
-    function pause(uint256 flowId, bytes memory extraData) external override {
+    function pause(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -196,7 +188,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         emit OrderPause(msg.sender, flowId, order);
     }
 
-    function start(uint256 flowId, bytes memory extraData) external override {
+    function start(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -207,7 +199,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         emit OrderStart(msg.sender, flowId, order);
     }
 
-    function destroy(uint256 flowId, bytes memory extraData) external override {
+    function destroy(uint256 flowId, bytes memory extraData) external {
         require(extraData.length > 0, "extraData size >0");
         require(
             config.isActiveControler(msg.sender),
@@ -228,19 +220,19 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             require(remain > 0, "remain Nft amount not enough");
             uint256 remainEth = remain * order.price;
             //withdraw ETH
-            bytes memory data = abi.encodeWithSelector(
-                IEvaSafes.refundETH.selector,
-                remainEth
-            );
+            // bytes memory data = abi.encodeWithSelector(
+            //     IEvaSafes.refundETH.selector,
+            //     remainEth
+            // );
 
-            bytes memory result = evaSafesFactory.get(order.owner).functionCall(
-                data,
-                "CallFailed"
-            );
-            require(
-                !Utils.hashCompareInternal(result, bytes("CallFailed")),
-                "cancel Order failed"
-            );
+            // bytes memory result = evaSafesFactory.get(order.owner).functionCall(
+            //     data,
+            //     "CallFailed"
+            // );
+            // require(
+            //     !Utils.hashCompareInternal(result, bytes("CallFailed")),
+            //     "cancel Order failed"
+            // );
         }
 
         emit OrderCancel(msg.sender, flowId, order);
