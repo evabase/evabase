@@ -86,8 +86,6 @@ interface IEvaFlowController {
 
     function destroyFlow(uint256 _flowId, bytes memory flowCode) external;
 
-    function createEvaSafes(address user) external;
-
     function execFlow(
         address keeper,
         uint256 _flowId,
@@ -133,8 +131,8 @@ interface IEvaFlowController {
 
     function getSafes(address user) external view returns (address);
 
-    function getFlowCheckData(uint256 flowId)
+    function getFlowCheckInfo(uint256 flowId)
         external
         view
-        returns (bytes memory);
+        returns (address flow, bytes memory checkData);
 }
