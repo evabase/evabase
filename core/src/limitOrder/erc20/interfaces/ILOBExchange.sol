@@ -11,7 +11,6 @@ struct Order {
     uint64 expiration;
     address receiptor;
     bool foc;
-    bytes extraData;
 }
 
 interface ILOBExchange {

@@ -122,10 +122,12 @@ contract LOB is Ownable {
         Order memory order = _orders[key];
         require(isActiveOrder(key), "ORDER_NOT_ACTIVE");
         require(order.owner != msg.sender, "ORDER_YOURSELF");
+
         if (order.foc) {
             // full deal or cancel
             require(input == uint256(_orderStatus[key].balance), "ORDER_FOC");
         }
+
         // Pull amount to strategy
         _transferOutBalance(key, address(strategy), input);
 
@@ -140,6 +142,7 @@ contract LOB is Ownable {
 
         // check bought
         uint256 expect = input.mul(order.minRate).div(1e18);
+
         require(output >= expect, "ORDER_OUTPUT_LESS");
 
         // pull bought to receiptor
@@ -185,8 +188,7 @@ contract LOB is Ownable {
                     o.outputToken,
                     o.inputAmount,
                     o.minRate,
-                    o.expiration,
-                    o.extraData
+                    o.expiration
                 )
             );
     }
@@ -217,8 +219,9 @@ contract LOB is Ownable {
         address to,
         uint256 amount
     ) private {
-        require(amount < type(uint96).max, "OVERFLOW");
-        _orderStatus[key].balance = _orderStatus[key].balance - uint96(amount);
+        uint96 balance = _orderStatus[key].balance;
+        require(amount <= uint256(balance), "INSUFFICIENT_BALANCE");
+        _orderStatus[key].balance = balance - uint96(amount);
         TransferHelper.safeTransferTokenOrETH(
             _orders[key].inputToken,
             to,

@@ -17,14 +17,13 @@ chai.use(solidity);
 
 type OrderInfo = {
   owner: string;
-  inputAmount: number;
+  inputAmount: BigNumberish;
   inputToken: string;
   minRate: BigNumberish;
   outputToken: string;
   expiration: number;
   receiptor: string;
   foc: boolean;
-  extraData: BytesLike;
 };
 
 describe("EvabaseConfig", function () {
@@ -63,7 +62,6 @@ describe("EvabaseConfig", function () {
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         foc: false,
-        extraData: "0x",
       };
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith(
         "WRONG_INPUT_OWNER"
@@ -79,7 +77,6 @@ describe("EvabaseConfig", function () {
         expiration: 0,
         receiptor: me.address,
         foc: false,
-        extraData: "0x",
       };
       // 不低于10分钟
       order.expiration = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
@@ -104,7 +101,6 @@ describe("EvabaseConfig", function () {
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         foc: false,
-        extraData: "0x",
       };
       await USDC.connect(me).mint(order.inputAmount);
       await USDC.connect(me).approve(exchange.address, order.inputAmount);
@@ -125,7 +121,6 @@ describe("EvabaseConfig", function () {
         expiration: (await help.getBlockTime()) + 60 * 60 * 24,
         receiptor: me.address,
         foc: false,
-        extraData: "0x",
       };
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith(
         "WRONG_INPUT_AMOUNT"
@@ -142,7 +137,6 @@ describe("EvabaseConfig", function () {
       ).to.revertedWith("WRONG_INPUT_AMOUNT");
     });
     it("normal order", async function () {
-
       const order = {
         owner: me.address,
         inputAmount: 10000,
@@ -152,7 +146,6 @@ describe("EvabaseConfig", function () {
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         foc: false,
-        extraData: "0x",
       };
 
       // approve
@@ -181,7 +174,6 @@ describe("EvabaseConfig", function () {
       expect(orderInfo[0].expiration).to.eq(order.expiration);
       expect(orderInfo[0].receiptor).to.eq(order.receiptor);
       expect(orderInfo[0].foc).to.eq(order.foc);
-      expect(orderInfo[0].extraData).to.eq(order.extraData);
 
       expect(orderInfo[1].balance).to.eq(order.inputAmount - fee);
       expect(orderInfo[1].paused).to.eq(false);
@@ -194,20 +186,24 @@ describe("EvabaseConfig", function () {
 
     const createNewOrder = async function (
       user: SignerWithAddress,
-      inputAmount: number,
+      inputAmount: BigNumberish,
       maxWaitTime: number,
       price = 1
     ) {
+      const inputToken = USDC;
+      const outputToken = WBTC;
+
+      const u1 = help.toUnits((await inputToken.decimals()) / 1);
+      const u2 = help.toUnits((await outputToken.decimals()) / 1);
       const order: OrderInfo = {
         owner: user.address,
         inputAmount: inputAmount,
         inputToken: USDC.address,
-        minRate: ethers.utils.parseUnits(price.toString(), 18),
+        minRate: ethers.utils.parseUnits(price.toString(), 18).mul(u2).div(u1),
         outputToken: WBTC.address,
         expiration: (await help.getBlockTime()) + maxWaitTime,
         receiptor: user.address,
         foc: false,
-        extraData: "0x",
       };
 
       // approve
@@ -215,7 +211,7 @@ describe("EvabaseConfig", function () {
       await USDC.connect(user).approve(exchange.address, inputAmount);
       exchange.connect(user).createOrder(order);
       orderId = await exchange.keyOf(order);
-      return { order, orderId };
+      return { order, orderId, inputToken, outputToken };
     };
 
     before(async function () {
@@ -281,6 +277,112 @@ describe("EvabaseConfig", function () {
       } finally {
         exchangeConfig.paused = false;
         await exchange.setConfig(exchangeConfig);
+      }
+    });
+
+    it("multi deal", async function () {
+      const price = 1 / 4000;
+      const info = await createNewOrder(
+        me,
+        "1000000000000000000",
+        3600 * 24,
+        price
+      );
+
+      // const fee = (info.order.inputAmount * exchangeConfig.basisPointsRate) / 10000;
+      // fee= 1e18 * 0.001 = 1e15
+      // const balance = 1e18 - 1e15; // 9.99e17
+
+      const multis = [
+        {
+          amountIn: 1 * 1e17,
+          expectAmountOut: 1e6,
+          expectBalance: "899000000000000000", // = (9.99 - 1) * 1e17,
+        },
+        {
+          amountIn: 8 * 1e17,
+          expectAmountOut: 20000,
+          expectBalance: "99000000000000000", // = (9.99 - 1 - 8) * 1e17,
+        },
+        {
+          amountIn: 0.19 * 1e17,
+          expectAmountOut: 0.92 * 1e6,
+          expectBalance: "80000000000000000", // (9.99 - 1 - 8 - 0.19) * 1e17,
+        },
+        {
+          amountIn: 0.9 * 1e17,
+          expectAmountOut: 0,
+          expectRevertWith: "INSUFFICIENT_BALANCE",
+        },
+        {
+          amountIn: 0.8 * 1e17,
+          expectAmountOut: 0.92 * 1e6,
+          expectBalance: 0,
+        },
+        {
+          amountIn: 0.001 * 1e17,
+          expectAmountOut: 0,
+          expectRevertWith: "ORDER_NOT_ACTIVE",
+        },
+      ];
+
+      // const argsType = ["address[]", "uint256", "uint256", "uint256"];
+
+      for (const item of multis) {
+        //   struct SwapArgs {
+        //     address[] path;
+        //     uint256 amountIn;
+        //     uint256 amountOutMin;
+        //     uint256 deadline;
+        // }
+        const amountInHex = "0x" + item.amountIn.toString(16);
+        const amountOutHex = "0x" + item.expectAmountOut.toString(16);
+        const swapData = ethers.utils.defaultAbiCoder.encode(
+          ["(address[],uint256,uint256,uint256)"],
+          [
+            [
+              [info.order.inputToken, info.order.outputToken],
+              amountInHex,
+              amountOutHex,
+              (await help.getBlockTime()) + 100,
+            ],
+          ]
+        );
+
+        if (item.expectRevertWith) {
+          // 期望失败
+          await expect(
+            exchange.executeOrder(
+              info.orderId,
+              strategy.address,
+              amountInHex,
+              swapData
+            )
+          ).to.revertedWith(item.expectRevertWith);
+        } else {
+          // 执行成功后
+          // 1. 有转资产给 receiptor
+          // 2. 有完整的 OrderExecuted 事件
+          await expect(
+            exchange.executeOrder(
+              info.orderId,
+              strategy.address,
+              amountInHex,
+              swapData
+            )
+          )
+            .to.emit(info.outputToken, "Transfer")
+            .withArgs(exchange.address, info.order.receiptor, amountOutHex)
+            .to.emit(exchange, "OrderExecuted")
+            .withArgs(info.orderId, amountInHex, amountOutHex);
+
+          // 检查order余额更新
+          await expect(
+            (
+              await exchange.getOrderInfo(info.orderId)
+            )[1].balance
+          ).to.eq(item.expectBalance);
+        }
       }
     });
   });

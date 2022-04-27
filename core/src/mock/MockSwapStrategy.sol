@@ -54,14 +54,16 @@ contract MockSwapStrategy is IStrategy {
         bytes calldata execData
     ) external override {
         SwapArgs memory args = abi.decode(execData, (SwapArgs));
-
-        uint256 balance = TransferHelper.balanceOf(inputToken, address(this));
-        require(balance >= args.amountIn, "bad input amount");
         require(inputToken == args.path[0], "bad input token");
         require(outputToken == args.path[1], "bad output token");
 
+        uint256 balance = TransferHelper.balanceOf(inputToken, address(this));
+        require(balance >= args.amountIn, "bad input amount");
         uint256 out = amountOut == 0 ? args.amountOutMin : amountOut;
-        // MockERC20(outputToken).mint(out);
+        //自动Mint代币
+        if (outputToken != TransferHelper.ETH_ADDRESS) {
+            MockERC20(outputToken).mint(out);
+        }
         TransferHelper.safeTransferTokenOrETH(outputToken, msg.sender, out);
         amountOut = 0; //reset
     }
