@@ -1,8 +1,25 @@
 import { ethers } from "hardhat";
 import { ethers as ethersV5 } from "ethers";
 
+
+let zeros = "0";
+while (zeros.length < 256) {
+  zeros += zeros;
+}
+
 class Help {
   public readonly ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+  toUnits(decimals: number) {
+    return 1 + zeros.substring(0, decimals);
+  }
+
+  toFullNum(num: number) {
+    if (isNaN(num)) {
+      return num;
+    }
+    return num.toLocaleString("fullwide", { useGrouping: false });
+  }
 
   async deploy(contractName: string, args?: any[], signer?: ethersV5.Signer) {
     const factory = await ethers.getContractFactory(contractName, signer);
