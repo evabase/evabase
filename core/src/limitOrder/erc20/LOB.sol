@@ -27,11 +27,10 @@ contract LOB is Ownable {
     mapping(bytes32 => OrderStatus) private _orderStatus;
 
     Config public config;
-
     struct Config {
         bool paused;
-        uint64 maximumFee;
         uint64 basisPointsRate;
+        address feeTo;
     }
 
     struct OrderStatus {
@@ -39,7 +38,7 @@ contract LOB is Ownable {
         bool paused;
     }
 
-    event OrderCreated(bytes32 indexed key, Order order, uint256 fee);
+    event OrderCreated(bytes32 indexed key, uint256 fee);
     event OrderExecuted(bytes32 indexed key, uint256 input, uint256 output);
     event OrderCancelled(bytes32 indexed key, uint256 returnAmount);
     event OrderPaused(bytes32 indexed key, bool paused);
@@ -56,11 +55,12 @@ contract LOB is Ownable {
     function createOrder(Order memory order)
         public
         payable
+        onlyRunning
         returns (bytes32 key)
     {
         key = keyOf(order);
 
-        require(order.owner != address(0), "WRONG_INPUT_OWNER");
+        require(order.owner == msg.sender, "WRONG_INPUT_OWNER");
         require(
             order.expiration >= block.timestamp + ORDER_MIN_AGE &&
                 order.expiration <= block.timestamp + ORDER_MAX_AGE,
@@ -68,14 +68,8 @@ contract LOB is Ownable {
         );
         require(_orders[key].owner == address(0), "ORDER_EXIST");
 
-        Config memory cfg = config;
-        require(!cfg.paused, "LOB_PAUSED");
-        uint256 fee = uint256(cfg.basisPointsRate).mul(order.inputAmount).div(
-            FEE_UNIT
-        );
-        if (fee > cfg.maximumFee) {
-            fee = cfg.maximumFee;
-        }
+        (address feeTo, uint256 fee) = getFee(order.inputAmount);
+
         // save order info
         _orders[key] = order;
         _orderStatus[key].balance = order.inputAmount - uint96(fee);
@@ -92,7 +86,12 @@ contract LOB is Ownable {
             );
         }
 
-        emit OrderCreated(key, order, fee);
+        if (fee > 0) {
+            // feeTo never empty
+            TransferHelper.safeTransferTokenOrETH(order.inputToken, feeTo, fee);
+        }
+
+        emit OrderCreated(key, fee);
     }
 
     /**
@@ -119,7 +118,7 @@ contract LOB is Ownable {
         IStrategy strategy,
         uint256 input,
         bytes memory data
-    ) public {
+    ) public onlyRunning {
         Order memory order = _orders[key];
         require(isActiveOrder(key), "ORDER_NOT_ACTIVE");
         require(order.owner != msg.sender, "ORDER_YOURSELF");
@@ -192,8 +191,24 @@ contract LOB is Ownable {
             );
     }
 
+    function getFee(uint96 amountIn)
+        public
+        view
+        returns (address feeTo, uint256 fee)
+    {
+        Config memory cfg = config;
+        feeTo = cfg.feeTo;
+
+        if (feeTo != address(0)) {
+            // fee will always be less then amountIn
+            fee = uint256(cfg.basisPointsRate).mul(amountIn).div(FEE_UNIT);
+        }
+    }
+
     function setConfig(Config calldata cfg) external onlyOwner {
         config = cfg;
+        // safe check
+        require(cfg.basisPointsRate < FEE_UNIT, "INVALID_RATE");
         emit ConfigChanged(cfg);
     }
 
@@ -209,6 +224,11 @@ contract LOB is Ownable {
             to,
             amount
         );
+    }
+
+    modifier onlyRunning() {
+        require(!config.paused, "LOB_PAUSED");
+        _;
     }
 
     modifier onlySeller(bytes32 key) {

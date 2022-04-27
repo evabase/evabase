@@ -10,7 +10,7 @@ struct Order {
     address outputToken;
     uint64 expiration;
     address receiptor;
-    bool foc; //full
+    bool foc;
     bytes extraData;
 }
 

@@ -19,35 +19,42 @@ contract LOBFlowProxy is IEvaFlowProxy {
      */
     function create(
         IEvaFlowController ser,
-        ILOBExchange dex,
+        ILOBExchange exchange,
         KeepNetWork network,
         uint256 gasFee,
         Order memory order
     ) external payable {
-        if (order.inputToken != TransferHelper.ETH_ADDRESS) {
-            //  pull token to here from acct (msg.sender)
+
+        uint256 value=0;
+        if (order.inputToken == TransferHelper.ETH_ADDRESS) {
+            value=msg.value-gasFee;
+            require(order.inputAmount+gasFee==msg.value,"invalid input amount");
+        }else{
+            //  pull token to accts'walletsafes from acct (msg.sender)
             TransferHelper.safeTransferFrom(
                 order.inputToken,
                 msg.sender,
-                address(dex),
+                address(this),
                 order.inputAmount
             );
             // approve Exchange can transfer amount
             TransferHelper.safeApprove(
                 order.inputToken,
-                address(dex),
+                address(exchange),
                 order.inputAmount
             );
         }
 
         // create order and get order key.
-        bytes32 key = dex.createOrder(order);
 
+        bytes32 key = exchange.createOrder(order);
+
+        // orderId+safes
         // 3. register listen order task on Evabase
         ser.registerFlow{value: msg.value}(
             "EvabaseLO",
             network,
-            address(dex),
+            address(exchange),
             abi.encode(key) //checkdata
         );
     }
