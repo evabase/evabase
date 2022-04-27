@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
 interface IEvabaseConfig {
+    struct KeepStuct {
+        bool isActive;
+        KeepNetWork keepNetWork;
+    }
     event AddKeeper(
         address indexed user,
         address keeper,
@@ -54,6 +58,8 @@ interface IEvabaseConfig {
         external
         view
         returns (uint32);
+
+    function getKeepBot(address add) external view returns (KeepStuct memory);
 
     function isActiveControler(address add) external view returns (bool);
 

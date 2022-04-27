@@ -8,10 +8,6 @@ import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract EvabaseConfig is IEvabaseConfig, Ownable {
-    struct KeepStuct {
-        bool isActive;
-        KeepNetWork keepNetWork;
-    }
     mapping(address => KeepStuct) public keepBotExists;
     mapping(KeepNetWork => uint32) public override keepBotSizes;
     // uint32 public override keepBotSize;
@@ -112,6 +108,16 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
     function isKeeper(address _query) external view override returns (bool) {
         return keepBotExists[_query].isActive;
+        // return keepBots.contains(_query);
+    }
+
+    function getKeepBot(address _query)
+        external
+        view
+        override
+        returns (KeepStuct memory)
+    {
+        return keepBotExists[_query];
         // return keepBots.contains(_query);
     }
 

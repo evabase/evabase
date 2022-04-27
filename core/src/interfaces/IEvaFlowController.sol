@@ -35,7 +35,8 @@ interface IEvaFlowController {
     event FlowCreated(
         address indexed user,
         uint256 indexed _flowId,
-        address flowAdd
+        address flowAdd,
+        uint256 fee
     );
     event FlowUpdated(address indexed user, uint256 _flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 _flowId);

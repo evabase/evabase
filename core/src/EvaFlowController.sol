@@ -76,14 +76,14 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     }
 
     function checkEnoughGas() internal view {
-        //TODO: 需要修正
+        // 需要修正
         bool isEnoughGas = true;
         unchecked {
             if (minConfig.feeToken == address(0)) {
                 isEnoughGas =
-                    (msg.value + userMetaMap[msg.sender].ethBal >=
+                    (userMetaMap[msg.sender].ethBal >=
                         minConfig.minGasFundForUser) &&
-                    (msg.value + userMetaMap[msg.sender].ethBal >=
+                    (userMetaMap[msg.sender].ethBal >=
                         (userMetaMap[msg.sender].vaildFlowsNum + 1) *
                             minConfig.minGasFundOneFlow);
             } else {
@@ -129,7 +129,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(network <= KeepNetWork.Others, "invalid netWork");
         _appendFee(msg.sender, msg.value);
         userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // 如果溢出则报错
-        //TODO: 检查Gas费余额
+        //检查Gas费余额是否足够
+        checkEnoughGas();
         flowMetas.push(
             EvaFlowMeta({
                 flowStatus: FlowStatus.Active,
@@ -145,7 +146,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         );
         flowId = flowMetas.length - 1;
         vaildFlows[network].add(flowId);
-        emit FlowCreated(msg.sender, flowId, flow);
+        emit FlowCreated(msg.sender, flowId, flow, msg.value);
     }
 
     function updateFlow(
@@ -154,8 +155,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         bytes memory _flowCode
     ) external override nonReentrant {
         require(_flowId < flowMetas.length, "over bound");
+        address safeWallet = evaSafesFactory.get(msg.sender);
+        require(safeWallet != address(0), "safe wallet is 0x");
         require(
-            msg.sender == flowMetas[_flowId].admin,
+            safeWallet == flowMetas[_flowId].admin,
             "flow's owner is not y"
         );
         require(
@@ -293,19 +296,22 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint256 amount,
         address user
     ) public payable override nonReentrant {
-        require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
+        address safeWallet = evaSafesFactory.get(user);
+        require(safeWallet != address(0), "safe wallet is 0x");
+
+        // require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
 
         unchecked {
             if (tokenAdress == address(0)) {
                 require(msg.value == amount, "value is not equal");
-                userMetaMap[user].ethBal =
-                    userMetaMap[user].ethBal +
+                userMetaMap[safeWallet].ethBal =
+                    userMetaMap[safeWallet].ethBal +
                     Utils.toUint120(msg.value);
             } else {
                 require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-                userMetaMap[user].gasTokenBal =
-                    userMetaMap[user].gasTokenBal +
+                userMetaMap[safeWallet].gasTokenBal =
+                    userMetaMap[safeWallet].gasTokenBal +
                     Utils.toUint120(amount);
 
                 IERC20(tokenAdress).safeTransferFrom(
@@ -322,23 +328,22 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         override
         nonReentrant
     {
-        require(
-            evaSafesFactory.get(msg.sender) != address(0),
-            "safe wallet is 0x"
-        );
+        address safeWallet = evaSafesFactory.get(msg.sender);
+        require(safeWallet != address(0), "safe wallet is 0x");
+
         unchecked {
             //        uint64 minGasFundForUser;
             // uint64 minGasFundOneFlow;
-            uint256 minTotalFlow = userMetaMap[msg.sender].vaildFlowsNum *
+            uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum *
                 minConfig.minGasFundOneFlow;
             uint256 minTotalGas = minTotalFlow > minConfig.minGasFundForUser
                 ? minTotalFlow
                 : minConfig.minGasFundForUser;
 
             if (tokenAdress == address(0)) {
-                require(userMetaMap[msg.sender].ethBal >= amount + minTotalGas);
-                userMetaMap[msg.sender].ethBal =
-                    userMetaMap[msg.sender].ethBal -
+                require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
+                userMetaMap[safeWallet].ethBal =
+                    userMetaMap[safeWallet].ethBal -
                     Utils.toUint120(amount);
                 (bool sent, bytes memory data) = msg.sender.call{value: amount}(
                     ""
@@ -347,10 +352,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             } else {
                 require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-                require(userMetaMap[msg.sender].ethBal >= amount + minTotalGas);
+                require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
 
-                userMetaMap[msg.sender].gasTokenBal =
-                    userMetaMap[msg.sender].gasTokenBal -
+                userMetaMap[safeWallet].gasTokenBal =
+                    userMetaMap[safeWallet].gasTokenBal -
                     Utils.toUint120(amount);
 
                 IERC20(tokenAdress).transfer(msg.sender, amount);
@@ -448,7 +453,11 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
         require(keeper != flow.lastKeeper, "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
-        // TODO: 检查是否 flow 的网络是否和 keeper 匹配
+        // 检查是否 flow 的网络是否和 keeper 匹配
+        require(
+            flow.keepNetWork == config.getKeepBot(msg.sender).keepNetWork,
+            "invalid keepNetWork"
+        );
 
         IEvaSafes safes = IEvaSafes(evaSafesFactory.get(flow.admin));
 

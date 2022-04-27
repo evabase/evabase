@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../../interfaces/IEvaFlow.sol";
 import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
+import "../../interfaces/INftLimitOrder.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
 import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
@@ -12,39 +13,18 @@ import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
-contract NftLimitOrderFlow is IEvaFlow, EIP712 {
+contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     using AddressUpgradeable for address;
 
-    event OrderExecute(
-        address indexed user,
-        Order order,
-        uint256 amount,
-        uint256 value
-    );
-
-    event OrderCancel(
-        address indexed user,
-        uint256 indexed flowId,
-        Order order
-    );
-
-    event OrderPause(address indexed user, uint256 indexed flowId, Order order);
-    event OrderStart(address indexed user, uint256 indexed flowId, Order order);
-    event OrderCreated(
-        address indexed user,
-        uint256 indexed flowId,
-        bytes32 _byte32,
-        Order order
-    );
-    struct Order {
-        address owner; //拥有人
-        address assetToken; //资产合约地址
-        uint256 amount; //NFT数量
-        uint256 price; //NFT价格
-        uint256 expireTime; //订单过期时间 s
-        uint256 tokenId;
-        uint256 salt; //随机数
-    }
+    // struct Order {
+    //     address owner; //拥有人
+    //     address assetToken; //资产合约地址
+    //     uint256 amount; //NFT数量
+    //     uint256 price; //NFT价格
+    //     uint256 expireTime; //订单过期时间 s
+    //     uint256 tokenId;
+    //     uint256 salt; //随机数
+    // }
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
             "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
@@ -52,27 +32,22 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
     address public _owner;
-    bool isInitialized;
-
-    struct OrderExist {
-        bool exist; //是否存在
-        uint256 amount; //已购NFT数量
-    }
+    // bool isInitialized;
 
     // mapping(bytes32 => bool) public orderExist;
     mapping(bytes32 => OrderExist) public orderExists;
 
-    function initialize(
+    constructor(
         address _config,
         address _evaSafesFactory,
         string memory name,
         string memory version
     ) public {
         // constructor(address _evaSafesFactory) {
-        require(isInitialized == false, "Already initialized");
+        // require(isInitialized == false, "Already initialized");
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
-        isInitialized = true;
+        // isInitialized = true;
         config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         _owner = msg.sender;
@@ -115,23 +90,21 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         _atomicMatch(order, signature, data);
     }
 
-    function create(uint256 flowId, bytes memory extraData)
+    function createOrder(Order memory order)
         external
-        returns (bytes memory checkData)
+        payable
+        override
+        returns (bytes32 orderId)
     {
-        require(extraData.length > 0, "extraData size >0");
+        // require(
+        //     address(0) != evaSafesFactory.get(msg.sender),
+        //     "only safes can creat order"
+        // );
+
         require(
-            config.isActiveControler(msg.sender),
-            "sender is  active controler"
+            msg.sender == evaSafesFactory.get(order.owner),
+            "only safes can creat order"
         );
-        //bytes memory input = abi.encode(_flowCode, _value);
-        (bytes memory _input, uint256 _value) = abi.decode(
-            extraData,
-            (bytes, uint256)
-        );
-        require(_input.length > 0, "_input size >0");
-        Order memory order = abi.decode(_input, (Order));
-        require(tx.origin == order.owner, "only owner can cancel order");
 
         require(order.amount > 0, "amount must be greater than 0");
         require(order.price > 0, "price must be greater than 0");
@@ -139,108 +112,77 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         require(order.assetToken != address(0), "assetToken is 0x");
         require(order.expireTime > block.timestamp, "order time is end");
 
+        uint256 total = 0;
         unchecked {
-            uint256 total = order.amount * order.price;
+            total = order.amount * order.price;
             require(
-                total <= _value,
+                total <= msg.value,
                 "order amount*price must be less than or equal to msg.value"
             );
         }
 
         require(!orderExists[hashOrder(order)].exist, "order exist");
-        require(
-            evaSafesFactory.get(order.owner) != address(0),
-            "Safes not exist"
-        );
-        bytes32 hash = hashOrder(order);
-        orderExists[hash] = OrderExist({exist: true, amount: 0});
-
-        //addFundByUser( address tokenAdress, uint256 amount,address user
-        // bytes memory data = abi.encodeWithSelector(
-        //     IEvaFlowController.addFundByUser.selector,
-        //     address(0),
-        //     fee,
-        //     order.owner
-        // );
-
-        // bytes memory result = config.control().functionCallWithValue(
-        //     data,
-        //     fee,
-        //     "CallFailed"
-        // );
         // require(
-        //     !Utils.hashCompareInternal(result, bytes("CallFailed")),
-        //     "cancel Order failed"
+        //     evaSafesFactory.get(order.owner) != address(0),
+        //     "Safes not exist"
+        // );
+        bytes32 hash = hashOrder(order);
+        orderExists[hash] = OrderExist({
+            exist: true,
+            amount: 0,
+            owner: order.owner,
+            balance: Utils.toUint96(total)
+        });
+
+        // emit OrderCreated(msg.sender, flowId, hash, order);
+        return hash;
+    }
+
+    function changeStatus(bytes32 orderId, bool pause) public override {
+        // require(
+        //     address(0) != evaSafesFactory.get(msg.sender),
+        //     "only owner can change status order"
         // );
 
-        emit OrderCreated(msg.sender, flowId, hash, order);
-        return abi.encodePacked(hash);
+        OrderExist memory orderExist = orderExists[orderId];
+        require(orderExist.exist, "order not exist");
+        require(
+            msg.sender == evaSafesFactory.get(orderExist.owner),
+            "shold be owner"
+        );
+
+        if (pause) {
+            // emit OrderPause(msg.sender, flowId, order);
+        } else {
+            // emit OrderStart(msg.sender, flowId, order);
+        }
     }
 
-    function pause(uint256 flowId, bytes memory extraData) external {
-        require(extraData.length > 0, "extraData size >0");
-        require(
-            config.isActiveControler(msg.sender),
-            "sender is  active controler"
-        );
-        Order memory order = abi.decode(extraData, (Order));
-        require(tx.origin == order.owner, "only owner can cancel order");
-        emit OrderPause(msg.sender, flowId, order);
-    }
+    function cancelOrder(bytes32 orderId) public override {
+        // require(
+        //     address(0) != evaSafesFactory.get(msg.sender),
+        //     "only owner can cancel order"
+        // );
 
-    function start(uint256 flowId, bytes memory extraData) external {
-        require(extraData.length > 0, "extraData size >0");
+        OrderExist storage orderExist = orderExists[orderId];
+        require(orderExist.exist, "order not exist");
         require(
-            config.isActiveControler(msg.sender),
-            "sender is  active controler"
+            msg.sender == evaSafesFactory.get(orderExist.owner),
+            "shold be owner"
         );
-        Order memory order = abi.decode(extraData, (Order));
-        require(tx.origin == order.owner, "only owner can cancel order");
-        emit OrderStart(msg.sender, flowId, order);
-    }
-
-    function destroy(uint256 flowId, bytes memory extraData) external {
-        require(extraData.length > 0, "extraData size >0");
-        require(
-            config.isActiveControler(msg.sender),
-            "sender is  active controler"
-        );
-
-        Order memory order = abi.decode(extraData, (Order));
-        require(tx.origin == order.owner, "only owner can cancel order");
-        require(orderExists[hashOrder(order)].exist, "order not exist");
-        require(
-            evaSafesFactory.get(order.owner) != address(0),
-            "Safes not exist"
-        );
-        orderExists[hashOrder(order)].exist = false;
+        orderExist.exist = false;
         unchecked {
-            uint256 remain = order.amount -
-                orderExists[hashOrder(order)].amount;
-            require(remain > 0, "remain Nft amount not enough");
-            uint256 remainEth = remain * order.price;
-            //withdraw ETH
-            // bytes memory data = abi.encodeWithSelector(
-            //     IEvaSafes.refundETH.selector,
-            //     remainEth
-            // );
+            uint256 remain = orderExist.balance;
+            if (remain > 0) {
+                (bool succeed, ) = orderExist.owner.call{value: remain}("");
+                require(succeed, "Failed to transfer Ether");
+            }
 
-            // bytes memory result = evaSafesFactory.get(order.owner).functionCall(
-            //     data,
-            //     "CallFailed"
-            // );
-            // require(
-            //     !Utils.hashCompareInternal(result, bytes("CallFailed")),
-            //     "cancel Order failed"
-            // );
+            orderExist.balance = 0;
         }
 
-        emit OrderCancel(msg.sender, flowId, order);
+        // emit OrderCancel(msg.sender, flowId, order);
     }
-
-    // function cancelOrder(Order memory order) external {
-
-    // }
 
     function _atomicMatch(
         Order memory _order,
@@ -260,6 +202,8 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             " should exected by safes"
         );
 
+        uint256 total = 0;
+
         unchecked {
             require(
                 _data.length <=
@@ -268,7 +212,7 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
             );
 
             results = new bytes[](_data.length);
-            uint256 total = 0;
+
             for (uint256 i = 0; i < _data.length; i++) {
                 (address target, bytes memory input, uint256 value) = abi
                     .decode(_data[i], (address, bytes, uint256));
@@ -307,9 +251,11 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
                 //     );
             }
 
-            orderExists[hashOrder(_order)].amount =
-                _order.amount -
-                _data.length;
+            OrderExist storage orderExist = orderExists[hashOrder(_order)];
+
+            orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
+
+            orderExist.balance = orderExist.balance - Utils.toUint96(total);
 
             emit OrderExecute(msg.sender, _order, _data.length, total);
         }
@@ -358,4 +304,9 @@ contract NftLimitOrderFlow is IEvaFlow, EIP712 {
         // return
         //     Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
     }
+
+    /**
+    @dev can receive ETH, owner can refund.
+   */
+    receive() external payable {}
 }
