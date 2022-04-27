@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
@@ -44,23 +43,19 @@ const config: HardhatUserConfig = {
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
-      accounts:
-        process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
+      accounts: process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     bscTest: {
       url: process.env.BSCTEST_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       gas: 10000000,
     },
   },
