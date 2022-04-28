@@ -1,7 +1,8 @@
-import * as dotenv from "dotenv";
+/* eslint-disable */
+import * as dotenv from 'dotenv';
 import fs from "fs";
 import path from "path";
-import { HardhatUserConfig, task } from "hardhat/config";
+import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
@@ -58,7 +59,6 @@ if (argv.enableGasReport) {
 
 if (argv.coverage) {
   require("solidity-coverage");
-  module.exports.networks.hardhat.initialBaseFeePerGas = 0;
 }
 //
 const otherConfigs = path.join(__dirname, "hardhat");
@@ -116,6 +116,7 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
+      initialBaseFeePerGas: argv.coverage ? 0 : 1000000000
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
