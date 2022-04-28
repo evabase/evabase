@@ -9,3 +9,14 @@ typechain
 cache
 artifacts
 .DS_Store
+
+# temporary artifact from solidity-coverage
+allFiredEvents
+.coverage_artifacts
+.coverage_cache
+.coverage_contracts
+
+# Certora
+.certora*
+.last_confs
+certora_*

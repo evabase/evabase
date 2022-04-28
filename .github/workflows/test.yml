@@ -1,0 +1,55 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+      - release-v*
+      - develop
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: "yarm"
+          cache-dependency-path: yarn.lock
+      - run: yarn install
+      - run: yarn lint
+      - run: yarn test
+        env:
+          FORCE_COLOR: 1
+          ENABLE_GAS_REPORT: true
+      - run: yarn test:inheritance
+      - name: Print gas report
+        run: cat gas-report.txt
+
+  coverage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: "yarm"
+          cache-dependency-path: yarn.lock
+      - run: yarn install
+      - run: yarn coverage
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+      - uses: codecov/codecov-action@v3
