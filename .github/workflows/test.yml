@@ -23,6 +23,7 @@ jobs:
           node-version: 16.x
           cache: "yarm"
           cache-dependency-path: yarn.lock
+      - run: npm install --global yarn
       - run: yarn install
       - run: yarn lint
       - run: yarn test
@@ -48,6 +49,7 @@ jobs:
           node-version: 16.x
           cache: "yarm"
           cache-dependency-path: yarn.lock
+      - run: npm install --global yarn
       - run: yarn install
       - run: yarn coverage
         env:
