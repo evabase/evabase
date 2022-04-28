@@ -10,10 +10,6 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: core
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -23,5 +19,5 @@ jobs:
       - run: npm install --global yarn
       - run: yarn install
       - name: Clean project
-        run: npm run clean
+        run: yarn clean
       - uses: crytic/slither-action@v0.1.1
