@@ -29,12 +29,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
      * @param user is the wallet owner.
      * @param wallet return the user wallet address.
      */
-    function create(address user)
-        external
-        override
-        nonReentrant
-        returns (address wallet)
-    {
+    function create(address user) external override nonReentrant returns (address wallet) {
         require(user != address(0), "zero address");
         require(evaSafesMap[user] == address(0), "wallet exists");
 
@@ -59,12 +54,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
         return keccak256(type(EvaSafes).creationCode);
     }
 
-    function calcSafes(address user)
-        external
-        view
-        override
-        returns (address wallet)
-    {
+    function calcSafes(address user) external view override returns (address wallet) {
         wallet = address(
             uint160(
                 uint256(

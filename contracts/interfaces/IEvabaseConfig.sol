@@ -9,17 +9,9 @@ struct KeepStruct {
 }
 
 interface IEvabaseConfig {
-    event AddKeeper(
-        address indexed user,
-        address keeper,
-        KeepNetWork keepNetWork
-    );
+    event AddKeeper(address indexed user, address keeper, KeepNetWork keepNetWork);
     event RemoveKeeper(address indexed user, address keeper);
-    event AddBatchKeeper(
-        address indexed user,
-        address[] keeper,
-        KeepNetWork[] keepNetWork
-    );
+    event AddBatchKeeper(address indexed user, address[] keeper, KeepNetWork[] keepNetWork);
     event RemoveBatchKeeper(address indexed user, address[] keeper);
 
     // event SetMinGasTokenBal(address indexed user, uint256 amount);
@@ -44,10 +36,7 @@ interface IEvabaseConfig {
 
     function removeKeeper(address keeper) external;
 
-    function addBatchKeeper(
-        address[] memory arr,
-        KeepNetWork[] memory keepNetWork
-    ) external;
+    function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWork) external;
 
     function removeBatchKeeper(address[] memory arr) external;
 
@@ -55,10 +44,7 @@ interface IEvabaseConfig {
 
     function batchFlowNum() external view returns (uint32);
 
-    function keepBotSizes(KeepNetWork keepNetWork)
-        external
-        view
-        returns (uint32);
+    function keepBotSizes(KeepNetWork keepNetWork) external view returns (uint32);
 
     function getKeepBot(address add) external view returns (KeepStruct memory);
 

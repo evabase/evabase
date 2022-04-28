@@ -14,8 +14,5 @@ interface UpkeepRegistrationRequestsInterface {
         uint8 source
     ) external;
 
-    function getPendingRequest(bytes32 hash)
-        external
-        view
-        returns (address, uint96);
+    function getPendingRequest(bytes32 hash) external view returns (address, uint96);
 }

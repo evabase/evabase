@@ -26,11 +26,7 @@ contract UintLibSingleListTest {
         return _list.getAll();
     }
 
-    function getRange(uint256 fromIndex, uint256 endIndex)
-        public
-        view
-        returns (uint256[] memory arr)
-    {
+    function getRange(uint256 fromIndex, uint256 endIndex) public view returns (uint256[] memory arr) {
         return _list.getRange(fromIndex, endIndex);
     }
 
@@ -44,12 +40,7 @@ contract UintLibSingleListTest {
         uint256 keepbotId,
         uint32 batch
     ) public view returns (uint256[] memory arr) {
-        (uint256 start, uint256 end) = Utils.getAvail(
-            allVaildSize,
-            keepBotSize,
-            keepbotId,
-            batch
-        );
+        (uint256 start, uint256 end) = Utils.getAvail(allVaildSize, keepBotSize, keepbotId, batch);
 
         arr = new uint256[](2);
         arr[0] = start;

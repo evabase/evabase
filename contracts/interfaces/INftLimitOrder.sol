@@ -26,32 +26,13 @@ interface INftLimitOrder {
         uint256 value
     );
 
-    event OrderCancel(
-        address indexed user,
-        uint256 indexed flowId,
-        bytes32 orderId
-    );
+    event OrderCancel(address indexed user, uint256 indexed flowId, bytes32 orderId);
 
-    event OrderPause(
-        address indexed user,
-        uint256 indexed flowId,
-        bytes32 orderId
-    );
-    event OrderStart(
-        address indexed user,
-        uint256 indexed flowId,
-        bytes32 orderId
-    );
-    event OrderCreated(
-        address indexed user,
-        uint256 indexed flowId,
-        bytes32 orderId
-    );
+    event OrderPause(address indexed user, uint256 indexed flowId, bytes32 orderId);
+    event OrderStart(address indexed user, uint256 indexed flowId, bytes32 orderId);
+    event OrderCreated(address indexed user, uint256 indexed flowId, bytes32 orderId);
 
-    function createOrder(Order memory order, uint256 flowId)
-        external
-        payable
-        returns (bytes32 orderId);
+    function createOrder(Order memory order, uint256 flowId) external payable returns (bytes32 orderId);
 
     function changeStatus(
         bytes32 orderId,

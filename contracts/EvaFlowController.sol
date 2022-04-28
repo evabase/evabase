@@ -81,28 +81,20 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         if (minConfig.feeToken == address(0)) {
             isEnoughGas =
-                (userMetaMap[msg.sender].ethBal >=
-                    minConfig.minGasFundForUser) &&
-                (userMetaMap[msg.sender].ethBal >=
-                    userMetaMap[msg.sender].vaildFlowsNum *
-                        minConfig.minGasFundOneFlow);
+                (userMetaMap[msg.sender].ethBal >= minConfig.minGasFundForUser) &&
+                (userMetaMap[msg.sender].ethBal >= userMetaMap[msg.sender].vaildFlowsNum * minConfig.minGasFundOneFlow);
         } else {
             isEnoughGas =
+                (userMetaMap[msg.sender].gasTokenBal >= minConfig.minGasFundForUser) &&
                 (userMetaMap[msg.sender].gasTokenBal >=
-                    minConfig.minGasFundForUser) &&
-                (userMetaMap[msg.sender].gasTokenBal >=
-                    userMetaMap[msg.sender].vaildFlowsNum *
-                        minConfig.minGasFundOneFlow);
+                    userMetaMap[msg.sender].vaildFlowsNum * minConfig.minGasFundOneFlow);
         }
 
         require(isEnoughGas, "gas balance is not enough");
     }
 
     function _beforeCreateFlow(KeepNetWork _keepNetWork) internal {
-        require(
-            uint256(_keepNetWork) <= uint256(KeepNetWork.Others),
-            "invalid netWork"
-        );
+        require(uint256(_keepNetWork) <= uint256(KeepNetWork.Others), "invalid netWork");
     }
 
     function isValidFlow(address flow) public returns (bool) {
@@ -151,13 +143,9 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(_flowId < _flowMetas.length, "over bound");
         // address safeWallet = evaSafesFactory.get(msg.sender);
         // require(safeWallet != address(0), "safe wallet is 0x");
+        require(msg.sender == _flowMetas[_flowId].admin, "flow's owner is not y");
         require(
-            msg.sender == _flowMetas[_flowId].admin,
-            "flow's owner is not y"
-        );
-        require(
-            FlowStatus.Active == _flowMetas[_flowId].flowStatus ||
-                FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
+            FlowStatus.Active == _flowMetas[_flowId].flowStatus || FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
             "flow's status is error"
         );
 
@@ -186,29 +174,15 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowUpdated(msg.sender, _flowId, addr);
     }
 
-    function pauseFlow(uint256 _flowId, bytes memory _flowCode)
-        external
-        override
-    {
+    function pauseFlow(uint256 _flowId, bytes memory _flowCode) external override {
         require(_flowId < _flowMetas.length, "over bound");
-        require(
-            userMetaMap[msg.sender].vaildFlowsNum > 0,
-            "vaildFlowsNum should gt 0"
-        );
-        require(
-            FlowStatus.Active == _flowMetas[_flowId].flowStatus,
-            "flow's status is error"
-        );
-        require(
-            msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(),
-            "flow's owner is not y"
-        );
+        require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
+        require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
+        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
         _flowMetas[_flowId].lastExecNumber = block.number;
         _flowMetas[_flowId].flowStatus = FlowStatus.Paused;
 
-        userMetaMap[msg.sender].vaildFlowsNum =
-            userMetaMap[msg.sender].vaildFlowsNum -
-            1;
+        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum - 1;
 
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
             // vaildFlows.remove(_flowId);
@@ -221,26 +195,15 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowPaused(msg.sender, _flowId);
     }
 
-    function startFlow(uint256 _flowId, bytes memory _flowCode)
-        external
-        override
-    {
+    function startFlow(uint256 _flowId, bytes memory _flowCode) external override {
         require(_flowId < _flowMetas.length, "over bound");
 
-        require(
-            msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(),
-            "flow's owner is not y"
-        );
-        require(
-            FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
-            "flow's status is error"
-        );
+        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
+        require(FlowStatus.Paused == _flowMetas[_flowId].flowStatus, "flow's status is error");
         _flowMetas[_flowId].lastExecNumber = block.number;
         _flowMetas[_flowId].flowStatus = FlowStatus.Active;
 
-        userMetaMap[msg.sender].vaildFlowsNum =
-            userMetaMap[msg.sender].vaildFlowsNum +
-            1;
+        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum + 1;
 
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
             // vaildFlows.add(_flowId);
@@ -251,19 +214,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId, bytes memory _flowCode)
-        external
-        override
-    {
+    function destroyFlow(uint256 _flowId, bytes memory _flowCode) external override {
         require(_flowId < _flowMetas.length, "over bound");
-        require(
-            msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(),
-            "flow's owner is not y"
-        );
-        require(
-            userMetaMap[msg.sender].vaildFlowsNum > 0,
-            "vaildFlowsNum should gt 0"
-        );
+        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
+        require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
             // vaildFlows.remove(_flowId);
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
@@ -274,9 +228,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         _flowMetas[_flowId].flowStatus = FlowStatus.Destroyed;
         // _flowMetas[_flowId].lastVersionflow = address(0);
 
-        userMetaMap[msg.sender].vaildFlowsNum =
-            userMetaMap[msg.sender].vaildFlowsNum -
-            1;
+        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum - 1;
 
         emit FlowDestroyed(msg.sender, _flowId);
     }
@@ -295,44 +247,27 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         if (tokenAdress == address(0)) {
             require(msg.value == amount, "value is not equal");
 
-            userMetaMap[flowAdmin].ethBal =
-                userMetaMap[flowAdmin].ethBal +
-                Utils.toUint120(msg.value);
+            userMetaMap[flowAdmin].ethBal = userMetaMap[flowAdmin].ethBal + Utils.toUint120(msg.value);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-            userMetaMap[flowAdmin].gasTokenBal =
-                userMetaMap[flowAdmin].gasTokenBal +
-                Utils.toUint120(amount);
+            userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
 
-            IERC20(tokenAdress).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amount
-            );
+            IERC20(tokenAdress).safeTransferFrom(msg.sender, address(this), amount);
         }
     }
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount)
-        external
-        override
-        nonReentrant
-    {
+    function withdrawFundByUser(address tokenAdress, uint256 amount) external override nonReentrant {
         address safeWallet = msg.sender;
         // require(safeWallet != address(0), "safe wallet is 0x");
         // require(msg.sender == flowAdmin, "flow's owner is not y");
 
-        uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum *
-            minConfig.minGasFundOneFlow;
-        uint256 minTotalGas = minTotalFlow > minConfig.minGasFundForUser
-            ? minTotalFlow
-            : minConfig.minGasFundForUser;
+        uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
+        uint256 minTotalGas = minTotalFlow > minConfig.minGasFundForUser ? minTotalFlow : minConfig.minGasFundForUser;
 
         if (tokenAdress == address(0)) {
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
-            userMetaMap[safeWallet].ethBal =
-                userMetaMap[safeWallet].ethBal -
-                Utils.toUint120(amount);
+            userMetaMap[safeWallet].ethBal = userMetaMap[safeWallet].ethBal - Utils.toUint120(amount);
             (bool sent, ) = safeWallet.call{value: amount}("");
             require(sent, "Failed to send Ether");
         } else {
@@ -340,19 +275,13 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
 
-            userMetaMap[safeWallet].gasTokenBal =
-                userMetaMap[safeWallet].gasTokenBal -
-                Utils.toUint120(amount);
+            userMetaMap[safeWallet].gasTokenBal = userMetaMap[safeWallet].gasTokenBal - Utils.toUint120(amount);
 
             IERC20(tokenAdress).transfer(safeWallet, amount);
         }
     }
 
-    function withdrawPayment(address tokenAdress, uint256 amount)
-        external
-        override
-        onlyOwner
-    {
+    function withdrawPayment(address tokenAdress, uint256 amount) external override onlyOwner {
         if (tokenAdress == address(0)) {
             require(paymentEthAmount >= amount, "");
             TransferHelper.safeTransferETH(msg.sender, amount);
@@ -365,12 +294,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         }
     }
 
-    function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork)
-        external
-        view
-        override
-        returns (uint256 value)
-    {
+    function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view override returns (uint256 value) {
         return vaildFlows[keepNetWork].get(index);
     }
 
@@ -382,21 +306,11 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         return vaildFlows[keepNetWork].getRange(fromIndex, endIndex);
     }
 
-    function getAllVaildFlowSize(KeepNetWork keepNetWork)
-        external
-        view
-        override
-        returns (uint256 size)
-    {
+    function getAllVaildFlowSize(KeepNetWork keepNetWork) external view override returns (uint256 size) {
         return vaildFlows[keepNetWork].getSize();
     }
 
-    function getFlowMetas(uint256 index)
-        external
-        view
-        override
-        returns (EvaFlowMeta memory)
-    {
+    function getFlowMetas(uint256 index) external view override returns (EvaFlowMeta memory) {
         return _flowMetas[index];
     }
 
@@ -411,8 +325,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     ) external override {
         uint256 gasTotal = 0;
         // uint256[] memory arr = Utils.decodeUints(data);
-        (uint256[] memory arr, bytes[] memory executeDataArray) = Utils
-            ._decodeTwoArr(data);
+        (uint256[] memory arr, bytes[] memory executeDataArray) = Utils._decodeTwoArr(data);
 
         require(arr.length == executeDataArray.length, "arr is empty");
 
@@ -477,38 +390,19 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
                 require(bal >= payAmountByETH, "insufficient fund");
             }
 
-            userMetaMap[flow.admin].ethBal = bal < payAmountByETH
-                ? 0
-                : bal - payAmountByETH;
+            userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
         } else {
             revert("TODO");
         }
 
         if (success) {
-            emit FlowExecuteSuccess(
-                flow.admin,
-                flowId,
-                payAmountByETH,
-                payAmountByFeeToken,
-                usedGas
-            );
+            emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
-            emit FlowExecuteFailed(
-                flow.admin,
-                flowId,
-                payAmountByETH,
-                payAmountByFeeToken,
-                usedGas,
-                failedReason
-            );
+            emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
         }
     }
 
-    function calculatePaymentAmount(uint256 gasLimit)
-        private
-        view
-        returns (uint96 payment)
-    {
+    function calculatePaymentAmount(uint256 gasLimit) private view returns (uint96 payment) {
         uint256 total;
 
         uint256 weiForGas = tx.gasprice * (gasLimit + REGISTRY_GAS_OVERHEAD);
@@ -523,12 +417,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         return evaSafesFactory.get(user);
     }
 
-    function getFlowCheckInfo(uint256 flowId)
-        external
-        view
-        override
-        returns (address flow, bytes memory checkData)
-    {
+    function getFlowCheckInfo(uint256 flowId) external view override returns (address flow, bytes memory checkData) {
         flow = _flowMetas[flowId].lastVersionflow;
         checkData = _flowMetas[flowId].checkData;
     }

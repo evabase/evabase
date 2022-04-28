@@ -22,12 +22,7 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
         revert("F");
     }
 
-    function check(bytes memory checkData)
-        external
-        view
-        override
-        returns (bool needExecute, bytes memory executeData)
-    {
+    function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
         bytes32 key = abi.decode(checkData, (bytes32));
 
         if (!isActiveOrder(key)) {
@@ -37,13 +32,12 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
         (Order memory order, OrderStatus memory status) = getOrderInfo(key);
 
         //find taker
-        (uint256 input, uint256 output, bytes memory execData) = strategy
-            .getRouter(
-                address(order.inputToken),
-                address(order.outputToken),
-                status.balance,
-                order.minRate
-            );
+        (uint256 input, uint256 output, bytes memory execData) = strategy.getRouter(
+            address(order.inputToken),
+            address(order.outputToken),
+            status.balance,
+            order.minRate
+        );
 
         if (output == 0) {
             return (false, bytes(""));
@@ -53,8 +47,10 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
     }
 
     function execute(bytes memory executeData) external override {
-        (bytes32 key, IStrategy s, uint256 input, bytes memory data) = abi
-            .decode(executeData, (bytes32, IStrategy, uint256, bytes));
+        (bytes32 key, IStrategy s, uint256 input, bytes memory data) = abi.decode(
+            executeData,
+            (bytes32, IStrategy, uint256, bytes)
+        );
         executeOrder(key, s, input, data);
     }
 

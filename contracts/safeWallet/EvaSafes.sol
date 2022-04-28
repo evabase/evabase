@@ -24,19 +24,12 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     }
 
     modifier onlyController() {
-        require(
-            !revoked && IEvabaseConfig(config).isActiveControler(msg.sender),
-            "forbidden"
-        );
+        require(!revoked && IEvabaseConfig(config).isActiveControler(msg.sender), "forbidden");
         _;
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _admin, address _config)
-        external
-        override
-        initializer
-    {
+    function initialize(address _admin, address _config) external override initializer {
         require(owner == address(0), "forbidden");
         owner = _admin;
         config = _config;
@@ -61,11 +54,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         }
     }
 
-    function execFlow(address flow, bytes calldata execData)
-        external
-        override
-        onlyController
-    {
+    function execFlow(address flow, bytes calldata execData) external override onlyController {
         flow.functionCall(abi.encodeWithSignature("execute(bytes)", execData));
     }
 

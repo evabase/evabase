@@ -39,9 +39,7 @@ contract StrategyBase is Ownable {
     ) public view returns (uint256 amountIn) {
         IUniswapV2Factory factory = IUniswapV2Factory(router.factory());
 
-        IUniswapV2Pair pair = IUniswapV2Pair(
-            factory.getPair(inputToken, outputToken)
-        );
+        IUniswapV2Pair pair = IUniswapV2Pair(factory.getPair(inputToken, outputToken));
         if (address(pair) == address(0)) {
             return 0;
         }
@@ -61,11 +59,7 @@ contract StrategyBase is Ownable {
         amountIn = (a - b).div(c);
     }
 
-    function _getAmountsOut(uint256 amountIn, address[] memory path)
-        internal
-        view
-        returns (uint256 amountOut)
-    {
+    function _getAmountsOut(uint256 amountIn, address[] memory path) internal view returns (uint256 amountOut) {
         uint256[] memory amounts = router.getAmountsOut(amountIn, path);
         amountOut = amounts[amounts.length - 1];
     }
@@ -103,12 +97,7 @@ contract StrategyBase is Ownable {
         output = amounts[amounts.length - 1];
         input = amounts[0];
         execData = abi.encode(
-            SwapArgs({
-                path: path,
-                amountIn: input,
-                amountOutMin: output,
-                deadline: block.timestamp + DEADLINE
-            })
+            SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + DEADLINE})
         );
     }
 
@@ -119,10 +108,7 @@ contract StrategyBase is Ownable {
     ) internal returns (uint256 bought) {
         SwapArgs memory args = abi.decode(execData, (SwapArgs));
 
-        uint256 preSwapBalance = TransferHelper.balanceOf(
-            outputToken,
-            address(this)
-        );
+        uint256 preSwapBalance = TransferHelper.balanceOf(outputToken, address(this));
         if (inputToken == TransferHelper.ETH_ADDRESS) {
             router.swapExactETHForTokens{value: args.amountIn}(
                 args.amountOutMin,
@@ -131,21 +117,11 @@ contract StrategyBase is Ownable {
                 args.deadline
             );
         } else {
-            TransferHelper.safeApprove(
-                inputToken,
-                address(router),
-                args.amountIn
-            );
+            TransferHelper.safeApprove(inputToken, address(router), args.amountIn);
 
             // swap: A->B->ETH
             if (outputToken == TransferHelper.ETH_ADDRESS) {
-                router.swapExactTokensForETH(
-                    args.amountIn,
-                    args.amountOutMin,
-                    args.path,
-                    address(this),
-                    args.deadline
-                );
+                router.swapExactTokensForETH(args.amountIn, args.amountOutMin, args.path, address(this), args.deadline);
             } else {
                 router.swapExactTokensForTokens(
                     args.amountIn,
@@ -158,9 +134,7 @@ contract StrategyBase is Ownable {
         }
 
         //check bought amount
-        bought = TransferHelper.balanceOf(outputToken, address(this)).sub(
-            preSwapBalance
-        );
+        bought = TransferHelper.balanceOf(outputToken, address(this)).sub(preSwapBalance);
         require(bought >= args.amountOutMin, "INSUFFICIENT_OUTPUT_AMOUNT");
     }
 }

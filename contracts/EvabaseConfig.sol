@@ -23,10 +23,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit SetBatchFlowNum(msg.sender, num);
     }
 
-    function addKeeper(address _keeper, KeepNetWork keepNetWork)
-        external
-        override
-    {
+    function addKeeper(address _keeper, KeepNetWork keepNetWork) external override {
         require(tx.origin == owner(), "only owner can add keeper");
         require(!_keepBotExists[_keeper].isActive, "keeper exist");
 
@@ -52,9 +49,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
             if (_keepBotExists[arr[i]].isActive) {
                 // _keepBotExists[arr[i]].isActive = false;
 
-                keepBotSizes[_keepBotExists[arr[i]].keepNetWork] =
-                    keepBotSizes[_keepBotExists[arr[i]].keepNetWork] -
-                    1;
+                keepBotSizes[_keepBotExists[arr[i]].keepNetWork] = keepBotSizes[_keepBotExists[arr[i]].keepNetWork] - 1;
                 delete _keepBotExists[arr[i]];
             }
         }
@@ -62,14 +57,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit RemoveBatchKeeper(msg.sender, arr);
     }
 
-    function addBatchKeeper(
-        address[] memory arr,
-        KeepNetWork[] memory keepNetWorks
-    ) external override {
-        require(
-            arr.length == keepNetWorks.length,
-            "arr length not equal keepNetWorks length"
-        );
+    function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWorks) external override {
+        require(arr.length == keepNetWorks.length, "arr length not equal keepNetWorks length");
         require(tx.origin == owner(), "only owner can add keeper");
         for (uint256 i = 0; i < arr.length; i++) {
             // if (!keepBots.contains(arr[i])) {
@@ -85,9 +74,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
                 // stuct.isActive == true;
                 // _keepBotExists[arr[i]].keepNetWork == keepNetWorks[i];
-                keepBotSizes[keepNetWorks[i]] =
-                    keepBotSizes[keepNetWorks[i]] +
-                    1;
+                keepBotSizes[keepNetWorks[i]] = keepBotSizes[keepNetWorks[i]] + 1;
             }
         }
 
@@ -111,12 +98,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         // return keepBots.contains(_query);
     }
 
-    function getKeepBot(address _query)
-        external
-        view
-        override
-        returns (KeepStruct memory)
-    {
+    function getKeepBot(address _query) external view override returns (KeepStruct memory) {
         return _keepBotExists[_query];
         // return keepBots.contains(_query);
     }
@@ -126,12 +108,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         emit SetControl(msg.sender, _control);
     }
 
-    function isActiveControler(address add)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isActiveControler(address add) external view override returns (bool) {
         return control == add;
     }
 

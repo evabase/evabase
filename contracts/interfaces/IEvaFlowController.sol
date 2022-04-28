@@ -32,13 +32,7 @@ struct MinConfig {
 }
 
 interface IEvaFlowController {
-    event FlowCreated(
-        address indexed user,
-        uint256 indexed flowId,
-        address flowAdd,
-        bytes checkData,
-        uint256 fee
-    );
+    event FlowCreated(address indexed user, uint256 indexed flowId, address flowAdd, bytes checkData, uint256 fee);
     event FlowUpdated(address indexed user, uint256 flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 flowId);
     event FlowStart(address indexed user, uint256 flowId);
@@ -110,20 +104,11 @@ interface IEvaFlowController {
         KeepNetWork keepNetWork
     ) external view returns (uint256[] memory arr);
 
-    function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork)
-        external
-        view
-        returns (uint256 value);
+    function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view returns (uint256 value);
 
-    function getAllVaildFlowSize(KeepNetWork keepNetWork)
-        external
-        view
-        returns (uint256 size);
+    function getAllVaildFlowSize(KeepNetWork keepNetWork) external view returns (uint256 size);
 
-    function getFlowMetas(uint256 index)
-        external
-        view
-        returns (EvaFlowMeta memory);
+    function getFlowMetas(uint256 index) external view returns (EvaFlowMeta memory);
 
     function getFlowMetaSize() external view returns (uint256);
 
@@ -135,8 +120,5 @@ interface IEvaFlowController {
 
     function getSafes(address user) external view returns (address);
 
-    function getFlowCheckInfo(uint256 flowId)
-        external
-        view
-        returns (address flow, bytes memory checkData);
+    function getFlowCheckInfo(uint256 flowId) external view returns (address flow, bytes memory checkData);
 }

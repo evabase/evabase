@@ -14,10 +14,7 @@ struct Order {
 }
 
 interface ILOBExchange {
-    function createOrder(Order calldata order)
-        external
-        payable
-        returns (bytes32 key);
+    function createOrder(Order calldata order) external payable returns (bytes32 key);
 
     function setPause(bytes32 key, bool pause) external;
 

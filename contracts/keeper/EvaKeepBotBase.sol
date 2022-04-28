@@ -8,10 +8,7 @@ abstract contract EvaKeepBotBase {
     IEvabaseConfig public config;
     EvaFlowChecker public evaFlowChecker;
 
-    function _check(bytes memory checkdata)
-        internal
-        virtual
-        returns (bool needExec, bytes memory execdata);
+    function _check(bytes memory checkdata) internal virtual returns (bool needExec, bytes memory execdata);
 
     function _exec(bytes memory execdata) internal virtual;
 }

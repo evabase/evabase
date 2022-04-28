@@ -39,12 +39,7 @@ contract MockSwapStrategy is IStrategy {
         input = maxInput;
         output = input * 2;
         execData = abi.encode(
-            SwapArgs({
-                path: path,
-                amountIn: input,
-                amountOutMin: output,
-                deadline: block.timestamp + 1 hours
-            })
+            SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + 1 hours})
         );
     }
 

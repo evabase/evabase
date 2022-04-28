@@ -8,9 +8,7 @@ contract UniswapV2Strategy is IStrategy, StrategyBase {
     mapping(address => bool) public executors;
     event ExecutorChanged(address acct, bool added);
 
-    constructor(IUniswapV2Router02 _router, uint256 bp)
-        StrategyBase(_router, bp)
-    {}
+    constructor(IUniswapV2Router02 _router, uint256 bp) StrategyBase(_router, bp) {}
 
     function getRouter(
         address inputToken,

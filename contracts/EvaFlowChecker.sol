@@ -32,16 +32,9 @@ contract EvaFlowChecker {
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
         uint32 keepBotSize = config.keepBotSizes(keepNetWork);
-        uint256 allVaildSize = IEvaFlowController(config.control())
-            .getAllVaildFlowSize(keepNetWork);
+        uint256 allVaildSize = IEvaFlowController(config.control()).getAllVaildFlowSize(keepNetWork);
         uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
-        (uint256 start, uint256 end) = _getAvailCircle(
-            allVaildSize,
-            keepBotSize,
-            keepbotId,
-            batch,
-            bot1start
-        );
+        (uint256 start, uint256 end) = _getAvailCircle(allVaildSize, keepBotSize, keepbotId, batch, bot1start);
 
         // {
         //     (uint256[] memory tmp, bytes[] memory executeDataArray) = _ring(
@@ -102,14 +95,7 @@ contract EvaFlowChecker {
             length = _end - _start;
             tmp = new uint256[](length);
             executeDataArray = new bytes[](length);
-            _addVaildFlowIndex(
-                _start,
-                _end,
-                tmp,
-                executeDataArray,
-                j,
-                keepNetWork
-            );
+            _addVaildFlowIndex(_start, _end, tmp, executeDataArray, j, keepNetWork);
         }
 
         if (tmp.length > 0) {
@@ -152,9 +138,7 @@ contract EvaFlowChecker {
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
                 EvaFlowMeta memory meta = ctr.getFlowMetas(index);
-                (bool needExec, bytes memory executeData) = IEvaFlow(
-                    meta.lastVersionflow
-                ).check(meta.checkData);
+                (bool needExec, bytes memory executeData) = IEvaFlow(meta.lastVersionflow).check(meta.checkData);
 
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
@@ -218,19 +202,11 @@ contract EvaFlowChecker {
         return (botNIndexS, botNIndexE);
     }
 
-    function _getRandomStart(uint256 _flowSize, uint256 lastMoveTime)
-        internal
-        view
-        returns (uint256 index)
-    {
+    function _getRandomStart(uint256 _flowSize, uint256 lastMoveTime) internal view returns (uint256 index) {
         if (block.timestamp - lastMoveTime >= 10 seconds) {
-            index =
-                uint256(keccak256(abi.encodePacked(block.timestamp))) %
-                _flowSize;
+            index = uint256(keccak256(abi.encodePacked(block.timestamp))) % _flowSize;
         } else {
-            index =
-                uint256(keccak256(abi.encodePacked(lastMoveTime))) %
-                _flowSize;
+            index = uint256(keccak256(abi.encodePacked(lastMoveTime))) % _flowSize;
         }
     }
 }

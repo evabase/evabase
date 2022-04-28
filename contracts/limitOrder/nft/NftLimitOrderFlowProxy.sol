@@ -23,16 +23,10 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         uint256 _value = 0;
 
         _value = msg.value - gasFee;
-        require(
-            order.amount * order.price <= _value,
-            "order value + gasFee must be greater than msg.value"
-        );
+        require(order.amount * order.price <= _value, "order value + gasFee must be greater than msg.value");
 
         uint256 flowSize = ser.getFlowMetaSize();
-        bytes32 orderId = nftLimitOrder.createOrder{value: _value}(
-            order,
-            flowSize
-        );
+        bytes32 orderId = nftLimitOrder.createOrder{value: _value}(order, flowSize);
         uint256 afterFlowId = ser.registerFlow{value: gasFee}(
             "NftLimitOrder",
             network,
@@ -44,10 +38,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         // emit OrderCreated(msg.sender, flowId, orderId, order);
     }
 
-    function pauseFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.pauseFlow(flowId, bytes(""));
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, true, flowId);
@@ -55,10 +46,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         // emit OrderPause(msg.sender, flowId, orderId);
     }
 
-    function startFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function startFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId, bytes(""));
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, false, flowId);
@@ -66,10 +54,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         // emit OrderStart(msg.sender, flowId, orderId);
     }
 
-    function destroyFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId, bytes(""));
         (INftLimitOrder exchange, bytes32 orderId) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderId, flowId);

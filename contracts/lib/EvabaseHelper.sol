@@ -36,19 +36,12 @@ library EvabaseHelper {
 
     function add(UintSet storage self, uint256 value) internal {
         require(value != uint256(0), "LibAddressSet: value can't be 0x0");
-        require(
-            !contains(self, value),
-            "LibAddressSet: value already exists in the set."
-        );
+        require(!contains(self, value), "LibAddressSet: value already exists in the set.");
         self.values.push(value);
         self.indexMapping[value] = self.values.length;
     }
 
-    function contains(UintSet storage self, uint256 value)
-        internal
-        view
-        returns (bool)
-    {
+    function contains(UintSet storage self, uint256 value) internal view returns (bool) {
         return self.indexMapping[value] != 0;
     }
 
@@ -68,19 +61,11 @@ library EvabaseHelper {
         return self.values.length;
     }
 
-    function get(UintSet storage self, uint256 index)
-        internal
-        view
-        returns (uint256)
-    {
+    function get(UintSet storage self, uint256 index) internal view returns (uint256) {
         return self.values[index];
     }
 
-    function getAll(UintSet storage self)
-        internal
-        view
-        returns (uint256[] memory)
-    {
+    function getAll(UintSet storage self) internal view returns (uint256[] memory) {
         // uint256[] memory output = new uint256[](self.values.length);
         // for (uint256 i; i < self.values.length; i++) {
         //     output[i] = self.values[i];

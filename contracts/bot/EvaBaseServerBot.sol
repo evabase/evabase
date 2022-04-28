@@ -11,11 +11,7 @@ import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
-contract EvaBaseServerBot is
-    EvaKeepBotBase,
-    KeeperCompatibleInterface,
-    Ownable
-{
+contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable {
     event SetEBSKeepStatus(address indexed user, bool status);
     uint32 public keepBotId;
     mapping(address => bool) public keeps;
@@ -48,11 +44,7 @@ contract EvaBaseServerBot is
         return _check(checkData);
     }
 
-    function _check(bytes memory _checkdata)
-        internal
-        override
-        returns (bool needExec, bytes memory execdata)
-    {
+    function _check(bytes memory _checkdata) internal override returns (bool needExec, bytes memory execdata) {
         return (true, _checkdata);
     }
 
@@ -65,11 +57,7 @@ contract EvaBaseServerBot is
 
         require(keeps[msg.sender], "not active EvaBase bot");
 
-        IEvaFlowController(config.control()).batchExecFlow(
-            msg.sender,
-            _execdata,
-            EXEC_GAS_LIMIT
-        );
+        IEvaFlowController(config.control()).batchExecFlow(msg.sender, _execdata, EXEC_GAS_LIMIT);
     }
 
     function setEBSKeepStatus(address keep, bool status) external onlyOwner {
@@ -77,27 +65,15 @@ contract EvaBaseServerBot is
         emit SetEBSKeepStatus(keep, status);
     }
 
-    function encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes)
-        external
-        pure
-        returns (bytes memory)
-    {
+    function encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes) external pure returns (bytes memory) {
         return (abi.encode(_uint, _bytes));
     }
 
-    function encodeUintAndBytes(bytes memory _bytes, uint256 _value)
-        external
-        pure
-        returns (bytes memory)
-    {
+    function encodeUintAndBytes(bytes memory _bytes, uint256 _value) external pure returns (bytes memory) {
         return (abi.encode(_bytes, _value));
     }
 
-    function encodeUints(uint256[] memory _uint)
-        external
-        pure
-        returns (bytes memory)
-    {
+    function encodeUints(uint256[] memory _uint) external pure returns (bytes memory) {
         return (abi.encode(_uint));
     }
 }

@@ -5,8 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library TransferHelper {
-    address internal constant ETH_ADDRESS =
-        address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    address internal constant ETH_ADDRESS = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     /// @notice Transfers tokens from the targeted address to the given destination
     /// @notice Errors with 'STF' if transfer fails
@@ -21,17 +20,9 @@ library TransferHelper {
         uint256 value
     ) internal {
         (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(
-                IERC20.transferFrom.selector,
-                from,
-                to,
-                value
-            )
+            abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value)
         );
-        require(
-            success && (data.length == 0 || abi.decode(data, (bool))),
-            "STF"
-        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "STF");
     }
 
     /// @notice Transfers tokens from msg.sender to a recipient
@@ -44,13 +35,8 @@ library TransferHelper {
         address to,
         uint256 value
     ) internal {
-        (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(IERC20.transfer.selector, to, value)
-        );
-        require(
-            success && (data.length == 0 || abi.decode(data, (bool))),
-            "ST"
-        );
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "ST");
     }
 
     /// @notice Approves the stipulated contract to spend the given allowance in the given token
@@ -63,13 +49,8 @@ library TransferHelper {
         address to,
         uint256 value
     ) internal {
-        (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(IERC20.approve.selector, to, value)
-        );
-        require(
-            success && (data.length == 0 || abi.decode(data, (bool))),
-            "SA"
-        );
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20.approve.selector, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "SA");
     }
 
     /// @notice Transfers ETH to the recipient address
@@ -87,11 +68,7 @@ library TransferHelper {
      * @param addr - Address of the account
      * @return uint256 - Account's balance of token or ETH
      */
-    function balanceOf(address token, address addr)
-        internal
-        view
-        returns (uint256)
-    {
+    function balanceOf(address token, address addr) internal view returns (uint256) {
         if (ETH_ADDRESS == address(token)) {
             return addr.balance;
         }

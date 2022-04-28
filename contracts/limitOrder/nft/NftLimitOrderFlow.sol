@@ -58,19 +58,11 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         return _owner;
     }
 
-    function check(bytes memory checkData)
-        external
-        view
-        override
-        returns (bool needExecute, bytes memory executeData)
-    {
+    function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
         return (false, bytes(""));
     }
 
-    function multicall(address target, bytes memory callData)
-        external
-        override
-    {
+    function multicall(address target, bytes memory callData) external override {
         require(_owner == msg.sender, "only owner can call this function");
         require(target != address(this), "FORBIDDEN safes address");
         require(target != _owner, "FORBIDDEN self");
@@ -84,22 +76,16 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     }
 
     function execute(bytes memory executeData) external override {
-        (Order memory order, bytes memory signature, bytes[] memory data) = abi
-            .decode(executeData, (Order, bytes, bytes[]));
+        (Order memory order, bytes memory signature, bytes[] memory data) = abi.decode(
+            executeData,
+            (Order, bytes, bytes[])
+        );
         // _atomicMatch(order, signature, data, _assetTokenIds);
         _atomicMatch(order, signature, data);
     }
 
-    function createOrder(Order memory order,uint flowId)
-        external
-        payable
-        override
-        returns (bytes32 orderId)
-    {
-        require(
-            msg.sender == evaSafesFactory.get(order.owner),
-            "only safes can creat order"
-        );
+    function createOrder(Order memory order, uint256 flowId) external payable override returns (bytes32 orderId) {
+        require(msg.sender == evaSafesFactory.get(order.owner), "only safes can creat order");
 
         require(order.amount > 0, "amount must be greater than 0");
         require(order.price > 0, "price must be greater than 0");
@@ -108,73 +94,57 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(order.expireTime > block.timestamp, "order time is end");
 
         uint256 total = order.amount * order.price;
-            require(
-                total <= msg.value,
-                "order amount*price must be less than or equal to msg.value"
-            );
-        
-        bytes32 orderId = hashOrder(order);
-        require(orderExists[orderId].owner==address(0), "order exist");
-        // require(
-        //     evaSafesFactory.get(order.owner) != address(0),
-        //     "Safes not exist"
-        // );
-       
-        orderExists[orderId] = OrderExist({
-            // exist: true,
-            amount: 0,
-            owner: order.owner,
-            balance: Utils.toUint96(total)
-        });
+        require(total <= msg.value, "order amount*price must be less than or equal to msg.value");
 
-        emit OrderCreated(msg.sender,flowId, orderId);
+        bytes32 orderId = hashOrder(order);
+        require(orderExists[orderId].owner == address(0), "order exist");
+
+        orderExists[orderId] = OrderExist({amount: 0, owner: order.owner, balance: Utils.toUint96(total)});
+
+        emit OrderCreated(msg.sender, flowId, orderId);
         return orderId;
     }
 
-    function changeStatus(bytes32 orderId, bool pause,uint flowId) public override {
+    function changeStatus(
+        bytes32 orderId,
+        bool pause,
+        uint256 flowId
+    ) public override {
         // require(
         //     address(0) != evaSafesFactory.get(msg.sender),
         //     "only owner can change status order"
         // );
 
         OrderExist memory orderExist = orderExists[orderId];
-        require(orderExist.owner!=address(0), "order not exist");
-        require(
-            msg.sender == evaSafesFactory.get(orderExist.owner),
-            "shold be owner"
-        );
+        require(orderExist.owner != address(0), "order not exist");
+        require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
 
         if (pause) {
-            emit OrderPause(msg.sender,flowId, orderId);
+            emit OrderPause(msg.sender, flowId, orderId);
         } else {
-            emit OrderStart(msg.sender,flowId, orderId);
+            emit OrderStart(msg.sender, flowId, orderId);
         }
     }
 
-    function cancelOrder(bytes32 orderId,uint flowId) public override {
+    function cancelOrder(bytes32 orderId, uint256 flowId) public override {
         // require(
         //     address(0) != evaSafesFactory.get(msg.sender),
         //     "only owner can cancel order"
         // );
 
         OrderExist storage orderExist = orderExists[orderId];
-        require(orderExist.owner!=address(0), "order not exist");
-        require(
-            msg.sender == evaSafesFactory.get(orderExist.owner),
-            "shold be owner"
-        );
-        // delete orderExists[orderId];
-   
-            uint256 remain = orderExist.balance;
-            if (remain > 0) {
-                (bool succeed, ) = orderExist.owner.call{value: remain}("");
-                require(succeed, "Failed to transfer Ether");
-            }
-            // orderExist.balance = 0;
-        
+        require(orderExist.owner != address(0), "order not exist");
+        require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
+
+        uint256 remain = orderExist.balance;
+        if (remain > 0) {
+            (bool succeed, ) = orderExist.owner.call{value: remain}("");
+            require(succeed, "Failed to transfer Ether");
+        }
+
         delete orderExists[orderId];
 
-        emit OrderCancel(msg.sender,flowId, orderId);
+        emit OrderCancel(msg.sender, flowId, orderId);
     }
 
     function _atomicMatch(
@@ -182,9 +152,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bytes memory _signature,
         bytes[] memory _data
     ) internal returns (bytes[] memory results) {
-        bytes32 ordeId =hashOrder(_order);
+        bytes32 ordeId = hashOrder(_order);
         OrderExist storage orderExist = orderExists[ordeId];
-        require(orderExist.owner!=address(0), "order not exist");
+        require(orderExist.owner != address(0), "order not exist");
         require(_order.owner != address(0), "order owner addrss is 0x");
         uint256 _amount = _order.amount;
         require(_amount > 0, "execute amount gt 0");
@@ -199,59 +169,49 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
         uint256 total = 0;
 
-  
-            require(
-                _data.length <=
-                    _order.amount - orderExist.amount,
-                "Exceeded purchase"
+        require(_data.length <= _order.amount - orderExist.amount, "Exceeded purchase");
+
+        results = new bytes[](_data.length);
+
+        for (uint256 i = 0; i < _data.length; i++) {
+            (address target, bytes memory input, uint256 value) = abi.decode(_data[i], (address, bytes, uint256));
+            require(target != address(this), "FORBIDDEN safes address");
+            require(target != msg.sender, "FORBIDDEN self");
+            results[i] = target.functionCallWithValue(
+                // target,
+                input,
+                value,
+                "CallFailed"
             );
+            require(!Utils.hashCompareInternal(results[i], bytes("CallFailed")), "_atomicMatch failed");
 
-            results = new bytes[](_data.length);
+            total += value;
 
-            for (uint256 i = 0; i < _data.length; i++) {
-                (address target, bytes memory input, uint256 value) = abi
-                    .decode(_data[i], (address, bytes, uint256));
-                require(target != address(this), "FORBIDDEN safes address");
-                require(target != msg.sender, "FORBIDDEN self");
-                results[i] = target.functionCallWithValue(
-                    // target,
-                    input,
-                    value,
-                    "CallFailed"
-                );
-                require(
-                    !Utils.hashCompareInternal(results[i], bytes("CallFailed")),
-                    "_atomicMatch failed"
-                );
+            //     if (_order.assetType == AssetType.ERC721) {
+            //         IERC721(_order.assetToken).safeTransferFrom(
+            //             address(this),
+            //             _order.owner,
+            //             _assetTokenIds[i]
+            //         );
+            //     } else if (_order.assetType == AssetType.ERC1155) {}
+            //     //withdarw erc721/erc1155
+            //     IERC1155(_order.assetToken).safeTransferFrom(
+            //         address(this),
+            //         _order.owner,
+            //         _assetTokenIds[i],
+            //         IERC1155(_order.assetToken).balanceOf(
+            //             address(this),
+            //             _assetTokenIds[i]
+            //         ),
+            //         ""
+            //     );
+        }
 
-                total += value;
+        orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
 
-                //     if (_order.assetType == AssetType.ERC721) {
-                //         IERC721(_order.assetToken).safeTransferFrom(
-                //             address(this),
-                //             _order.owner,
-                //             _assetTokenIds[i]
-                //         );
-                //     } else if (_order.assetType == AssetType.ERC1155) {}
-                //     //withdarw erc721/erc1155
-                //     IERC1155(_order.assetToken).safeTransferFrom(
-                //         address(this),
-                //         _order.owner,
-                //         _assetTokenIds[i],
-                //         IERC1155(_order.assetToken).balanceOf(
-                //             address(this),
-                //             _assetTokenIds[i]
-                //         ),
-                //         ""
-                //     );
-            }
+        orderExist.balance = orderExist.balance - Utils.toUint96(total);
 
-            orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
-
-            orderExist.balance = orderExist.balance - Utils.toUint96(total);
-
-            emit OrderExecute(msg.sender, ordeId, _data.length, total);
-        
+        emit OrderExecute(msg.sender, ordeId, _data.length, total);
     }
 
     function hashOrder(Order memory order) public pure returns (bytes32) {
@@ -270,11 +230,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             );
     }
 
-    function verifyOrder(Order memory order, bytes memory signature)
-        public
-        view
-        returns (bool)
-    {
+    function verifyOrder(Order memory order, bytes memory signature) public view returns (bool) {
         bytes32 messageHash = hashOrder(order);
         // bytes32 ethSignedMessageHash = Utils.getEthSignedMessageHash(
         //     messageHash
@@ -282,12 +238,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
         bytes32 ethSignedMessageHash = _hashTypedDataV4(messageHash);
 
-        return
-            SignatureChecker.isValidSignatureNow(
-                order.owner,
-                ethSignedMessageHash,
-                signature
-            );
+        return SignatureChecker.isValidSignatureNow(order.owner, ethSignedMessageHash, signature);
         // return
         //     Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
     }
