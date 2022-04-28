@@ -24,63 +24,44 @@ contract LOBFlowProxy is IEvaFlowProxy {
         uint256 gasFee,
         Order memory order
     ) external payable {
-
-        uint256 value=0;
+        uint256 value = 0;
         if (order.inputToken == TransferHelper.ETH_ADDRESS) {
-            value=msg.value-gasFee;
-            require(order.inputAmount+gasFee==msg.value,"invalid input amount");
-        }else{
+            value = msg.value - gasFee;
+            require(order.inputAmount + gasFee == msg.value, "invalid input amount");
+        } else {
             //  pull token to accts'walletsafes from acct (msg.sender)
-            TransferHelper.safeTransferFrom(
-                order.inputToken,
-                msg.sender,
-                address(this),
-                order.inputAmount
-            );
+            TransferHelper.safeTransferFrom(order.inputToken, msg.sender, address(this), order.inputAmount);
             // approve Exchange can transfer amount
-            TransferHelper.safeApprove(
-                order.inputToken,
-                address(exchange),
-                order.inputAmount
-            );
+            TransferHelper.safeApprove(order.inputToken, address(exchange), order.inputAmount);
         }
 
         // create order and get order key.
 
-        bytes32 key = exchange.createOrder(order);
+        bytes32 orderId = exchange.createOrder{value: value}(order);
 
         // orderId+safes
         // 3. register listen order task on Evabase
-        ser.registerFlow{value: msg.value}(
+        ser.registerFlow{value: gasFee}(
             "EvabaseLO",
             network,
             address(exchange),
-            abi.encode(key) //checkdata
+            abi.encode(orderId) //checkdata
         );
     }
 
-    function pauseFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.pauseFlow(flowId, bytes(""));
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
         exchange.setPause(orderKey, true);
     }
 
-    function startFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function startFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId, bytes(""));
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
         exchange.setPause(orderKey, true);
     }
 
-    function destroyFlow(IEvaFlowController ser, uint256 flowId)
-        external
-        override
-    {
+    function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId, bytes(""));
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderKey);

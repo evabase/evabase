@@ -38,10 +38,10 @@ contract LOB is Ownable {
         bool paused;
     }
 
-    event OrderCreated(bytes32 indexed key, uint256 fee);
-    event OrderExecuted(bytes32 indexed key, uint256 input, uint256 output);
-    event OrderCancelled(bytes32 indexed key, uint256 returnAmount);
-    event OrderPaused(bytes32 indexed key, bool paused);
+    event OrderCreated(bytes32 indexed orderId, uint256 fee);
+    event OrderExecuted(bytes32 indexed orderId, uint256 input, uint256 output);
+    event OrderCancelled(bytes32 indexed orderId, uint256 returnAmount);
+    event OrderPaused(bytes32 indexed orderId, bool paused);
     event ConfigChanged(Config newConfig);
 
     /**
@@ -52,38 +52,27 @@ contract LOB is Ownable {
       2. creation fee charged, but capped.
       3. will transfer sell token to here.
      */
-    function createOrder(Order memory order)
-        public
-        payable
-        onlyRunning
-        returns (bytes32 key)
-    {
-        key = keyOf(order);
+    function createOrder(Order memory order) public payable onlyRunning returns (bytes32 orderId) {
+        orderId = keyOf(order);
 
         require(order.owner == msg.sender, "WRONG_INPUT_OWNER");
         require(
-            order.expiration >= block.timestamp + ORDER_MIN_AGE &&
-                order.expiration <= block.timestamp + ORDER_MAX_AGE,
+            order.expiration >= block.timestamp + ORDER_MIN_AGE && order.expiration <= block.timestamp + ORDER_MAX_AGE,
             "WRONG_EXPIRATION"
         );
-        require(_orders[key].owner == address(0), "ORDER_EXIST");
+        require(_orders[orderId].owner == address(0), "ORDER_EXIST");
 
         (address feeTo, uint256 fee) = getFee(order.inputAmount);
 
         // save order info
-        _orders[key] = order;
-        _orderStatus[key].balance = order.inputAmount - uint96(fee);
+        _orders[orderId] = order;
+        _orderStatus[orderId].balance = order.inputAmount - uint96(fee);
 
         // transfer order amount to here include fee.
         if (order.inputToken == TransferHelper.ETH_ADDRESS) {
             require(msg.value == order.inputAmount, "WRONG_INPUT_AMOUNT");
         } else {
-            TransferHelper.safeTransferFrom(
-                order.inputToken,
-                msg.sender,
-                address(this),
-                order.inputAmount
-            );
+            TransferHelper.safeTransferFrom(order.inputToken, msg.sender, address(this), order.inputAmount);
         }
 
         if (fee > 0) {
@@ -91,22 +80,22 @@ contract LOB is Ownable {
             TransferHelper.safeTransferTokenOrETH(order.inputToken, feeTo, fee);
         }
 
-        emit OrderCreated(key, fee);
+        emit OrderCreated(orderId, fee);
     }
 
     /**
      * @notice Cancel order
      */
-    function cancelOrder(bytes32 key) public onlySeller(key) {
-        uint256 balance = _orderStatus[key].balance;
-        _transferOutBalance(key, msg.sender, balance);
-        emit OrderCancelled(key, balance);
+    function cancelOrder(bytes32 orderId) public onlySeller(orderId) {
+        uint256 balance = _orderStatus[orderId].balance;
+        _transferOutBalance(orderId, msg.sender, balance);
+        emit OrderCancelled(orderId, balance);
     }
 
-    function setPause(bytes32 key, bool pause) external onlySeller(key) {
-        require(_orderStatus[key].paused != pause, "INVALID_STATUS");
-        _orderStatus[key].paused = pause;
-        emit OrderPaused(key, pause);
+    function setPause(bytes32 orderId, bool pause) external onlySeller(orderId) {
+        require(_orderStatus[orderId].paused != pause, "INVALID_STATUS");
+        _orderStatus[orderId].paused = pause;
+        emit OrderPaused(orderId, pause);
     }
 
     /**
@@ -114,31 +103,26 @@ contract LOB is Ownable {
      * @dev it can be called by anyone
      */
     function executeOrder(
-        bytes32 key,
+        bytes32 orderId,
         IStrategy strategy,
         uint256 input,
         bytes memory data
     ) public onlyRunning {
-        Order memory order = _orders[key];
-        require(isActiveOrder(key), "ORDER_NOT_ACTIVE");
+        Order memory order = _orders[orderId];
+        require(isActiveOrder(orderId), "ORDER_NOT_ACTIVE");
         require(order.owner != msg.sender, "ORDER_YOURSELF");
 
         if (order.foc) {
             // full deal or cancel
-            require(input == uint256(_orderStatus[key].balance), "ORDER_FOC");
+            require(input == uint256(_orderStatus[orderId].balance), "ORDER_FOC");
         }
 
         // Pull amount to strategy
-        _transferOutBalance(key, address(strategy), input);
+        _transferOutBalance(orderId, address(strategy), input);
 
-        uint256 before = TransferHelper.balanceOf(
-            order.outputToken,
-            address(this)
-        );
+        uint256 before = TransferHelper.balanceOf(order.outputToken, address(this));
         strategy.execute(order.inputToken, order.outputToken, data);
-        uint256 output = TransferHelper
-            .balanceOf(order.outputToken, address(this))
-            .sub(before);
+        uint256 output = TransferHelper.balanceOf(order.outputToken, address(this)).sub(before);
 
         // check bought
         uint256 expect = input.mul(order.minRate).div(1e18);
@@ -152,28 +136,21 @@ contract LOB is Ownable {
             output
         );
 
-        emit OrderExecuted(key, input, output);
+        emit OrderExecuted(orderId, input, output);
     }
 
-    function getOrderInfo(bytes32 key)
-        public
-        view
-        returns (Order memory order, OrderStatus memory status)
-    {
-        order = _orders[key];
-        status = _orderStatus[key];
+    function getOrderInfo(bytes32 orderId) public view returns (Order memory order, OrderStatus memory status) {
+        order = _orders[orderId];
+        status = _orderStatus[orderId];
     }
 
-    function isActiveOrder(bytes32 key) public view returns (bool) {
-        OrderStatus memory status = _orderStatus[key];
-        return
-            !status.paused &&
-            status.balance > 0 &&
-            _orders[key].expiration >= block.timestamp;
+    function isActiveOrder(bytes32 orderId) public view returns (bool) {
+        OrderStatus memory status = _orderStatus[orderId];
+        return !status.paused && status.balance > 0 && _orders[orderId].expiration >= block.timestamp;
     }
 
     /**
-     * @notice Get the order's key
+     * @notice Get the order's orderId
      */
     function keyOf(Order memory o) public pure returns (bytes32) {
         return
@@ -191,11 +168,7 @@ contract LOB is Ownable {
             );
     }
 
-    function getFee(uint96 amountIn)
-        public
-        view
-        returns (address feeTo, uint256 fee)
-    {
+    function getFee(uint96 amountIn) public view returns (address feeTo, uint256 fee) {
         Config memory cfg = config;
         feeTo = cfg.feeTo;
 
@@ -213,18 +186,14 @@ contract LOB is Ownable {
     }
 
     function _transferOutBalance(
-        bytes32 key,
+        bytes32 orderId,
         address to,
         uint256 amount
     ) private {
-        uint96 balance = _orderStatus[key].balance;
+        uint96 balance = _orderStatus[orderId].balance;
         require(amount <= uint256(balance), "INSUFFICIENT_BALANCE");
-        _orderStatus[key].balance = balance - uint96(amount);
-        TransferHelper.safeTransferTokenOrETH(
-            _orders[key].inputToken,
-            to,
-            amount
-        );
+        _orderStatus[orderId].balance = balance - uint96(amount);
+        TransferHelper.safeTransferTokenOrETH(_orders[orderId].inputToken, to, amount);
     }
 
     modifier onlyRunning() {
@@ -232,8 +201,8 @@ contract LOB is Ownable {
         _;
     }
 
-    modifier onlySeller(bytes32 key) {
-        require(msg.sender == _orders[key].owner, "INVALID_OWNER");
+    modifier onlySeller(bytes32 orderId) {
+        require(msg.sender == _orders[orderId].owner, "INVALID_OWNER");
         _;
     }
 }
