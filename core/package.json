@@ -1,11 +1,25 @@
 {
   "name": "evabase",
+  "license": "MIT",
+  "author": "evabase.net core team",
   "scripts": {
-    "lint": "eslint . --ext js,jsx,ts,tsx --fix",
     "compile": "npx hardhat compile",
     "rinkeby": "npx hardhat run --network rinkeby scripts/deploy/rinkeby.ts",
     "bsctest": "npx hardhat run --network bscTest scripts/deploy/bsctest.ts",
-    "local": "npx hardhat run --network localhost scripts/deploy/localhost.ts"
+    "local": "npx hardhat run --network localhost scripts/deploy/localhost.ts",
+    "coverage": "env COVERAGE=true hardhat coverage",
+    "lint": "npm run lint:js && npm run lint:sol",
+    "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
+    "lint:js": "eslint --ignore-path .gitignore .",
+    "lint:js:fix": "eslint --ignore-path .gitignore . --fix",
+    "lint:sol": "solhint 'src/**/*.sol' && prettier -c 'src/**/*.sol'",
+    "lint:sol:fix": "prettier --write \"src/**/*.sol\"",
+    "clean": "hardhat clean && rimraf build contracts/build",
+    "prepare": "npm run clean && env COMPILE_MODE=production npm run compile",
+    "prepack": "scripts/prepack.sh",
+    "test": "hardhat test",
+    "test:inheritance": "node scripts/inheritanceOrdering artifacts/build-info/*",
+    "gas-report": "env ENABLE_GAS_REPORT=true npm run test"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
@@ -39,15 +53,14 @@
     "solidity-coverage": "^0.7.20",
     "ts-node": "^10.7.0",
     "typechain": "^5.2.0",
-    "typescript": "^4.6.2"
-  },
-  "dependencies": {
+    "typescript": "^4.6.2",
     "@chainlink/contracts": "^0.4.0",
     "@nomiclabs/buidler": "^1.4.8",
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "data-store": "^4.0.3",
     "lint": "^0.7.0",
-    "mocha": "^9.2.1"
+    "mocha": "^9.2.1",
+    "micromatch": "^4.0.5"
   }
 }
