@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable node/shebang */
-
+/* eslint-disable */
 // This script removes the build artifacts of ignored contracts.
 
 const fs = require("fs");
@@ -41,6 +40,5 @@ if (typeof pkgFiles !== "undefined") {
       }
     }
   }
-
 }
 console.error(`Removed ${n} mock artifacts`);

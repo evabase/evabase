@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = {
   env: {
     browser: false,
@@ -53,6 +54,6 @@ module.exports = {
     "mocha/no-exclusive-tests": ["error"],
 
     "promise/always-return": "off",
-    "promise/avoid-new": "off",
+    'promise/avoid-new': 'off',
   },
 };
