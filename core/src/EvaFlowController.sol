@@ -289,7 +289,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     ) public payable override nonReentrant {
         // address safeWallet = evaSafesFactory.get(user);
         // require(safeWallet != address(0), "safe wallet is 0x");
-        require(msg.sender == flowAdmin, "flow's owner is not y");
+        // require(msg.sender == flowAdmin, "flow's owner is not y");
         // require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
 
         if (tokenAdress == address(0)) {
