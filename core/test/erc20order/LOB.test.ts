@@ -12,7 +12,7 @@ import type {
   // eslint-disable-next-line node/no-missing-import
 } from "../../typechain/index";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumberish, BytesLike } from "ethers";
+import { BigNumberish } from "ethers";
 chai.use(solidity);
 
 type OrderInfo = {
@@ -52,6 +52,101 @@ describe("EvabaseConfig", function () {
   });
 
   describe("createOrder", function () {
+
+    it("check order hash", async function () {
+      // 任何属性的变更都会使得Order哈希变化
+      const orders = [
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000009",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000009",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000009",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 9,
+          minRate: "6",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "9",
+          expiration: 7,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 9,
+          foc: false,
+        },
+        {
+          owner: "0x0000000000000000000000000000000000000001",
+          inputToken: "0x0000000000000000000000000000000000000002",
+          outputToken: "0x0000000000000000000000000000000000000003",
+          receiptor: "0x0000000000000000000000000000000000000004",
+          inputAmount: 5,
+          minRate: "6",
+          expiration: 7,
+          foc: true,
+        },
+      ];
+
+      const keys = new Set<string>();
+
+      for (const item of orders) {
+        const key = await exchange.keyOf(item);
+        expect(keys.has(key)).to.eq(false);
+        keys.add(key);
+      }
+    });
+
     it("failed when owner not equal msg.sender", async function () {
       const order = {
         owner: signers[2].address,
@@ -188,7 +283,8 @@ describe("EvabaseConfig", function () {
       user: SignerWithAddress,
       inputAmount: BigNumberish,
       maxWaitTime: number,
-      price = 1
+      price = 1,
+      foc = false
     ) {
       const inputToken = USDC;
       const outputToken = WBTC;
@@ -203,7 +299,7 @@ describe("EvabaseConfig", function () {
         outputToken: WBTC.address,
         expiration: (await help.getBlockTime()) + maxWaitTime,
         receiptor: user.address,
-        foc: false,
+        foc: foc,
       };
 
       // approve
@@ -278,6 +374,24 @@ describe("EvabaseConfig", function () {
         exchangeConfig.paused = false;
         await exchange.setConfig(exchangeConfig);
       }
+    });
+
+    it("failed when multi deal for FOC order", async function () {
+      const info = await createNewOrder(
+        me,
+        "1000000000000000001",
+        3600 * 24,
+        1 / 4000,
+        true
+      );
+      await expect(
+        exchange.executeOrder(
+          info.orderId,
+          strategy.address,
+          "1000000000000000000",
+          "0x"
+        )
+      ).to.revertedWith("ORDER_FOC");
     });
 
     it("multi deal", async function () {

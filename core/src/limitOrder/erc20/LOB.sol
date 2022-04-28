@@ -164,10 +164,6 @@ contract LOB is Ownable {
         status = _orderStatus[key];
     }
 
-    function getOrderOwner(bytes32 key) public view returns (address) {
-        return _orders[key].owner;
-    }
-
     function isActiveOrder(bytes32 key) public view returns (bool) {
         OrderStatus memory status = _orderStatus[key];
         return
@@ -184,11 +180,13 @@ contract LOB is Ownable {
             keccak256(
                 abi.encode(
                     o.owner,
+                    o.receiptor,
                     o.inputToken,
                     o.outputToken,
                     o.inputAmount,
                     o.minRate,
-                    o.expiration
+                    o.expiration,
+                    o.foc
                 )
             );
     }
