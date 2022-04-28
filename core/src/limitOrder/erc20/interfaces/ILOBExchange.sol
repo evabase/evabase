@@ -10,8 +10,7 @@ struct Order {
     address outputToken;
     uint64 expiration;
     address receiptor;
-    bool foc; //full
-    bytes extraData;
+    bool foc;
 }
 
 interface ILOBExchange {

@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-
 import fs from "fs";
 import path from "path";
 import { HardhatUserConfig, task } from "hardhat/config";
@@ -112,8 +111,7 @@ module.exports = {
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
-      accounts:
-        process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
+      accounts: process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
     },
     hardhat: {
       blockGasLimit: 10000000,

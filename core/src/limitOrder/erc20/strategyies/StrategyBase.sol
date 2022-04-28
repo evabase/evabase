@@ -106,7 +106,7 @@ contract StrategyBase is Ownable {
             SwapArgs({
                 path: path,
                 amountIn: input,
-                amountOutMin: input,
+                amountOutMin: output,
                 deadline: block.timestamp + DEADLINE
             })
         );

@@ -14,6 +14,10 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
 
     event StrategyChanged(address newStrategy);
 
+    constructor(IStrategy strategy_) {
+        strategy = strategy_;
+    }
+
     function multicall(address, bytes memory) external pure override {
         revert("F");
     }
