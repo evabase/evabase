@@ -1,0 +1,27 @@
+name: Core Contracts Slither Analysis
+on:
+  push:
+    branches:
+      - main
+      - release-v*
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          cache: "yarn"
+      - run: npm install --global yarn
+      - run: yarn install
+      - name: Clean project
+        run: npm run clean
+      - uses: crytic/slither-action@v0.1.1
