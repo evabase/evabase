@@ -7,7 +7,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { ethers } from "hardhat";
 const store = require("data-store")({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deploy/localhost.json",
+  path: process.cwd() + "/scripts/deploy/bsctest.json",
 });
 
 async function main() {
@@ -35,15 +35,6 @@ async function main() {
   await evaSafesFactory.deployed();
   store.set("evaSafesFactory", evaSafesFactory.address);
   console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
-
-  await evaSafesFactory.create(ownerO[0].address);
-  const evaSafes = await evaSafesFactory.get(ownerO[0].address);
-  console.log(`safes: ${evaSafes}`);
-
-  const EvaSafes = await ethers.getContractFactory("EvaSafes");
-  const evaSafesContract = EvaSafes.attach(evaSafes);
-  const safesOwner = await evaSafesContract.owner();
-  console.log(`safesOwner: ${safesOwner}`);
 
   // 3 EvaFlowController
   const EvaFlowController = await ethers.getContractFactory(
@@ -147,15 +138,15 @@ async function main() {
   //   342905,
   //   1899909,
   // ];
-  const order = {
-    owner: ownerO[0].address,
-    assetToken: ownerO[0].address,
-    amount: "1000",
-    price: "1",
-    expireTime: "1680355507",
-    tokenId: 342905,
-    salt: "1899909",
-  };
+  // const order = {
+  //   owner: ownerO[0].address,
+  //   assetToken: ownerO[0].address,
+  //   amount: "1000",
+  //   price: "1",
+  //   expireTime: "1680355507",
+  //   tokenId: 342905,
+  //   salt: "1899909",
+  // };
 
   // const myStructData = ethers.utils.AbiCoder.prototype.encode(
   //   [
@@ -215,109 +206,68 @@ async function main() {
     // {From:,to:,data:}
     return ethers.utils.defaultAbiCoder.encode(["address", "bytes", "uint256"], [contract.address, input, typeof (value) === "undefined" ? 0 : value]);
    */
-  const data = nftLimitOrderFlowProxy.interface.encodeFunctionData("create", [
-    evaFlowController.address,
-    nftLimitOrderFlowProxy.address,
-    1,
-    200000,
-    order,
-  ]);
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, data, {
-    value: ethers.utils.parseEther("0.01"),
-  });
-  // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
-  const evaSafesContractBal = await ethers.provider.getBalance(
-    evaSafesContract.address
-  );
-  const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(
-    nftLimitOrderFlowProxy.address
-  );
-  const evaFlowControllerBal = await ethers.provider.getBalance(
-    evaFlowController.address
-  );
-  console.log("evaSafesContractBal before=", evaSafesContractBal);
-  console.log("nftLimitOrderFlowProxyBal before=", nftLimitOrderFlowProxyBal);
-  console.log("evaFlowControllerBal=", evaFlowControllerBal);
-  // pause
-  const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
-    "pauseFlow",
-    [evaFlowController.address, 1]
-  );
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
-  // start
-  const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
-    "startFlow",
-    [evaFlowController.address, 1]
-  );
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
-  // pause
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
-  // cancel
-  const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
-    "destroyFlow",
-    [evaFlowController.address, 1]
-  );
+  await evaSafesFactory.create(ownerO[0].address);
+  const evaSafes = await evaSafesFactory.get(ownerO[0].address);
+  console.log(`safes: ${evaSafes}`);
 
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, cancelData);
+  // const EvaSafes = await ethers.getContractFactory("EvaSafes");
+  // const evaSafesContract = EvaSafes.attach(evaSafes);
+  // const safesOwner = await evaSafesContract.owner();
+  // console.log(`safesOwner: ${safesOwner}`);
+  // const data = nftLimitOrderFlowProxy.interface.encodeFunctionData("create", [
+  //   evaFlowController.address,
+  //   nftLimitOrderFlowProxy.address,
+  //   1,
+  //   200000,
+  //   order,
+  // ]);
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, data, {
+  //   value: ethers.utils.parseEther("0.01"),
+  // });
+  // // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
+  // const evaSafesContractBal = await ethers.provider.getBalance(
+  //   evaSafesContract.address
+  // );
+  // const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(
+  //   nftLimitOrderFlowProxy.address
+  // );
+  // const evaFlowControllerBal = await ethers.provider.getBalance(
+  //   evaFlowController.address
+  // );
+  // console.log("evaSafesContractBal before=", evaSafesContractBal);
+  // console.log("nftLimitOrderFlowProxyBal before=", nftLimitOrderFlowProxyBal);
+  // console.log("evaFlowControllerBal=", evaFlowControllerBal);
+  // // pause
+  // const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "pauseFlow",
+  //   [evaFlowController.address, 1]
+  // );
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
+  // // start
+  // const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "startFlow",
+  //   [evaFlowController.address, 1]
+  // );
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
+  // // pause
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
+  // // cancel
+  // const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "destroyFlow",
+  //   [evaFlowController.address, 1]
+  // );
 
-  const evaSafesContractBal1 = await ethers.provider.getBalance(
-    evaSafesContract.address
-  );
-  const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(
-    nftLimitOrderFlowProxy.address
-  );
-  console.log("evaSafesContractBal after=", evaSafesContractBal1);
-  console.log("nftLimitOrderFlowProxyBal after=", nftLimitOrderFlowProxyBal1);
-  console.log(await evaFlowController.getFlowMetas(1));
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, cancelData);
 
-  const withDrawData = evaFlowController.interface.encodeFunctionData(
-    "withdrawFundByUser",
-    [
-      "0x0000000000000000000000000000000000000000",
-      ethers.utils.parseEther("0.01"),
-    ]
-  );
-
-  const addFundByUser = evaFlowController.interface.encodeFunctionData(
-    "addFundByUser",
-    [
-      "0x0000000000000000000000000000000000000000",
-      ethers.utils.parseEther("0.01"),
-      evaSafes,
-    ]
-  );
-
-  let evaFlowControllerBal1 = await ethers.provider.getBalance(
-    evaFlowController.address
-  );
-
-  let userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log("userBal1 before=", userBal1);
-  console.log("evaFlowControllerBal1 before=", evaFlowControllerBal1);
-  let evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log("evaSafes before=", evaSafesBal1);
-
-  await evaSafesContract.proxy(evaFlowController.address, 0, addFundByUser, {
-    value: ethers.utils.parseEther("0.01"),
-  });
-  evaFlowControllerBal1 = await ethers.provider.getBalance(
-    evaFlowController.address
-  );
-  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log("userBal1 mid=", userBal1);
-  console.log("evaFlowControllerBal1 mid=", evaFlowControllerBal1);
-  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log("evaSafes mid=", evaSafesBal1);
-
-  await evaSafesContract.proxy(evaFlowController.address, 0, withDrawData);
-  evaFlowControllerBal1 = await ethers.provider.getBalance(
-    evaFlowController.address
-  );
-  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log("userBal1 after=", userBal1);
-  console.log("evaFlowControllerBal1 after=", evaFlowControllerBal1);
-  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log("evaSafes after=", evaSafesBal1);
+  // const evaSafesContractBal1 = await ethers.provider.getBalance(
+  //   evaSafesContract.address
+  // );
+  // const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(
+  //   nftLimitOrderFlowProxy.address
+  // );
+  // console.log("evaSafesContractBal after=", evaSafesContractBal1);
+  // console.log("nftLimitOrderFlowProxyBal after=", nftLimitOrderFlowProxyBal1);
+  // console.log(await evaFlowController.getFlowMetas(1));
   // await evaFlowController.createFlow(
   //   "ACE",
   //   1, // evabaseKeep
