@@ -1,10 +1,10 @@
 {
   "chainlinkKeeperRegistry": "0xA3E3026562a3ADAF7A761B10a45217c400a4054A",
-  "evabaseConfig": "0x27F86EC43FD33249EF17c0912f3265b93f2d0D4a",
-  "evaSafesFactory": "0x8f1ec077A33a3467eC50D4f23cCD60f6aC2b3bD7",
-  "evaFlowController": "0x26816de8e93dB99600e4F1Fa5DF7C4293e9d549D",
-  "evaFlowChecker": "0xd8f372b5c6f439205a95EDE7fba3159BdA90E572",
-  "evaFlowChainLinkKeeperBot": "0x01dadFCa653CEb1d73f8199d7B1B44b1E21E1623",
-  "evaBaseServerBot": "0xD9aCdA6f99515B3196632Df74Bd31f2E334a68b5",
-  "NftLimitOrderFlow": "0x4fFc07803efCb397BEb0a656225ddF2b4086f458"
+  "evabaseConfig": "0xD92EdE10Ba6F558b7A730bC38c23ce6Eb91A7997",
+  "evaSafesFactory": "0x8D6e8Df1728719e959626E154148243a9e11fEAb",
+  "evaFlowController": "0x3dE6E523cBD355ABBC223934b3FB9a92C8f98eE2",
+  "evaFlowChecker": "0xfbcc2D0C30F7E92Ec12bdF05bf2EfDDf102daD3E",
+  "evaFlowChainLinkKeeperBot": "0xc2e3B00AABeAab03b4D153F2103eEEEE72CA5FFA",
+  "NftLimitOrderFlow": "0x9958C474962bEdC11892c5517730e212894FD8e4",
+  "evaBaseServerBot": "0xb45a5c7c7f6bDF58295a6B9bD94Ba7fad5255385"
 }

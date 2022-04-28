@@ -180,39 +180,37 @@ contract EvaFlowChecker {
     ) internal view returns (uint256 botNIndexS, uint256 botNIndexE) {
         require(_keepBotSize > 0 && _allVaildSize > 0 && _keepbotN > 0, "gt 0");
 
-        unchecked {
-            uint256 quotient = _allVaildSize / _keepBotSize;
-            uint256 remainder = _allVaildSize % _keepBotSize;
+        uint256 quotient = _allVaildSize / _keepBotSize;
+        uint256 remainder = _allVaildSize % _keepBotSize;
 
-            if (remainder != 0) {
-                quotient++;
+        if (remainder != 0) {
+            quotient++;
+        }
+
+        bool isUseBatch = _batch < quotient;
+
+        if (isUseBatch) {
+            quotient = _batch;
+        }
+
+        //first find should index
+        botNIndexS = _bot1start + (_keepbotN - 1) * quotient;
+        botNIndexE = _bot1start + _keepbotN * quotient;
+
+        //Both of these are outside the circle
+        if (botNIndexS >= _allVaildSize) {
+            botNIndexS = botNIndexS - _allVaildSize;
+            botNIndexE = botNIndexE - _allVaildSize;
+
+            if (botNIndexS > _bot1start) {
+                botNIndexS = botNIndexS % _allVaildSize;
+                botNIndexE = botNIndexE % _allVaildSize;
             }
-
-            bool isUseBatch = _batch < quotient;
-
-            if (isUseBatch) {
-                quotient = _batch;
-            }
-
-            //first find should index
-            botNIndexS = _bot1start + (_keepbotN - 1) * quotient;
-            botNIndexE = _bot1start + _keepbotN * quotient;
-
-            //Both of these are outside the circle
-            if (botNIndexS >= _allVaildSize) {
-                botNIndexS = botNIndexS - _allVaildSize;
-                botNIndexE = botNIndexE - _allVaildSize;
-
-                if (botNIndexS > _bot1start) {
-                    botNIndexS = botNIndexS % _allVaildSize;
-                    botNIndexE = botNIndexE % _allVaildSize;
-                }
-            } else {
-                if (botNIndexE > _allVaildSize) {
-                    botNIndexE = botNIndexE - _allVaildSize - 1;
-                    if (botNIndexE >= _bot1start) {
-                        botNIndexE = _bot1start;
-                    }
+        } else {
+            if (botNIndexE > _allVaildSize) {
+                botNIndexE = botNIndexE - _allVaildSize - 1;
+                if (botNIndexE >= _bot1start) {
+                    botNIndexE = _bot1start;
                 }
             }
         }

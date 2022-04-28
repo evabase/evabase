@@ -56,12 +56,15 @@ const config: HardhatUserConfig = {
       url: process.env.BSCTEST_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gas: 26000000,
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || "",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-      gas: 10000000,
+      gas: 26000000,
+      // gasPrice: 50000000000,
+      // timeout: 20000,
     },
   },
   gasReporter: {

@@ -2,17 +2,13 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 
-import {IEvabaseConfig} from "./interfaces/IEvabaseConfig.sol";
+import "./interfaces/IEvabaseConfig.sol";
 import {EvabaseHelper, KeepNetWork} from "./lib/EvabaseHelper.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract EvabaseConfig is IEvabaseConfig, Ownable {
-    struct KeepStuct {
-        bool isActive;
-        KeepNetWork keepNetWork;
-    }
-    mapping(address => KeepStuct) public keepBotExists;
+    mapping(address => KeepStruct) private _keepBotExists;
     mapping(KeepNetWork => uint32) public override keepBotSizes;
     // uint32 public override keepBotSize;
     // using EvabaseHelper for EvabaseHelper.AddressSet;
@@ -32,9 +28,9 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         override
     {
         require(tx.origin == owner(), "only owner can add keeper");
-        require(!keepBotExists[_keeper].isActive, "keeper exist");
+        require(!_keepBotExists[_keeper].isActive, "keeper exist");
 
-        keepBotExists[_keeper] = KeepStuct(true, keepNetWork);
+        _keepBotExists[_keeper] = KeepStruct(true, keepNetWork);
 
         // require(keepBots.contains(_keeper), "keeper exist");
         // keepBots.add(_keeper);
@@ -53,13 +49,13 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
             //     keepBots.remove(arr[i]);
             // }
 
-            if (keepBotExists[arr[i]].isActive) {
-                // keepBotExists[arr[i]].isActive = false;
+            if (_keepBotExists[arr[i]].isActive) {
+                // _keepBotExists[arr[i]].isActive = false;
 
-                keepBotSizes[keepBotExists[arr[i]].keepNetWork] =
-                    keepBotSizes[keepBotExists[arr[i]].keepNetWork] -
+                keepBotSizes[_keepBotExists[arr[i]].keepNetWork] =
+                    keepBotSizes[_keepBotExists[arr[i]].keepNetWork] -
                     1;
-                delete keepBotExists[arr[i]];
+                delete _keepBotExists[arr[i]];
             }
         }
 
@@ -79,16 +75,16 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
             // if (!keepBots.contains(arr[i])) {
             //     keepBots.add(arr[i]);
             // }
-            if (!keepBotExists[arr[i]].isActive) {
-                // keepBotExists[arr[i]] = true;
+            if (!_keepBotExists[arr[i]].isActive) {
+                // _keepBotExists[arr[i]] = true;
                 // keepBotSize++;
 
                 // require(keepBots.contains(_keeper), "keeper exist");
                 // keepBots.add(_keeper);
-                keepBotExists[arr[i]] = KeepStuct(true, keepNetWorks[i]);
+                _keepBotExists[arr[i]] = KeepStruct(true, keepNetWorks[i]);
 
                 // stuct.isActive == true;
-                // keepBotExists[arr[i]].keepNetWork == keepNetWorks[i];
+                // _keepBotExists[arr[i]].keepNetWork == keepNetWorks[i];
                 keepBotSizes[keepNetWorks[i]] =
                     keepBotSizes[keepNetWorks[i]] +
                     1;
@@ -100,18 +96,28 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
     function removeKeeper(address _keeper) external override {
         require(tx.origin == owner(), "only owner can add keeper");
-        require(keepBotExists[_keeper].isActive, "keeper not exist");
+        require(_keepBotExists[_keeper].isActive, "keeper not exist");
 
-        KeepNetWork _keepNetWork = keepBotExists[_keeper].keepNetWork;
+        KeepNetWork _keepNetWork = _keepBotExists[_keeper].keepNetWork;
         keepBotSizes[_keepNetWork] = keepBotSizes[_keepNetWork] - 1;
-        delete keepBotExists[_keeper];
+        delete _keepBotExists[_keeper];
         // require(!keepBots.contains(_keeper), "keeper not exist");
         // keepBots.remove(_keeper);
         emit RemoveKeeper(msg.sender, _keeper);
     }
 
     function isKeeper(address _query) external view override returns (bool) {
-        return keepBotExists[_query].isActive;
+        return _keepBotExists[_query].isActive;
+        // return keepBots.contains(_query);
+    }
+
+    function getKeepBot(address _query)
+        external
+        view
+        override
+        returns (KeepStruct memory)
+    {
+        return _keepBotExists[_query];
         // return keepBots.contains(_query);
     }
 

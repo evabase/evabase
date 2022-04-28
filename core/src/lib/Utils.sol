@@ -49,4 +49,20 @@ library Utils {
         );
         return uint120(value);
     }
+
+    function toUint96(uint256 value) internal pure returns (uint96) {
+        require(
+            value <= type(uint96).max,
+            "SafeCast: value doesn't fit in 96 bits"
+        );
+        return uint96(value);
+    }
+
+    function toUint8(uint256 value) internal pure returns (uint8) {
+        require(
+            value <= type(uint8).max,
+            "SafeCast: value doesn't fit in 8 bits"
+        );
+        return uint8(value);
+    }
 }

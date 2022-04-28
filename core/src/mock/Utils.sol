@@ -11,26 +11,24 @@ library Utils {
     ) internal view returns (uint256 start, uint256 end) {
         require(keepBotSize > 0 && allVaildSize > 0 && keepbotId > 0, "gt 0");
         if (allVaildSize > keepBotSize) {
-            unchecked {
-                uint256 quotient = allVaildSize / keepBotSize;
-                uint256 remainder = allVaildSize % keepBotSize;
+            uint256 quotient = allVaildSize / keepBotSize;
+            uint256 remainder = allVaildSize % keepBotSize;
 
-                if (remainder != 0) {
-                    quotient++;
-                }
+            if (remainder != 0) {
+                quotient++;
+            }
 
-                bool isUseBatch = batch < quotient;
+            bool isUseBatch = batch < quotient;
 
-                if (isUseBatch) {
-                    quotient = batch;
-                }
+            if (isUseBatch) {
+                quotient = batch;
+            }
 
-                start = (keepbotId - 1) * quotient + 1;
-                end = keepbotId * quotient;
+            start = (keepbotId - 1) * quotient + 1;
+            end = keepbotId * quotient;
 
-                if (!isUseBatch && remainder != 0 && keepbotId == keepBotSize) {
-                    end = allVaildSize;
-                }
+            if (!isUseBatch && remainder != 0 && keepbotId == keepBotSize) {
+                end = allVaildSize;
             }
         } else {
             start = keepbotId;

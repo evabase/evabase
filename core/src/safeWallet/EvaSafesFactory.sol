@@ -37,10 +37,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
     {
         require(user != address(0), "zero address");
         require(evaSafesMap[user] == address(0), "wallet exists");
-        require(
-            msg.sender == IEvabaseConfig(config).control(),
-            "require control"
-        );
+
         bytes memory bytecode = type(EvaSafes).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(user));
         //no-inline-assembly
