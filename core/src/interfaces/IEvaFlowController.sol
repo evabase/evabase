@@ -34,14 +34,15 @@ struct MinConfig {
 interface IEvaFlowController {
     event FlowCreated(
         address indexed user,
-        uint256 indexed _flowId,
+        uint256 indexed flowId,
         address flowAdd,
+        bytes checkData,
         uint256 fee
     );
-    event FlowUpdated(address indexed user, uint256 _flowId, address flowAdd);
-    event FlowPaused(address indexed user, uint256 _flowId);
-    event FlowStart(address indexed user, uint256 _flowId);
-    event FlowDestroyed(address indexed user, uint256 _flowId);
+    event FlowUpdated(address indexed user, uint256 flowId, address flowAdd);
+    event FlowPaused(address indexed user, uint256 flowId);
+    event FlowStart(address indexed user, uint256 flowId);
+    event FlowDestroyed(address indexed user, uint256 flowId);
     event FlowExecuteSuccess(
         address indexed user,
         uint256 indexed flowId,
@@ -76,21 +77,21 @@ interface IEvaFlowController {
     ) external payable returns (uint256 flowId);
 
     function updateFlow(
-        uint256 _flowId,
-        string memory _flowName,
+        uint256 flowId,
+        string memory flowName,
         bytes memory flowCode
     ) external;
 
-    function startFlow(uint256 _flowId, bytes memory flowCode) external;
+    function startFlow(uint256 flowId, bytes memory flowCode) external;
 
-    function pauseFlow(uint256 _flowId, bytes memory flowCode) external;
+    function pauseFlow(uint256 flowId, bytes memory flowCode) external;
 
-    function destroyFlow(uint256 _flowId, bytes memory flowCode) external;
+    function destroyFlow(uint256 flowId, bytes memory flowCode) external;
 
     function execFlow(
         address keeper,
-        uint256 _flowId,
-        bytes memory _inputData
+        uint256 flowId,
+        bytes memory inputData
     ) external;
 
     function addFundByUser(
@@ -106,15 +107,15 @@ interface IEvaFlowController {
     function getVaildFlowRange(
         uint256 fromIndex,
         uint256 endIndex,
-        KeepNetWork _keepNetWork
+        KeepNetWork keepNetWork
     ) external view returns (uint256[] memory arr);
 
-    function getIndexVaildFlow(uint256 _index, KeepNetWork _keepNetWork)
+    function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork)
         external
         view
         returns (uint256 value);
 
-    function getAllVaildFlowSize(KeepNetWork _keepNetWork)
+    function getAllVaildFlowSize(KeepNetWork keepNetWork)
         external
         view
         returns (uint256 size);
@@ -124,9 +125,11 @@ interface IEvaFlowController {
         view
         returns (EvaFlowMeta memory);
 
+    function getFlowMetaSize() external view returns (uint256);
+
     function batchExecFlow(
         address keeper,
-        bytes memory _data,
+        bytes memory data,
         uint256 gasLimit
     ) external;
 

@@ -13,14 +13,15 @@ interface INftLimitOrder {
         uint256 salt; //随机数
     }
     struct OrderExist {
-        bool exist; //是否存在
+        // bool exist; //是否存在
         uint8 amount; //已购NFT数量
         address owner; //  msg.sender== safes(owner)
         uint96 balance; //可提取金额
     }
     event OrderExecute(
         address indexed user,
-        Order order,
+        // Order order,
+        bytes32 orderId,
         uint256 amount,
         uint256 value
     );
@@ -28,32 +29,35 @@ interface INftLimitOrder {
     event OrderCancel(
         address indexed user,
         uint256 indexed flowId,
-        bytes32 _byte32
+        bytes32 orderId
     );
 
     event OrderPause(
         address indexed user,
         uint256 indexed flowId,
-        bytes32 _byte32
+        bytes32 orderId
     );
     event OrderStart(
         address indexed user,
         uint256 indexed flowId,
-        bytes32 _byte32
+        bytes32 orderId
     );
     event OrderCreated(
         address indexed user,
         uint256 indexed flowId,
-        bytes32 _byte32,
-        Order order
+        bytes32 orderId
     );
 
-    function createOrder(Order memory order)
+    function createOrder(Order memory order, uint256 flowId)
         external
         payable
         returns (bytes32 orderId);
 
-    function changeStatus(bytes32 orderId, bool pause) external;
+    function changeStatus(
+        bytes32 orderId,
+        bool pause,
+        uint256 flowId
+    ) external;
 
-    function cancelOrder(bytes32 orderId) external;
+    function cancelOrder(bytes32 orderId, uint256 flowId) external;
 }

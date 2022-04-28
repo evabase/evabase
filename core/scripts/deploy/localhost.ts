@@ -269,6 +269,55 @@ async function main() {
   console.log("evaSafesContractBal after=", evaSafesContractBal1);
   console.log("nftLimitOrderFlowProxyBal after=", nftLimitOrderFlowProxyBal1);
   console.log(await evaFlowController.getFlowMetas(1));
+
+  const withDrawData = evaFlowController.interface.encodeFunctionData(
+    "withdrawFundByUser",
+    [
+      "0x0000000000000000000000000000000000000000",
+      ethers.utils.parseEther("0.01"),
+    ]
+  );
+
+  const addFundByUser = evaFlowController.interface.encodeFunctionData(
+    "addFundByUser",
+    [
+      "0x0000000000000000000000000000000000000000",
+      ethers.utils.parseEther("0.01"),
+      evaSafes,
+    ]
+  );
+
+  let evaFlowControllerBal1 = await ethers.provider.getBalance(
+    evaFlowController.address
+  );
+
+  let userBal1 = await ethers.provider.getBalance(ownerO[0].address);
+  console.log("userBal1 before=", userBal1);
+  console.log("evaFlowControllerBal1 before=", evaFlowControllerBal1);
+  let evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
+  console.log("evaSafes before=", evaSafesBal1);
+
+  await evaSafesContract.proxy(evaFlowController.address, 0, addFundByUser, {
+    value: ethers.utils.parseEther("0.01"),
+  });
+  evaFlowControllerBal1 = await ethers.provider.getBalance(
+    evaFlowController.address
+  );
+  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
+  console.log("userBal1 mid=", userBal1);
+  console.log("evaFlowControllerBal1 mid=", evaFlowControllerBal1);
+  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
+  console.log("evaSafes mid=", evaSafesBal1);
+
+  await evaSafesContract.proxy(evaFlowController.address, 0, withDrawData);
+  evaFlowControllerBal1 = await ethers.provider.getBalance(
+    evaFlowController.address
+  );
+  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
+  console.log("userBal1 after=", userBal1);
+  console.log("evaFlowControllerBal1 after=", evaFlowControllerBal1);
+  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
+  console.log("evaSafes after=", evaSafesBal1);
   // await evaFlowController.createFlow(
   //   "ACE",
   //   1, // evabaseKeep

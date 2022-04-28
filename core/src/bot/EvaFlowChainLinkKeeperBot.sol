@@ -59,13 +59,7 @@ contract EvaFlowChainLinkKeeperBot is
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        // unchecked {
-        //     upkeepNeeded = block.number - lastBlockNum >= 10;
-        // }
-
-        // if (upkeepNeeded) {
         (upkeepNeeded, performData) = _check(checkData);
-        // }
     }
 
     function performUpkeep(bytes calldata performData) external override {

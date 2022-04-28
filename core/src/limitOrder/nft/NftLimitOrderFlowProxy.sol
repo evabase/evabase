@@ -21,23 +21,27 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         Order memory order
     ) external payable {
         uint256 _value = 0;
-        unchecked {
-            _value = msg.value - gasFee;
-            require(
-                order.amount * order.price <= _value,
-                "order value + gasFee must be greater than msg.value"
-            );
-        }
 
-        bytes32 orderId = nftLimitOrder.createOrder{value: _value}(order);
-        uint256 flowId = ser.registerFlow{value: gasFee}(
+        _value = msg.value - gasFee;
+        require(
+            order.amount * order.price <= _value,
+            "order value + gasFee must be greater than msg.value"
+        );
+
+        uint256 flowSize = ser.getFlowMetaSize();
+        bytes32 orderId = nftLimitOrder.createOrder{value: _value}(
+            order,
+            flowSize
+        );
+        uint256 afterFlowId = ser.registerFlow{value: gasFee}(
             "NftLimitOrder",
             network,
             address(nftLimitOrder),
             abi.encode(orderId)
         );
+        require(flowSize == afterFlowId, "flowId must be equal");
 
-        emit OrderCreated(msg.sender, flowId, orderId, order);
+        // emit OrderCreated(msg.sender, flowId, orderId, order);
     }
 
     function pauseFlow(IEvaFlowController ser, uint256 flowId)
@@ -46,9 +50,9 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     {
         ser.pauseFlow(flowId, bytes(""));
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
-        nftLimitOrder.changeStatus(orderId, true);
+        nftLimitOrder.changeStatus(orderId, true, flowId);
 
-        emit OrderPause(msg.sender, flowId, orderId);
+        // emit OrderPause(msg.sender, flowId, orderId);
     }
 
     function startFlow(IEvaFlowController ser, uint256 flowId)
@@ -57,9 +61,9 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     {
         ser.startFlow(flowId, bytes(""));
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
-        nftLimitOrder.changeStatus(orderId, false);
+        nftLimitOrder.changeStatus(orderId, false, flowId);
 
-        emit OrderStart(msg.sender, flowId, orderId);
+        // emit OrderStart(msg.sender, flowId, orderId);
     }
 
     function destroyFlow(IEvaFlowController ser, uint256 flowId)
@@ -68,9 +72,9 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     {
         ser.startFlow(flowId, bytes(""));
         (INftLimitOrder exchange, bytes32 orderId) = _getInfo(ser, flowId);
-        exchange.cancelOrder(orderId);
+        exchange.cancelOrder(orderId, flowId);
 
-        emit OrderCancel(msg.sender, flowId, orderId);
+        // emit OrderCancel(msg.sender, flowId, orderId);
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)
