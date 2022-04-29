@@ -35,7 +35,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
 
         bytes memory bytecode = type(EvaSafes).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(user));
-        //no-inline-assembly
+        // solhint-disable no-inline-assembly
         assembly {
             wallet := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
