@@ -38,7 +38,7 @@ contract LOB is Ownable {
         bool paused;
     }
 
-    event OrderCreated(bytes32 indexed orderId, uint256 fee);
+    event OrderCreated(bytes32 indexed orderId, address indexed owner, uint256 fee);
     event OrderExecuted(bytes32 indexed orderId, uint256 input, uint256 output);
     event OrderCancelled(bytes32 indexed orderId, uint256 returnAmount);
     event OrderPaused(bytes32 indexed orderId, bool paused);
@@ -80,8 +80,7 @@ contract LOB is Ownable {
             // feeTo never empty
             TransferHelper.safeTransferTokenOrETH(order.inputToken, feeTo, fee);
         }
-
-        emit OrderCreated(orderId, fee);
+        emit OrderCreated(orderId, order.owner, fee);
     }
 
     /**
@@ -89,7 +88,9 @@ contract LOB is Ownable {
      */
     function cancelOrder(bytes32 orderId) public onlySeller(orderId) {
         uint256 balance = _orderStatus[orderId].balance;
-        _transferOutBalance(orderId, msg.sender, balance);
+        address receiptor = _orders[orderId].receiptor;
+        // msg.sender is order owner
+        _transferOutBalance(orderId, receiptor == address(0) ? msg.sender : receiptor, balance);
         emit OrderCancelled(orderId, balance);
     }
 

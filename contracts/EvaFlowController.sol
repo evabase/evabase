@@ -214,7 +214,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId, bytes memory _flowCode) external override {
+    function destroyFlow(uint256 _flowId, bytes memory) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
         require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
