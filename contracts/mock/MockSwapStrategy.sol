@@ -8,7 +8,7 @@ import "../limitOrder/erc20/interfaces/IStrategy.sol";
 import "../limitOrder/erc20/strategyies/StrategyBase.sol";
 
 contract MockSwapStrategy is IStrategy {
-    uint256 amountOut;
+    uint256 private _amountOut;
 
     struct SwapArgs {
         address[] path;
@@ -21,7 +21,7 @@ contract MockSwapStrategy is IStrategy {
         address inputToken,
         address outputToken,
         uint256 maxInput,
-        uint256 minRate
+        uint256
     )
         external
         view
@@ -39,6 +39,7 @@ contract MockSwapStrategy is IStrategy {
         input = maxInput;
         output = input * 2;
         execData = abi.encode(
+            // solhint-disable not-rely-on-time
             SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + 1 hours})
         );
     }
@@ -54,16 +55,16 @@ contract MockSwapStrategy is IStrategy {
 
         uint256 balance = TransferHelper.balanceOf(inputToken, address(this));
         require(balance >= args.amountIn, "bad input amount");
-        uint256 out = amountOut == 0 ? args.amountOutMin : amountOut;
+        uint256 out = _amountOut == 0 ? args.amountOutMin : _amountOut;
         //自动Mint代币
         if (outputToken != TransferHelper.ETH_ADDRESS) {
             MockERC20(outputToken).mint(out);
         }
         TransferHelper.safeTransferTokenOrETH(outputToken, msg.sender, out);
-        amountOut = 0; //reset
+        _amountOut = 0; //reset
     }
 
     function mockSwapOut(uint256 amount) external {
-        amountOut = amount;
+        _amountOut = amount;
     }
 }

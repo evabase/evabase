@@ -14,9 +14,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract StrategyBase is Ownable {
     using SafeMath for uint256;
-    uint256 private constant DEADLINE = 30 minutes;
-    address private immutable WETH;
-    uint256 private immutable BP; //997
+    uint256 public constant DEADLINE = 30 minutes;
+    address public immutable weth;
+    uint256 public immutable bp; //997
     IUniswapV2Router02 public immutable router;
 
     struct SwapArgs {
@@ -28,8 +28,8 @@ contract StrategyBase is Ownable {
 
     constructor(IUniswapV2Router02 _router, uint256 bp) {
         router = _router;
-        WETH = _router.WETH();
-        BP = bp; //997
+        weth = _router.weth();
+        bp = bp; //997
     }
 
     function calcMaxInput(
@@ -50,12 +50,12 @@ contract StrategyBase is Ownable {
 
         // (in*0.997*R1)/(R0+in*0.997) >= in*MinRate
         // =>  in <= (997*R1 - 1000*MinRate*R0)/(997*MinRate)
-        uint256 a = BP.mul(uint256(r1));
+        uint256 a = bp.mul(uint256(r1));
         uint256 b = minRate.mul(uint256(r0)).mul(1000).div(1e18);
         if (b >= a) {
             return 0;
         }
-        uint256 c = BP.mul(minRate).div(1e18);
+        uint256 c = bp.mul(minRate).div(1e18);
         amountIn = (a - b).div(c);
     }
 
@@ -79,10 +79,10 @@ contract StrategyBase is Ownable {
         )
     {
         if (inputToken == TransferHelper.ETH_ADDRESS) {
-            inputToken = WETH;
+            inputToken = weth;
         }
         if (outputToken == TransferHelper.ETH_ADDRESS) {
-            outputToken = WETH;
+            outputToken = weth;
         }
         address[] memory path = new address[](2);
         path[0] = inputToken;
@@ -97,6 +97,7 @@ contract StrategyBase is Ownable {
         output = amounts[amounts.length - 1];
         input = amounts[0];
         execData = abi.encode(
+            // solhint-disable not-rely-on-time
             SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + DEADLINE})
         );
     }

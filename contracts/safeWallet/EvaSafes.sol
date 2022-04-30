@@ -69,5 +69,5 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     /**
     @dev can receive ETH, owner can refund.
    */
-    receive() external payable {}
+    receive() external payable {} // solhint-disable no-empty-blocks
 }
