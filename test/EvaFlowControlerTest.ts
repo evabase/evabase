@@ -6,13 +6,13 @@ import { solidity } from 'ethereum-waffle';
 chai.use(solidity);
 const help = require('./initEvebase.ts');
 
-describe('EvaFlowControler', function () {
+describe('EvaFlowController', function () {
   let app: any;
   before(async function () {
     app = await help.initEvebase();
   });
 
-  it('Should return the new EvaFlowControler creat', async function () {
+  it('Should return the new EvaFlowController creat', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
     const evaFlowController = app.evaFlowController;
     // const evabaseConfig = app.evabaseConfig;
@@ -26,15 +26,15 @@ describe('EvaFlowControler', function () {
 
     // const flowCode = '0x';
     console.log('ownerO[0]', ownerO[0].address);
-    await evaFlowController.registerFlow('ace', 1, ownerO[0].address, flowCode, { value: 10000 });
+    await expect(evaFlowController.registerFlow('ace', 1, ownerO[0].address, flowCode, { value: 10000 })).to.reverted;
 
     const size = await evaFlowController.getAllVaildFlowSize(1);
     // const flowMetas = await evaFlowController.getFlowMetas(1);
     // console.log(flowMetas);
-    expect(ethers.BigNumber.from(1)).to.eql(size);
+    expect(ethers.BigNumber.from(0)).to.eql(size);
   });
 
-  it('Should return the new EvaFlowControler update/pause', async function () {
+  it('Should return the new EvaFlowController update/pause', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
     const evaFlowController = app.evaFlowController;
     const evabaseConfig = app.evabaseConfig;
