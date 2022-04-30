@@ -49,10 +49,9 @@ module.exports = {
     "prefer-const": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
-    "space-before-function-paren": ["error", "always"],
 
     "mocha/no-exclusive-tests": ["error"],
-
+    "space-before-function-paren": "off",
     "promise/always-return": "off",
     'promise/avoid-new': 'off',
     "no-unused-vars": 'off',

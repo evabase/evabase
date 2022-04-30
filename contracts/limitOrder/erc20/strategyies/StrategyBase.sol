@@ -138,4 +138,6 @@ contract StrategyBase is Ownable {
         bought = TransferHelper.balanceOf(outputToken, address(this)).sub(preSwapBalance);
         require(bought >= args.amountOutMin, "INSUFFICIENT_OUTPUT_AMOUNT");
     }
+
+    receive() external payable {} // solhint-disable  no-empty-blocks
 }

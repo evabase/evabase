@@ -112,7 +112,6 @@ contract LOB is Ownable {
     ) public onlyRunning {
         Order memory order = _orders[orderId];
         require(isActiveOrder(orderId), "ORDER_NOT_ACTIVE");
-        require(order.owner != msg.sender, "ORDER_YOURSELF");
 
         if (order.foc) {
             // full deal or cancel
@@ -196,6 +195,7 @@ contract LOB is Ownable {
         uint96 balance = _orderStatus[orderId].balance;
         require(amount <= uint256(balance), "INSUFFICIENT_BALANCE");
         _orderStatus[orderId].balance = balance - uint96(amount);
+
         TransferHelper.safeTransferTokenOrETH(_orders[orderId].inputToken, to, amount);
     }
 

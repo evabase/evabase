@@ -360,8 +360,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
 
-        IEvaSafes safes = IEvaSafes(evaSafesFactory.get(flow.admin));
-
+        // TODO: flow 必须被 Safes 创建，否则无法执行execFlow
+        IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
         try safes.execFlow(flow.lastVersionflow, execData) {

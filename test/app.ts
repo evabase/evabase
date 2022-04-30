@@ -1,3 +1,4 @@
+'use strict';
 import { ethers } from 'hardhat';
 import { EvabaseConfig, EvaFlowController, EvaSafesFactory } from '../typechain/index';
 import { initEvebase } from './initEvebase';
@@ -37,8 +38,6 @@ export class App {
   public safesFactory!: EvaSafesFactory;
   public controler!: EvaFlowController;
 
-  constructor() {}
-
   async deploy() {
     const result = await initEvebase();
     this.config = result.evabaseConfig as EvabaseConfig;
@@ -47,7 +46,7 @@ export class App {
   }
 
   async createOrLoadWalletSeafes(acct: string) {
-    var find = await this.safesFactory.get(acct);
+    let find = await this.safesFactory.get(acct);
     if (find === ethers.constants.AddressZero) {
       await this.safesFactory.create(acct);
       find = await this.safesFactory.get(acct);

@@ -1,4 +1,5 @@
 'use strict';
+import { config } from 'dotenv';
 /* eslint-disable prettier/prettier */
 // import chai, { expect } from "chai";
 import { ethers } from 'hardhat';
@@ -49,6 +50,7 @@ export const initEvebase = async function initEvebase() {
   // await config.setWalletFactory(factory.address);
   // await config.addKeeper(anyKeeper.address);
 
+  await evabaseConfig.setControl(evaFlowControler.address);
   return {
     evabaseConfig,
     evaSafesFactory,
