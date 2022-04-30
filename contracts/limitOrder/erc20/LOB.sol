@@ -20,9 +20,9 @@ contract LOB is Ownable {
     using SafeERC20 for IERC20;
     // using Fabric for bytes32;
 
-    uint256 private constant FEE_UNIT = 10000;
-    uint256 private constant ORDER_MIN_AGE = 10 minutes;
-    uint256 private constant ORDER_MAX_AGE = 90 days;
+    uint256 private constant _FEE_UNIT = 10000;
+    uint256 private constant _ORDER_MIN_AGE = 10 minutes;
+    uint256 private constant _ORDER_MAX_AGE = 90 days;
     mapping(bytes32 => Order) private _orders;
     mapping(bytes32 => OrderStatus) private _orderStatus;
 
@@ -57,7 +57,8 @@ contract LOB is Ownable {
 
         require(order.owner == msg.sender, "WRONG_INPUT_OWNER");
         require(
-            order.expiration >= block.timestamp + ORDER_MIN_AGE && order.expiration <= block.timestamp + ORDER_MAX_AGE,
+            order.expiration >= block.timestamp + _ORDER_MIN_AGE && //solhint-disable  not-rely-on-time
+                order.expiration <= block.timestamp + _ORDER_MAX_AGE, //solhint-disable  not-rely-on-time
             "WRONG_EXPIRATION"
         );
         require(_orders[orderId].owner == address(0), "ORDER_EXIST");
@@ -146,6 +147,7 @@ contract LOB is Ownable {
 
     function isActiveOrder(bytes32 orderId) public view returns (bool) {
         OrderStatus memory status = _orderStatus[orderId];
+        //solhint-disable  not-rely-on-time
         return !status.paused && status.balance > 0 && _orders[orderId].expiration >= block.timestamp;
     }
 
@@ -174,14 +176,14 @@ contract LOB is Ownable {
 
         if (feeTo != address(0)) {
             // fee will always be less then amountIn
-            fee = uint256(cfg.basisPointsRate).mul(amountIn).div(FEE_UNIT);
+            fee = uint256(cfg.basisPointsRate).mul(amountIn).div(_FEE_UNIT);
         }
     }
 
     function setConfig(Config calldata cfg) external onlyOwner {
         config = cfg;
         // safe check
-        require(cfg.basisPointsRate < FEE_UNIT, "INVALID_RATE");
+        require(cfg.basisPointsRate < _FEE_UNIT, "INVALID_RATE");
         emit ConfigChanged(cfg);
     }
 

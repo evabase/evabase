@@ -15,7 +15,7 @@ contract IEvaFlowTest is IEvaFlow {
         return _owner;
     }
 
-    function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
+    function check(bytes memory) external view override returns (bool needExecute, bytes memory executeData) {
         return (true, bytes(""));
     }
 
@@ -23,7 +23,7 @@ contract IEvaFlowTest is IEvaFlow {
         revert("F");
     }
 
-    function execute(bytes memory executeData) external override {
+    function execute(bytes memory) external override {
         return;
     }
 }
