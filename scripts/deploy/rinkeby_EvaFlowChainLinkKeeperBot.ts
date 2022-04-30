@@ -3,11 +3,11 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import "@openzeppelin/hardhat-upgrades";
-import { ethers } from "hardhat";
-const store = require("data-store")({
+import '@openzeppelin/hardhat-upgrades';
+import { ethers } from 'hardhat';
+const store = require('data-store')({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deploy/rinkeby.json",
+  path: process.cwd() + '/scripts/deploy/rinkeby.json',
 });
 
 async function main() {
@@ -22,24 +22,20 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory(
-    "EvaFlowChainLinkKeeperBot"
-  );
+  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
-    store.get("evabaseConfig"),
-    store.get("evaFlowChecker"),
+    store.get('evabaseConfig'),
+    store.get('evaFlowChecker'),
     // evaFlowControler.address,
     // store.get("linkToken"),
-    store.get("chainlinkKeeperRegistry"),
-    0
+    store.get('chainlinkKeeperRegistry'),
+    0,
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
-  console.log(
-    `evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`
-  );
-  store.set("evaFlowChainLinkKeeperBot", evaFlowChainLinkKeeperBot.address);
+  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
+  store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -6,12 +6,9 @@ import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
 import {Utils} from "./lib/Utils.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
-import {IEvaFlow} from "./interfaces/IEvaFlow.sol";
 import "./interfaces/IEvabaseConfig.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -25,12 +22,12 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     ////need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
-    mapping(KeepNetWork => EvabaseHelper.UintSet) vaildFlows;
-    // EvabaseHelper.UintSet vaildFlows;
-    uint256 private constant REGISTRY_GAS_OVERHEAD = 80_000;
+    mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
+    // EvabaseHelper.UintSet _vaildFlows;
+    uint256 private constant _REGISTRY_GAS_OVERHEAD = 80_000;
     // using LibSingleList for LibSingleList.List;
     // using LibSingleList for LibSingleList.Iterate;
-    // LibSingleList.List vaildFlows;
+    // LibSingleList.List _vaildFlows;
 
     uint256 public constant MAX_INT = 2 ^ (256 - 1);
 
@@ -70,12 +67,12 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             _minConfig.feeToken,
             _minConfig.minGasFundForUser,
             _minConfig.minGasFundOneFlow,
-            _minConfig.PPB,
+            _minConfig.ppb,
             _minConfig.blockCountPerTurn
         );
     }
 
-    function checkEnoughGas() internal view {
+    function _checkEnoughGas() internal view {
         // 需要修正
         bool isEnoughGas = true;
 
@@ -98,11 +95,12 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     }
 
     function isValidFlow(address flow) public returns (bool) {
+        require(flow != address(0), "flow is 0x");
         return true; //TODO: 需要维护合法Flow清单
     }
 
     function _appendFee(address acct, uint256 amount) private {
-        userMetaMap[msg.sender].ethBal += Utils.toUint120(amount);
+        userMetaMap[acct].ethBal += Utils.toUint120(amount);
     }
 
     function registerFlow(
@@ -116,7 +114,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         _appendFee(msg.sender, msg.value);
         userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // 如果溢出则报错
         //检查Gas费余额是否足够
-        checkEnoughGas();
+        _checkEnoughGas();
         _flowMetas.push(
             EvaFlowMeta({
                 flowStatus: FlowStatus.Active,
@@ -131,7 +129,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             })
         );
         flowId = _flowMetas.length - 1;
-        vaildFlows[network].add(flowId);
+        _vaildFlows[network].add(flowId);
         emit FlowCreated(msg.sender, flowId, flow, checkdata, msg.value);
     }
 
@@ -162,19 +160,19 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
                 revert(0, 0)
             }
         }
-        // vaildFlows.remove(_flowId);
-        vaildFlows[keepNetWork].remove(_flowId);
+        // _vaildFlows.remove(_flowId);
+        _vaildFlows[keepNetWork].remove(_flowId);
         _flowMetas[_flowId].flowName = _flowName;
         _flowMetas[_flowId].lastKeeper = address(0);
         _flowMetas[_flowId].lastExecNumber = block.number;
         _flowMetas[_flowId].lastVersionflow = addr;
-        // vaildFlows.add(_flowId);
-        vaildFlows[keepNetWork].add(_flowId);
+        // _vaildFlows.add(_flowId);
+        _vaildFlows[keepNetWork].add(_flowId);
 
         emit FlowUpdated(msg.sender, _flowId, addr);
     }
 
-    function pauseFlow(uint256 _flowId, bytes memory _flowCode) external override {
+    function pauseFlow(uint256 _flowId) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
         require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
@@ -185,9 +183,9 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum - 1;
 
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // vaildFlows.remove(_flowId);
+            // _vaildFlows.remove(_flowId);
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            vaildFlows[keepNetWork].remove(_flowId);
+            _vaildFlows[keepNetWork].remove(_flowId);
         }
         //pause flow IEvaFlow
         // IEvaFlow(_flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
@@ -195,7 +193,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowPaused(msg.sender, _flowId);
     }
 
-    function startFlow(uint256 _flowId, bytes memory _flowCode) external override {
+    function startFlow(uint256 _flowId) external override {
         require(_flowId < _flowMetas.length, "over bound");
 
         require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
@@ -206,22 +204,22 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum + 1;
 
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // vaildFlows.add(_flowId);
+            // _vaildFlows.add(_flowId);
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            vaildFlows[keepNetWork].add(_flowId);
+            _vaildFlows[keepNetWork].add(_flowId);
         }
 
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId, bytes memory _flowCode) external override {
+    function destroyFlow(uint256 _flowId) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
         require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
         if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // vaildFlows.remove(_flowId);
+            // _vaildFlows.remove(_flowId);
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            vaildFlows[keepNetWork].remove(_flowId);
+            _vaildFlows[keepNetWork].remove(_flowId);
         }
 
         _flowMetas[_flowId].lastExecNumber = block.number;
@@ -295,7 +293,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     }
 
     function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view override returns (uint256 value) {
-        return vaildFlows[keepNetWork].get(index);
+        return _vaildFlows[keepNetWork].get(index);
     }
 
     function getVaildFlowRange(
@@ -303,11 +301,11 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint256 endIndex,
         KeepNetWork keepNetWork
     ) external view override returns (uint256[] memory arr) {
-        return vaildFlows[keepNetWork].getRange(fromIndex, endIndex);
+        return _vaildFlows[keepNetWork].getRange(fromIndex, endIndex);
     }
 
     function getAllVaildFlowSize(KeepNetWork keepNetWork) external view override returns (uint256 size) {
-        return vaildFlows[keepNetWork].getSize();
+        return _vaildFlows[keepNetWork].getSize();
     }
 
     function getFlowMetas(uint256 index) external view override returns (EvaFlowMeta memory) {
@@ -355,7 +353,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require(keeper != flow.lastKeeper, "expect next keeper");
+        require((keeper != flow.lastKeeper && flow.keepNetWork==KeepNetWork.ChainLink), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
@@ -382,7 +380,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint120 payAmountByFeeToken = 0;
 
         if (minConfig.feeToken == address(0)) {
-            payAmountByETH = Utils.toUint120(calculatePaymentAmount(usedGas));
+            payAmountByETH = Utils.toUint120(_calculatePaymentAmount(usedGas));
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
             if (tx.origin == address(0)) {
@@ -402,12 +400,12 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         }
     }
 
-    function calculatePaymentAmount(uint256 gasLimit) private view returns (uint96 payment) {
+    function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint96 payment) {
         uint256 total;
 
-        uint256 weiForGas = tx.gasprice * (gasLimit + REGISTRY_GAS_OVERHEAD);
+        uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
         // uint256 premium = minConfig.add(config.paymentPremiumPPB);
-        total = weiForGas * (minConfig.PPB);
+        total = weiForGas * (minConfig.ppb);
 
         //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
         return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX

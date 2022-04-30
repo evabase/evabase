@@ -22,7 +22,7 @@ module.exports = {
       { ignores: ["modules"] },
     ],
     // Strict mode
-    "strict": ["error", "global"],
+    "strict": ["warn", "global"],
 
     // Code style
     "array-bracket-spacing": ["off"],

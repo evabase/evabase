@@ -21,7 +21,7 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
 
     function changeConfig(address _config) external override onlyOwner {
         config = _config;
-        emit configChanged(_config);
+        emit ConfigChanged(_config);
     }
 
     /**

@@ -10,8 +10,8 @@ import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 contract EvaFlowChecker {
     IEvabaseConfig public config;
 
-    uint32 public constant checkGasLimitMin = 4_000_0;
-    uint32 private constant GAS_LIMIT = 2_000_000;
+    uint32 public constant CHECK_GASLIMIT_MIN = 4_000_0;
+    uint32 private constant _GAS_LIMIT = 2_000_000;
 
     constructor(address _config) {
         // require(_evaFlowControler != address(0), "addess is 0x");
@@ -142,7 +142,7 @@ contract EvaFlowChecker {
 
                 uint256 afterGas = gasleft();
                 totalGas = totalGas + beforGas - afterGas;
-                if (totalGas > GAS_LIMIT || afterGas < checkGasLimitMin) {
+                if (totalGas > _GAS_LIMIT || afterGas < CHECK_GASLIMIT_MIN) {
                     return (tmp, jj, datas);
                 }
                 if (needExec) {
