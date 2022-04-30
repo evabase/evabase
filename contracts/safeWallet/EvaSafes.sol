@@ -66,7 +66,7 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         }
     }
 
-    function isEvaSafes() pure external override returns (bool) {
+    function isEvaSafes() external pure override returns (bool) {
         return true;
     }
 

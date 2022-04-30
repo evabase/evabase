@@ -18,5 +18,5 @@ interface IEvaSafes {
 
     function execFlow(address flow, bytes calldata execData) external;
 
-    function isEvaSafes() pure external returns (bool);
+    function isEvaSafes() external pure returns (bool);
 }

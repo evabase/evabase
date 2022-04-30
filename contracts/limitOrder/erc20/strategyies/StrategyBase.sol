@@ -26,12 +26,10 @@ contract StrategyBase is Ownable {
         uint256 deadline;
     }
 
-
     constructor(IUniswapV2Router02 router_, uint256 bp_) {
         router = router_;
         weth = router_.WETH();
         bp = bp_; //997
-
     }
 
     function calcMaxInput(
