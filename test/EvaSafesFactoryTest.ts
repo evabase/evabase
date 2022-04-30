@@ -1,17 +1,18 @@
-import chai, { expect } from "chai";
+'use strict';
+import chai, { expect } from 'chai';
 // import { ethers } from "hardhat";
-import { solidity } from "ethereum-waffle";
+import { solidity } from 'ethereum-waffle';
 
 chai.use(solidity);
-const help = require("./initEvebase.ts");
-describe("EvaSafesFactory", function () {
+const help = require('./initEvebase.ts');
+describe('EvaSafesFactory', function () {
   let app: any;
   before(async function () {
     app = await help.initEvebase();
   });
-  const testaddress = "0x707cc7727Ca057056516b48864F0BA52B8A03A2b";
+  const testaddress = '0x707cc7727Ca057056516b48864F0BA52B8A03A2b';
 
-  it("Should return the new EvaSafesFactory create safes", async function () {
+  it('Should return the new EvaSafesFactory create safes', async function () {
     const evaSafesFactory = app.evaSafesFactory;
     const evaFlowControler = app.evaFlowControler;
     const evabaseConfig = app.evabaseConfig;
@@ -30,7 +31,7 @@ describe("EvaSafesFactory", function () {
     expect(before === real);
   });
 
-  it("Should return the new evaFlowControler address same", async function () {
+  it('Should return the new evaFlowControler address same', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
     const evaFlowControler = app.evaFlowControler;
     const evabaseConfig = app.evabaseConfig;

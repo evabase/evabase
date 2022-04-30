@@ -1,13 +1,14 @@
+'use strict';
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import "@openzeppelin/hardhat-upgrades";
-import { ethers, upgrades } from "hardhat";
-const store = require("data-store")({
+import '@openzeppelin/hardhat-upgrades';
+import { ethers, upgrades } from 'hardhat';
+const store = require('data-store')({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deploy/rinkeby.json",
+  path: process.cwd() + '/scripts/deploy/rinkeby.json',
 });
 
 async function main() {
@@ -21,9 +22,7 @@ async function main() {
   // We get the contract to deploy
 
   // 6 NftLimitOrder upgrade
-  const NftLimitOrderFlow = await ethers.getContractFactory(
-    "NftLimitOrderFlow"
-  );
+  const NftLimitOrderFlow = await ethers.getContractFactory('NftLimitOrderFlow');
 
   // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
   // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
@@ -40,11 +39,8 @@ async function main() {
   // store.set("NftLimitOrderFlow", upgrade.address);
 
   // const BoxV2 = await ethers.getContractFactory("BoxV2");
-  await upgrades.upgradeProxy(
-    store.get("NftLimitOrderFlow"),
-    NftLimitOrderFlow
-  );
-  console.log("NftLimitOrderFlow upgraded");
+  await upgrades.upgradeProxy(store.get('NftLimitOrderFlow'), NftLimitOrderFlow);
+  console.log('NftLimitOrderFlow upgraded');
 
   // await evaFlowControler.addEvabaseFlowByOwner(
   //   upgrade.address,
