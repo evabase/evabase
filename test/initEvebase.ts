@@ -1,3 +1,4 @@
+'use strict';
 /* eslint-disable prettier/prettier */
 // import chai, { expect } from "chai";
 import { ethers } from 'hardhat';

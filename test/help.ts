@@ -1,3 +1,4 @@
+'use strict';
 import { ethers } from 'hardhat';
 import { ethers as ethersV5 } from 'ethers';
 

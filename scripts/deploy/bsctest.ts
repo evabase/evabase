@@ -1,13 +1,14 @@
+'use strict';
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import "@openzeppelin/hardhat-upgrades";
-import { ethers } from "hardhat";
-const store = require("data-store")({
+import '@openzeppelin/hardhat-upgrades';
+import { ethers } from 'hardhat';
+const store = require('data-store')({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deploy/bsctest.json",
+  path: process.cwd() + '/scripts/deploy/bsctest.json',
 });
 
 async function main() {
@@ -22,69 +23,58 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
   // 1 config
-  const EvabaseConfig = await ethers.getContractFactory("EvabaseConfig");
+  const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
   const evabaseConfig = await EvabaseConfig.deploy();
 
   await evabaseConfig.deployed();
   console.log(`evabaseConfig: ${evabaseConfig.address}`);
-  store.set("evabaseConfig", evabaseConfig.address);
+  store.set('evabaseConfig', evabaseConfig.address);
   // 2 EvaSafesFactory
-  const EvaSafesFactory = await ethers.getContractFactory("EvaSafesFactory");
+  const EvaSafesFactory = await ethers.getContractFactory('EvaSafesFactory');
   const evaSafesFactory = await EvaSafesFactory.deploy(evabaseConfig.address);
 
   await evaSafesFactory.deployed();
-  store.set("evaSafesFactory", evaSafesFactory.address);
+  store.set('evaSafesFactory', evaSafesFactory.address);
   console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
 
   // 3 EvaFlowController
-  const EvaFlowController = await ethers.getContractFactory(
-    "EvaFlowController"
-  );
-  const evaFlowController = await EvaFlowController.deploy(
-    evabaseConfig.address,
-    evaSafesFactory.address
-  );
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
+  const evaFlowController = await EvaFlowController.deploy(evabaseConfig.address, evaSafesFactory.address);
   await evaFlowController.deployed();
   await evabaseConfig.setControl(evaFlowController.address);
-  store.set("evaFlowController", evaFlowController.address);
+  store.set('evaFlowController', evaFlowController.address);
   console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4 EvaFlowChecker
-  const EvaFlowChecker = await ethers.getContractFactory("EvaFlowChecker");
+  const EvaFlowChecker = await ethers.getContractFactory('EvaFlowChecker');
   const evaFlowChecker = await EvaFlowChecker.deploy(
-    evabaseConfig.address
+    evabaseConfig.address,
     // evaFlowController.address
   );
   await evaFlowChecker.deployed();
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
-  store.set("evaFlowChecker", evaFlowChecker.address);
+  store.set('evaFlowChecker', evaFlowChecker.address);
   // 5 EvaFlowChainLinkKeeperBot
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory(
-    "EvaFlowChainLinkKeeperBot"
-  );
+  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
     // evaFlowController.address,
     // store.get("linkToken"),
-    store.get("chainlinkKeeperRegistry"),
-    0
+    store.get('chainlinkKeeperRegistry'),
+    0,
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
-  console.log(
-    `evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`
-  );
-  store.set("evaFlowChainLinkKeeperBot", evaFlowChainLinkKeeperBot.address);
+  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
+  store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
 
   // 6 NftLimitOrder
   // const NftLimitOrderFlow = await ethers.getContractFactory(
   //   "NftLimitOrderFlow"
   // ); NftLimitOrderFlowProxy
 
-  const NftLimitOrderFlowProxy = await ethers.getContractFactory(
-    "NftLimitOrderFlowProxy"
-  );
+  const NftLimitOrderFlowProxy = await ethers.getContractFactory('NftLimitOrderFlowProxy');
   // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
   // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
 
@@ -97,17 +87,12 @@ async function main() {
   // ]);
 
   // await upgrade.deployed();
-  const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(
-    evabaseConfig.address,
-    factory,
-    "EVABASE",
-    "1"
-  );
+  const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(evabaseConfig.address, factory, 'EVABASE', '1');
 
   await nftLimitOrderFlowProxy.deployed();
 
-  console.log("NftLimitOrderFlow deployed to:", nftLimitOrderFlowProxy.address);
-  store.set("NftLimitOrderFlow", nftLimitOrderFlowProxy.address);
+  console.log('NftLimitOrderFlow deployed to:', nftLimitOrderFlowProxy.address);
+  store.set('NftLimitOrderFlow', nftLimitOrderFlowProxy.address);
 
   // const Order = [
   //   { name: "owner", type: "addess" },
@@ -283,16 +268,16 @@ async function main() {
 
   // await evaFlowController.destroyFlow(1, myStructData);
   // 7 evabase bot
-  const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
+  const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
     // evaFlowController.address,
-    1 // KeepNetWork.Evabase
+    1, // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
-  store.set("evaBaseServerBot", evaBaseServerBot.address);
+  store.set('evaBaseServerBot', evaBaseServerBot.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

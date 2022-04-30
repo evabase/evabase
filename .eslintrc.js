@@ -55,5 +55,6 @@ module.exports = {
 
     "promise/always-return": "off",
     'promise/avoid-new': 'off',
+    "no-unused-vars": 'off',
   },
 };

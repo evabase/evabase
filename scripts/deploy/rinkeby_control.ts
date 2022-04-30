@@ -1,13 +1,14 @@
+'use strict';
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import "@openzeppelin/hardhat-upgrades";
-import { ethers } from "hardhat";
-const store = require("data-store")({
+import '@openzeppelin/hardhat-upgrades';
+import { ethers } from 'hardhat';
+const store = require('data-store')({
   // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + "/scripts/deploy/rinkeby.json",
+  path: process.cwd() + '/scripts/deploy/rinkeby.json',
 });
 
 async function main() {
@@ -23,13 +24,8 @@ async function main() {
   console.log(`deployer owner : ${ownerO[0].address}`);
 
   // EvaFlowController
-  const EvaFlowController = await ethers.getContractFactory(
-    "EvaFlowController"
-  );
-  const evaFlowController = await EvaFlowController.deploy(
-    store.get("evabaseConfig"),
-    store.get("evaSafesFactory")
-  );
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
+  const evaFlowController = await EvaFlowController.deploy(store.get('evabaseConfig'), store.get('evaSafesFactory'));
   await evaFlowController.deployed();
   // const Order = [
   //   { name: "owner", type: "addess" },
@@ -42,16 +38,8 @@ async function main() {
   // ];
 
   const myStructData = ethers.utils.AbiCoder.prototype.encode(
-    [
-      "address",
-      "address",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-    ],
-    [ownerO[0].address, ownerO[0].address, 100, 1, 16803555107, 342905, 1899909]
+    ['address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
+    [ownerO[0].address, ownerO[0].address, 100, 1, 16803555107, 342905, 1899909],
   );
 
   // const tx = await myContract.myFunction(myStructData, {
@@ -73,14 +61,14 @@ async function main() {
   console.log(`data: ${myStructData}`);
 
   await evaFlowController.createFlow(
-    "ACE",
+    'ACE',
     1, // evabaseKeep
-    store.get("NftLimitOrderFlow"),
+    store.get('NftLimitOrderFlow'),
     myStructData,
     200000,
     {
-      value: ethers.utils.parseEther("0.01"),
-    }
+      value: ethers.utils.parseEther('0.01'),
+    },
   );
 
   await evaFlowController.pauseFlow(1, myStructData);
@@ -92,7 +80,7 @@ async function main() {
   //   "NFTLimitOrderFlow"
   // );
 
-  store.set("evaFlowController", evaFlowController.address);
+  store.set('evaFlowController', evaFlowController.address);
   console.log(`evaFlowController: ${evaFlowController.address}`);
 }
 
