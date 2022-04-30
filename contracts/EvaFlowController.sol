@@ -214,7 +214,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId, bytes memory _flowCode) external override {
+    function destroyFlow(uint256 _flowId, bytes memory) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
         require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
@@ -360,8 +360,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
 
-        IEvaSafes safes = IEvaSafes(evaSafesFactory.get(flow.admin));
-
+        // TODO: flow 必须被 Safes 创建，否则无法执行execFlow
+        IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
         try safes.execFlow(flow.lastVersionflow, execData) {
