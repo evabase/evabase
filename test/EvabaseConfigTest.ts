@@ -1,4 +1,5 @@
-/* eslint-disable strict */
+'use strict';
+
 import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
@@ -26,7 +27,9 @@ describe('EvabaseConfig', function () {
     expect(await evabaseConfig.batchFlowNum()).to.equal(4);
 
     const keeper = '0x707cc7727Ca057056516b48864F0BA52B8A03A2b';
+
     const addKeepTx = await evabaseConfig.addKeeper(keeper, 1);
+
     // wait until the transaction is mined
     await addKeepTx.wait();
 

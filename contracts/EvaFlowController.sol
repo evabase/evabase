@@ -92,6 +92,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     function _beforeCreateFlow(KeepNetWork _keepNetWork) internal {
         require(uint256(_keepNetWork) <= uint256(KeepNetWork.Others), "invalid netWork");
+         IEvaSafes safes = IEvaSafes(msg.sender);
+         require(safes.isEvaSafes(),"should be safes");
     }
 
     function isValidFlow(address flow) public returns (bool) {
@@ -358,8 +360,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
 
-        IEvaSafes safes = IEvaSafes(evaSafesFactory.get(flow.admin));
-
+        //  flow 必须被 Safes 创建，否则无法执行execFlow
+        IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
         try safes.execFlow(flow.lastVersionflow, execData) {

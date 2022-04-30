@@ -1,17 +1,18 @@
-/* eslint-disable strict */
+'use strict';
 import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
 
 chai.use(solidity);
 const help = require('./initEvebase.ts');
-describe('evaFlowController', function () {
+
+describe('EvaFlowControler', function () {
   let app: any;
   before(async function () {
     app = await help.initEvebase();
   });
 
-  it('Should return the new evaFlowController creat', async function () {
+  it('Should return the new EvaFlowControler creat', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
     const evaFlowController = app.evaFlowController;
     // const evabaseConfig = app.evabaseConfig;
@@ -33,7 +34,7 @@ describe('evaFlowController', function () {
     expect(ethers.BigNumber.from(1)).to.eql(size);
   });
 
-  it('Should return the new evaFlowController update/pause', async function () {
+  it('Should return the new EvaFlowControler update/pause', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
     const evaFlowController = app.evaFlowController;
     const evabaseConfig = app.evabaseConfig;

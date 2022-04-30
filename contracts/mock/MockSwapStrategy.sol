@@ -67,4 +67,6 @@ contract MockSwapStrategy is IStrategy {
     function mockSwapOut(uint256 amount) external {
         _amountOut = amount;
     }
+
+    receive() external payable {} // solhint-disable  no-empty-blocks
 }

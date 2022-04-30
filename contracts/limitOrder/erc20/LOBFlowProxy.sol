@@ -24,12 +24,16 @@ contract LOBFlowProxy is IEvaFlowProxy {
         uint256 gasFee,
         Order memory order
     ) external payable {
+        // disable call self
+        require(address(this) != address(exchange), "FORBIDDEN");
+
         uint256 value = 0;
         if (order.inputToken == TransferHelper.ETH_ADDRESS) {
-            value = msg.value - gasFee;
+            value = msg.value - gasFee; // will be revert when overflow
             require(order.inputAmount + gasFee == msg.value, "invalid input amount");
         } else {
-            //  pull token to accts'walletsafes from acct (msg.sender)
+            require(msg.value == gasFee, "invalid value");
+            //  pull token to acct's walletsafes from acct (msg.sender)
             TransferHelper.safeTransferFrom(order.inputToken, msg.sender, address(this), order.inputAmount);
             // approve Exchange can transfer amount
             TransferHelper.safeApprove(order.inputToken, address(exchange), order.inputAmount);
@@ -58,11 +62,11 @@ contract LOBFlowProxy is IEvaFlowProxy {
     function startFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId);
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
-        exchange.setPause(orderKey, true);
+        exchange.setPause(orderKey, false);
     }
 
     function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId);
+        ser.destroyFlow(flowId);
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderKey);
     }

@@ -1,4 +1,5 @@
-/* eslint-disable strict */
+'use strict';
+
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -11,7 +12,7 @@ const store = require('data-store')({
   path: process.cwd() + '/scripts/deploy/localhost.json',
 });
 
-async function main () {
+async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
   //

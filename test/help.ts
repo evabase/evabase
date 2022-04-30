@@ -1,5 +1,5 @@
-/* eslint-disable space-before-function-paren */
-/* eslint-disable strict */
+'use strict';
+
 import { ethers } from 'hardhat';
 import { ethers as ethersV5 } from 'ethers';
 

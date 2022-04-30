@@ -26,10 +26,12 @@ contract StrategyBase is Ownable {
         uint256 deadline;
     }
 
-    constructor(IUniswapV2Router02 _router, uint256 _bp) {
-        router = _router;
-        weth = _router.WETH();
-        bp = _bp; //997
+
+    constructor(IUniswapV2Router02 router_, uint256 bp_) {
+        router = router_;
+        weth = router_.WETH();
+        bp = bp_; //997
+
     }
 
     function calcMaxInput(
@@ -138,4 +140,6 @@ contract StrategyBase is Ownable {
         bought = TransferHelper.balanceOf(outputToken, address(this)).sub(preSwapBalance);
         require(bought >= args.amountOutMin, "INSUFFICIENT_OUTPUT_AMOUNT");
     }
+
+    receive() external payable {} // solhint-disable  no-empty-blocks
 }
