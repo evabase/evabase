@@ -96,13 +96,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         uint256 total = order.amount * order.price;
         require(total <= msg.value, "order amount*price must be less than or equal to msg.value");
 
-        bytes32 orderId = hashOrder(order);
+        orderId = hashOrder(order);
         require(orderExists[orderId].owner == address(0), "order exist");
 
         orderExists[orderId] = OrderExist({amount: 0, owner: order.owner, balance: Utils.toUint96(total)});
 
         emit OrderCreated(msg.sender, flowId, orderId);
-        return orderId;
     }
 
     function changeStatus(

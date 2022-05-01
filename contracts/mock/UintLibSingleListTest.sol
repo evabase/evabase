@@ -1,3 +1,5 @@
+//SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 import "../lib/EvabaseHelper.sol";
 import "./Utils.sol";
@@ -39,7 +41,7 @@ contract UintLibSingleListTest {
         uint256 keepBotSize,
         uint256 keepbotId,
         uint32 batch
-    ) public view returns (uint256[] memory arr) {
+    ) public pure returns (uint256[] memory arr) {
         (uint256 start, uint256 end) = Utils.getAvail(allVaildSize, keepBotSize, keepbotId, batch);
 
         arr = new uint256[](2);

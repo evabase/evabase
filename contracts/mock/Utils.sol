@@ -8,7 +8,7 @@ library Utils {
         uint256 keepBotSize,
         uint256 keepbotId,
         uint32 batch
-    ) internal view returns (uint256 start, uint256 end) {
+    ) internal pure returns (uint256 start, uint256 end) {
         require(keepBotSize > 0 && allVaildSize > 0 && keepbotId > 0, "gt 0");
         if (allVaildSize > keepBotSize) {
             uint256 quotient = allVaildSize / keepBotSize;

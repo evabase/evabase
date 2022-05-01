@@ -21,7 +21,7 @@ library Utils {
         return (abi.encode(_uint, _bytes));
     }
 
-    function hashCompareInternal(bytes memory a, bytes memory b) internal returns (bool) {
+    function hashCompareInternal(bytes memory a, bytes memory b) internal pure returns (bool) {
         return keccak256(a) == keccak256(b);
     }
 
