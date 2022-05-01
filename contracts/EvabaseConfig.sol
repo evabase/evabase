@@ -24,7 +24,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     }
 
     function addKeeper(address _keeper, KeepNetWork keepNetWork) external override {
-        require(tx.origin == owner(), "only owner can add keeper");
+        require(msg.sender == owner(), "only owner can add keeper");
         require(!_keepBotExists[_keeper].isActive, "keeper exist");
 
         _keepBotExists[_keeper] = KeepStruct(true, keepNetWork);
@@ -36,7 +36,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     }
 
     function removeBatchKeeper(address[] memory arr) external override {
-        require(tx.origin == owner(), "only owner can add keeper");
+        require(msg.sender == owner(), "only owner can add keeper");
         // require(
         //     arr.length == keepNetWorks.length,
         //     "arr length not equal keepNetWorks length"
@@ -59,7 +59,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
     function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWorks) external override {
         require(arr.length == keepNetWorks.length, "arr length not equal keepNetWorks length");
-        require(tx.origin == owner(), "only owner can add keeper");
+        require(msg.sender == owner(), "only owner can add keeper");
         for (uint256 i = 0; i < arr.length; i++) {
             // if (!keepBots.contains(arr[i])) {
             //     keepBots.add(arr[i]);
@@ -82,7 +82,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     }
 
     function removeKeeper(address _keeper) external override {
-        require(tx.origin == owner(), "only owner can add keeper");
+        require(msg.sender == owner(), "only owner can add keeper");
         require(_keepBotExists[_keeper].isActive, "keeper not exist");
 
         KeepNetWork _keepNetWork = _keepBotExists[_keeper].keepNetWork;
