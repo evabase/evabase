@@ -1,4 +1,5 @@
 'use strict';
+
 import chai, { expect } from 'chai';
 // import { ethers } from "hardhat";
 import { solidity } from 'ethereum-waffle';
@@ -14,33 +15,33 @@ describe('EvaSafesFactory', function () {
 
   it('Should return the new EvaSafesFactory create safes', async function () {
     const evaSafesFactory = app.evaSafesFactory;
-    const evaFlowControler = app.evaFlowControler;
+    const evaFlowController = app.evaFlowController;
     const evabaseConfig = app.evabaseConfig;
-    await evabaseConfig.setControl(evaFlowControler.address);
+    await evabaseConfig.setControl(evaFlowController.address);
     // console.log(tx);
 
     await evaSafesFactory.calcSafes(testaddress);
 
-    await evaFlowControler.createEvaSafes(testaddress);
+    await evaSafesFactory.create(testaddress);
 
     const real = await evaSafesFactory.get(testaddress);
-    console.log(before);
+    // console.log('before', before);
     // console.log(after);
-    console.log(real);
+    // console.log('real', real);
 
     expect(before === real);
   });
 
-  it('Should return the new evaFlowControler address same', async function () {
+  it('Should return the new evaFlowController address same', async function () {
     // const evaSafesFactory = app.evaSafesFactory;
-    const evaFlowControler = app.evaFlowControler;
+    const evaFlowController = app.evaFlowController;
     const evabaseConfig = app.evabaseConfig;
-    await evabaseConfig.setControl(evaFlowControler.address);
+    await evabaseConfig.setControl(evaFlowController.address);
     // console.log(tx);
 
     // await evaSafesFactory.calcSafes(testaddress);
 
-    // await evaFlowControler.createEvaSafes(testaddress);
+    // await evaFlowController.createEvaSafes(testaddress);
 
     // const real = await evaSafesFactory.get(testaddress);
     // console.log(before);

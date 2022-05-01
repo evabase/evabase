@@ -17,4 +17,6 @@ interface IEvaSafes {
     ) external payable returns (bytes memory);
 
     function execFlow(address flow, bytes calldata execData) external;
+
+    function isEvaSafes() external pure returns (bool);
 }

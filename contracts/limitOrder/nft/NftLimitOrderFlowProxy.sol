@@ -39,7 +39,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     }
 
     function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.pauseFlow(flowId, bytes(""));
+        ser.pauseFlow(flowId);
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, true, flowId);
 
@@ -47,7 +47,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     }
 
     function startFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId, bytes(""));
+        ser.startFlow(flowId);
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, false, flowId);
 
@@ -55,7 +55,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
     }
 
     function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId, bytes(""));
+        ser.destroyFlow(flowId);
         (INftLimitOrder exchange, bytes32 orderId) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderId, flowId);
 

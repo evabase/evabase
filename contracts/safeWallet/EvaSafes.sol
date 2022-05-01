@@ -66,6 +66,10 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         }
     }
 
+    function isEvaSafes() external pure override returns (bool) {
+        return true;
+    }
+
     /**
     @dev can receive ETH, owner can refund.
    */

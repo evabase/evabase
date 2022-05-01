@@ -42,7 +42,7 @@ export class App {
     const result = await initEvebase();
     this.config = result.evabaseConfig as EvabaseConfig;
     this.safesFactory = result.evaSafesFactory as EvaSafesFactory;
-    this.controler = result.evaFlowControler as EvaFlowController;
+    this.controler = result.evaFlowController as EvaFlowController;
   }
 
   async createOrLoadWalletSeafes(acct: string) {

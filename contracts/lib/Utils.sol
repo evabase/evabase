@@ -1,5 +1,7 @@
 //SPDX-License-Identifier: MIT
 //Create by evabase.network core team.
+/* solhint-disable */
+
 pragma solidity ^0.8.0;
 
 library Utils {

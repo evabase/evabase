@@ -27,7 +27,7 @@ struct MinConfig {
     address feeToken;
     uint64 minGasFundForUser;
     uint64 minGasFundOneFlow;
-    uint16 PPB;
+    uint16 ppb;
     uint16 blockCountPerTurn;
 }
 
@@ -59,7 +59,7 @@ interface IEvaFlowController {
         address feeToken,
         uint64 minGasFundForUser,
         uint64 minGasFundOneFlow,
-        uint16 PPB,
+        uint16 ppb,
         uint16 blockCountPerTurn
     );
 
@@ -76,11 +76,11 @@ interface IEvaFlowController {
         bytes memory flowCode
     ) external;
 
-    function startFlow(uint256 flowId, bytes memory flowCode) external;
+    function startFlow(uint256 flowId) external;
 
-    function pauseFlow(uint256 flowId, bytes memory flowCode) external;
+    function pauseFlow(uint256 flowId) external;
 
-    function destroyFlow(uint256 flowId, bytes memory flowCode) external;
+    function destroyFlow(uint256 flowId) external;
 
     function execFlow(
         address keeper,

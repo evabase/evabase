@@ -8,6 +8,7 @@ const store = require('data-store')({
   path: process.cwd() + '/testInfo.json',
 });
 
+
 export const initEvebase = async function initEvebase() {
   // Hardhat always runs the compile task when running scripts with its command
   const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
@@ -22,11 +23,12 @@ export const initEvebase = async function initEvebase() {
   await evaSafesFactory.deployed();
 
   console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
-  // 3 EvaFlowControler
-  const EvaFlowControler = await ethers.getContractFactory('EvaFlowController');
-  const evaFlowControler = await EvaFlowControler.deploy(evabaseConfig.address, evaSafesFactory.address);
-  await evaFlowControler.deployed();
-  console.log(`evaFlowControler: ${evaFlowControler.address}`);
+
+  // 3 EvaFlowController
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
+  const evaFlowController = await EvaFlowController.deploy(evabaseConfig.address, evaSafesFactory.address);
+  await evaFlowController.deployed();
+  console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4
   const EvaFlowChecker = await ethers.getContractFactory('EvaFlowChecker');
   const evaFlowChecker = await EvaFlowChecker.deploy(evabaseConfig.address);
@@ -35,27 +37,34 @@ export const initEvebase = async function initEvebase() {
   // 5
   const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
+
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
-    // evaFlowControler.address,
+
+    // evaFlowController.address,
+
+    // evaFlowController.address,
+
     // store.get("linkToken"),
     store.get('chainlinkKeeperRegistry'),
     0,
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
+
   console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
 
   // await config.setWalletFactory(factory.address);
   // await config.addKeeper(anyKeeper.address);
 
-  await evabaseConfig.setControl(evaFlowControler.address);
+  await evabaseConfig.setControl(evaFlowController.address);
   return {
     evabaseConfig,
     evaSafesFactory,
-    evaFlowControler,
+    evaFlowController,
     evaFlowChecker,
     EvaFlowChainLinkKeeperBot,
   };
+
 };

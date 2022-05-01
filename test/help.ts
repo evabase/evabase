@@ -1,4 +1,5 @@
 'use strict';
+
 import { ethers } from 'hardhat';
 import { ethers as ethersV5 } from 'ethers';
 
@@ -45,6 +46,16 @@ class Help {
   async setNextBlockTimestamp(timestamp: number) {
     await ethers.provider.send('evm_setNextBlockTimestamp', [timestamp]);
     await ethers.provider.send('evm_mine', []);
+  }
+
+  async encodeFunctionData(contractName: string, functionName: any, args?: any[], signer?: ethersV5.Signer) {
+    // const factory = await ethers.getContractFactory(contractName, signer);
+    // const contract = args ? await factory.deploy(...args) : await factory.deploy();
+    // await contract.deployed();
+    // return contract;
+    const factory = await ethers.getContractFactory(contractName, signer);
+    const data = factory.interface.encodeFunctionData(functionName, args);
+    return data;
   }
 }
 

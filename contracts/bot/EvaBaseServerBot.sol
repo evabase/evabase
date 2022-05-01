@@ -15,7 +15,7 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
     event SetEBSKeepStatus(address indexed user, bool status);
     uint32 public keepBotId;
     mapping(address => bool) public keeps;
-    uint32 private constant EXEC_GAS_LIMIT = 8_000_000;
+    uint32 private constant _EXEC_GAS_LIMIT = 8_000_000;
 
     constructor(
         address _config,
@@ -57,7 +57,7 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
 
         require(keeps[msg.sender], "not active EvaBase bot");
 
-        IEvaFlowController(config.control()).batchExecFlow(msg.sender, _execdata, EXEC_GAS_LIMIT);
+        IEvaFlowController(config.control()).batchExecFlow(msg.sender, _execdata, _EXEC_GAS_LIMIT);
     }
 
     function setEBSKeepStatus(address keep, bool status) external onlyOwner {

@@ -6,9 +6,9 @@ contract UintLibSingleListTest {
     using EvabaseHelper for EvabaseHelper.UintSet;
     EvabaseHelper.UintSet _list;
 
-    event log(uint256 data);
+    event Log(uint256 data);
 
-    event log2(bytes32 data, uint16 count);
+    event Log2(bytes32 data, uint16 count);
 
     function testRemove(uint256 a) public {
         _list.remove(a);

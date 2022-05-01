@@ -1,4 +1,5 @@
 'use strict';
+
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -198,7 +199,9 @@ async function main() {
   /**
    * const input = contract.interface.encodeFunctionData(method, args)
     // {From:,to:,data:}
-    return ethers.utils.defaultAbiCoder.encode(["address", "bytes", "uint256"], [contract.address, input, typeof (value) === "undefined" ? 0 : value]);
+    // eslint-disable-next-line max-len
+    return ethers.utils.defaultAbiCoder.encode(["address", "bytes", "uint256"], [contract.address, input,
+       typeof (value) === "undefined" ? 0 : value]);
    */
   const data = nftLimitOrderFlowProxy.interface.encodeFunctionData('create', [
     evaFlowController.address,
@@ -225,6 +228,7 @@ async function main() {
   await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
   // pause
   await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
+  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
   // cancel
   const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('destroyFlow', [evaFlowController.address, 1]);
 

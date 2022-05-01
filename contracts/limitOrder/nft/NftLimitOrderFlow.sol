@@ -25,13 +25,13 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     //     uint256 tokenId;
     //     uint256 salt; //随机数
     // }
-    bytes32 constant ORDER_TYPEHASH =
+    bytes32 constant _ORDER_TYPEHASH =
         keccak256(
             "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
         );
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
-    address public _owner;
+    address private _owner;
     // bool isInitialized;
 
     // mapping(bytes32 => bool) public orderExist;
@@ -59,7 +59,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     }
 
     function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
-        return (false, bytes(""));
+        return (false, checkData);
     }
 
     function multicall(address target, bytes memory callData) external override {
@@ -135,14 +135,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
-
+        delete orderExists[orderId];
         uint256 remain = orderExist.balance;
         if (remain > 0) {
             (bool succeed, ) = orderExist.owner.call{value: remain}("");
             require(succeed, "Failed to transfer Ether");
         }
-
-        delete orderExists[orderId];
 
         emit OrderCancel(msg.sender, flowId, orderId);
     }
@@ -152,6 +150,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bytes memory _signature,
         bytes[] memory _data
     ) internal returns (bytes[] memory results) {
+        require(verifyOrder(_order, _signature), "signature is not valid");
         bytes32 ordeId = hashOrder(_order);
         OrderExist storage orderExist = orderExists[ordeId];
         require(orderExist.owner != address(0), "order not exist");
@@ -218,7 +217,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         return
             keccak256(
                 abi.encode( // order
-                    ORDER_TYPEHASH,
+                    _ORDER_TYPEHASH,
                     order.owner,
                     order.assetToken,
                     order.amount,
