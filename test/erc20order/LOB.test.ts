@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
 // eslint-disable-next-line node/no-missing-import
-import { help } from '../help';
+import { help } from '../../scripts/help';
 
 // eslint-disable-next-line node/no-missing-import
 import type {
