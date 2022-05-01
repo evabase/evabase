@@ -48,7 +48,6 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
-        require(tx.origin == address(0), "only for off-chain"); // solhint-disable
         (upkeepNeeded, performData) = _check(checkData);
     }
 
