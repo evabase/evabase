@@ -12,7 +12,7 @@ import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-
+// import "hardhat/console.sol";
 contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     using AddressUpgradeable for address;
 
@@ -160,7 +160,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
         require(_order.expireTime >= block.timestamp, "order time is end");
         require(
-            msg.sender == evaSafesFactory.get(msg.sender),
+            msg.sender == evaSafesFactory.get(orderExist.owner),
             // msg.sender == evaSafesFactory.calcSafes(_order.owner),
             " should exected by safes"
         );
@@ -185,25 +185,14 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
             total += value;
 
-            //     if (_order.assetType == AssetType.ERC721) {
-            //         IERC721(_order.assetToken).safeTransferFrom(
-            //             address(this),
-            //             _order.owner,
-            //             _assetTokenIds[i]
-            //         );
-            //     } else if (_order.assetType == AssetType.ERC1155) {}
-            //     //withdarw erc721/erc1155
-            //     IERC1155(_order.assetToken).safeTransferFrom(
-            //         address(this),
-            //         _order.owner,
-            //         _assetTokenIds[i],
-            //         IERC1155(_order.assetToken).balanceOf(
-            //             address(this),
-            //             _assetTokenIds[i]
-            //         ),
-            //         ""
-            //     );
+            // console.log("target:",target);
+            // console.logBytes(input);
+            // console.log("value:",value);
+
+          
         }
+
+
 
         orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
 

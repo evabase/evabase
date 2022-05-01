@@ -60,19 +60,19 @@ async function main() {
 
   console.log(`data: ${myStructData}`);
 
-  await evaFlowController.createFlow(
-    'ACE',
-    1, // evabaseKeep
-    store.get('NftLimitOrderFlow'),
-    myStructData,
-    200000,
-    {
-      value: ethers.utils.parseEther('0.01'),
-    },
-  );
+  // await evaFlowController.createFlow(
+  //   'ACE',
+  //   1, // evabaseKeep
+  //   store.get('NftLimitOrderFlow'),
+  //   myStructData,
+  //   200000,
+  //   {
+  //     value: ethers.utils.parseEther('0.01'),
+  //   },
+  // );
 
-  await evaFlowController.pauseFlow(1, myStructData);
-  await evaFlowController.startFlow(1, myStructData);
+  // await evaFlowController.pauseFlow(1, myStructData);
+  // await evaFlowController.startFlow(1, myStructData);
   // await evabaseConfig.setControl(evaFlowController.address);
   // await evaFlowController.addEvabaseFlowByOwner(
   //   store.get("NftLimitOrderFlow"),
