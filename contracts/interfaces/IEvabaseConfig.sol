@@ -24,7 +24,7 @@ interface IEvabaseConfig {
 
     function control() external view returns (address);
 
-    function setControl(address control) external;
+    function setControl(address control_) external;
 
     // function getWalletFactory() external view returns (address);
 

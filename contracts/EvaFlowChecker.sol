@@ -12,46 +12,28 @@ contract EvaFlowChecker {
 
     uint32 public constant CHECK_GASLIMIT_MIN = 4_000_0;
     uint32 private constant _GAS_LIMIT = 2_000_000;
+    uint256 private constant _TIME_SOLT = 10 seconds;
 
     constructor(address _config) {
         // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
-
-        // IEvaFlowController(config.control()) = IEvaFlowController(
-        //     _evaFlowControler
-        // );
         config = IEvabaseConfig(_config);
     }
 
     function check(
         uint256 keepbotId,
-        // uint256 checkGasLimit,
-        // bytes memory checkdata,
         uint256 lastMoveTime,
         KeepNetWork keepNetWork
     ) external view returns (bool needExec, bytes memory execData) {
         uint32 batch = config.batchFlowNum();
         uint32 keepBotSize = config.keepBotSizes(keepNetWork);
         uint256 allVaildSize = IEvaFlowController(config.control()).getAllVaildFlowSize(keepNetWork);
+        if (allVaildSize == 0) {
+            return (false, bytes(""));
+        }
         uint256 bot1start = _getRandomStart(allVaildSize, lastMoveTime);
         (uint256 start, uint256 end) = _getAvailCircle(allVaildSize, keepBotSize, keepbotId, batch, bot1start);
 
-        // {
-        //     (uint256[] memory tmp, bytes[] memory executeDataArray) = _ring(
-        //         start,
-        //         end,
-        //         allVaildSize,
-        //         checkdata
-        //     );
-
-        //     if (tmp.length > 0) {
-        //         needExec = true;
-        //     }
-
-        //     // execData = Utils.encodeUints(tmp);
-        //     execData = Utils._encodeTwoArr(tmp, executeDataArray);
-        // }
-        // return (needExec, execData);
         return _ring(start, end, allVaildSize, keepNetWork);
     }
 
@@ -161,7 +143,7 @@ contract EvaFlowChecker {
         uint256 _keepbotN,
         uint32 _batch,
         uint256 _bot1start
-    ) internal view returns (uint256 botNIndexS, uint256 botNIndexE) {
+    ) internal pure returns (uint256 botNIndexS, uint256 botNIndexE) {
         require(_keepBotSize > 0 && _allVaildSize > 0 && _keepbotN > 0, "gt 0");
 
         uint256 quotient = _allVaildSize / _keepBotSize;
@@ -203,7 +185,8 @@ contract EvaFlowChecker {
     }
 
     function _getRandomStart(uint256 _flowSize, uint256 lastMoveTime) internal view returns (uint256 index) {
-        if (block.timestamp - lastMoveTime >= 10 seconds) {
+        // solhint-disable
+        if (block.timestamp - lastMoveTime >= _TIME_SOLT) {
             index = uint256(keccak256(abi.encodePacked(block.timestamp))) % _flowSize;
         } else {
             index = uint256(keccak256(abi.encodePacked(lastMoveTime))) % _flowSize;

@@ -27,34 +27,28 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
     // address private regiesterRequest;
 
     constructor(
-        address _config,
-        address _evaFlowChecker,
-        address _keeperRegistryCurr,
-        KeepNetWork keepNetWork
+        address config_,
+        address evaFlowChecker_,
+        address keeperRegistry_
     ) {
         // require(_evaFlowControler != address(0), "addess is 0x");
-        require(_config != address(0), "addess is 0x");
-        require(_evaFlowChecker != address(0), "addess is 0x");
-        // require(_linkToken != address(0), "addess is 0x");
-        require(_keeperRegistryCurr != address(0), "addess is 0x");
-        // require(_regiesterRequest != address(0), "addess is 0x");
+        require(config_ != address(0), "addess is 0x");
+        require(evaFlowChecker_ != address(0), "addess is 0x");
+        require(keeperRegistry_ != address(0), "addess is 0x");
 
-        config = IEvabaseConfig(_config);
-        // evaFlowControler = IEvaFlowControler(_evaFlowControler);
-        evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
-        // linkToken = _linkToken;
-        _keeperRegistry = KeeperRegistryInterface(_keeperRegistryCurr);
-        // regiesterRequest = _regiesterRequest;
-        config.addKeeper(address(this), keepNetWork);
-        // keepBotId = config.keepBotSizes(keepNetWork);
+        config = IEvabaseConfig(config_);
+        evaFlowChecker = EvaFlowChecker(evaFlowChecker_);
+        _keeperRegistry = KeeperRegistryInterface(keeperRegistry_);
         lastMoveTime = block.timestamp;
     }
 
     function checkUpkeep(bytes calldata checkData)
         external
+        view
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
+        require(tx.origin == address(0), "only for off-chain"); // solhint-disable
         (upkeepNeeded, performData) = _check(checkData);
     }
 
@@ -62,32 +56,25 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         _exec(performData);
     }
 
-    function _check(bytes memory _checkdata) internal override returns (bool needExec, bytes memory execdata) {
+    function _check(bytes memory _checkdata) internal view override returns (bool needExec, bytes memory execdata) {
         uint32 keepBotId = abi.decode(_checkdata, (uint32));
-        (bool needExec, bytes memory execData) = evaFlowChecker.check(
+        (needExec, execdata) = evaFlowChecker.check(
             keepBotId,
             // _CHECK_GAS_LIMIT,
             // _checkdata,
             lastMoveTime,
             KeepNetWork.ChainLink
         );
-
-        return (needExec, execData);
     }
 
-    function _exec(bytes memory _execdata) internal override {
-        // lastBlockNum = block.number;
-        setLastMoveTime();
-        _batchExec(_execdata);
-    }
-
-    function _batchExec(bytes memory _data) internal {
-        require(_data.length > 0, "exec data should not null");
+    function _exec(bytes memory execdata) internal override {
         address keeper = msg.sender;
         (, bool active, ) = _keeperRegistry.getKeeperInfo(keeper);
         require(active, "not active chianlink active");
 
-        IEvaFlowController(config.control()).batchExecFlow(keeper, _data, _EXEC_GAS_LIMIT);
+        // lastBlockNum = block.number;
+        setLastMoveTime();
+        IEvaFlowController(config.control()).batchExecFlow(keeper, execdata, _EXEC_GAS_LIMIT);
     }
 
     function setLastMoveTime() public {
@@ -95,55 +82,4 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
             lastMoveTime = block.timestamp;
         }
     }
-
-    // function registerTask(bytes memory checkData)
-    //     external
-    //     onlyOwner
-    //     returns (uint256 thirdId)
-    // {
-    //     uint256 linkTokenAmount = 5 * 1e18;
-    //     //check balance
-    //     LinkTokenInterface link = LinkTokenInterface(linkToken);
-    //     require(
-    //         link.balanceOf(address(this)) >= linkTokenAmount,
-    //         "insufficient LINK"
-    //     );
-
-    //     bytes memory callInput = abi.encodeWithSelector(
-    //         UpkeepRegistrationRequestsInterface.register.selector,
-    //         "T",
-    //         hex"efaebfb59113bbba19dada14b745015c7afec8bb03c6192fb20bc99302a1d6493f185837865aa75406da8e2184d05225a78cec5d018d25939fb342cd0bc3a765a287ab7c6d410157134d9e30435a6a1cde9b66addcd028ad",
-    //         address(this),
-    //         uint32(_EXEC_GAS_LIMIT),
-    //         address(this),
-    //         checkData,
-    //         uint96(linkTokenAmount),
-    //         uint8(0)
-    //     );
-
-    //     require(
-    //         link.transferAndCall(regiesterRequest, linkTokenAmount, callInput),
-    //         "chainlink upkeeps register failed"
-    //     );
-
-    //     bytes32 hash = keccak256(
-    //         abi.encode(address(this), _EXEC_GAS_LIMIT, address(this), checkData)
-    //     );
-    //     (address admin, ) = UpkeepRegistrationRequestsInterface(
-    //         regiesterRequest
-    //     ).getPendingRequest(hash);
-    //     require(admin == address(0), "need chainlink approved");
-
-    //     uint256 nextId = KeeperRegistryInterface(_keeperRegistry)
-    //         .getUpkeepCount();
-    //     chainLinkKeepId = nextId - 1;
-    //     config.addKeeper(address(this));
-    //     keepBotId = config.keepBotSize() + 1;
-    //     return chainLinkKeepId;
-    // }
-
-    // function cancelTask() external onlyOwner {
-    //     KeeperRegistryInterface(_keeperRegistry).cancelUpkeep(chainLinkKeepId);
-    //     config.removeKeeper(address(this));
-    // }
 }

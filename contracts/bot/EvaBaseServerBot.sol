@@ -38,13 +38,14 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
 
     function checkUpkeep(bytes calldata checkData)
         external
+        pure
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
         return _check(checkData);
     }
 
-    function _check(bytes memory _checkdata) internal override returns (bool needExec, bytes memory execdata) {
+    function _check(bytes memory _checkdata) internal pure override returns (bool needExec, bytes memory execdata) {
         return (true, _checkdata);
     }
 

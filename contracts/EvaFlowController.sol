@@ -90,13 +90,13 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(isEnoughGas, "gas balance is not enough");
     }
 
-    function _beforeCreateFlow(KeepNetWork _keepNetWork) internal {
+    function _beforeCreateFlow(KeepNetWork _keepNetWork) internal view {
         require(uint256(_keepNetWork) <= uint256(KeepNetWork.Others), "invalid netWork");
         IEvaSafes safes = IEvaSafes(msg.sender);
         require(safes.isEvaSafes(), "should be safes");
     }
 
-    function isValidFlow(address flow) public returns (bool) {
+    function isValidFlow(address flow) public pure returns (bool) {
         require(flow != address(0), "flow is 0x");
         return true; //TODO: 需要维护合法Flow清单
     }
