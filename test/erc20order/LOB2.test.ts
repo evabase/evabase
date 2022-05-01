@@ -1,3 +1,4 @@
+'use strict';
 // eslint-disable-next-line strict
 import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
