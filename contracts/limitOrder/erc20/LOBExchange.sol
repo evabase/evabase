@@ -14,7 +14,7 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
 
     event StrategyChanged(address newStrategy);
 
-    constructor(IStrategy strategy_) {
+    constructor(IStrategy strategy_, Config memory cfg) LOB(cfg) {
         strategy = strategy_;
     }
 

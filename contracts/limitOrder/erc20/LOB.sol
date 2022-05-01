@@ -44,6 +44,10 @@ contract LOB is Ownable {
     event OrderPaused(bytes32 indexed orderId, bool paused);
     event ConfigChanged(Config newConfig);
 
+    constructor(Config memory cfg) {
+        setConfig(cfg);
+    }
+
     /**
       @notice create order
       @dev sender can create order for anyone.
@@ -180,7 +184,7 @@ contract LOB is Ownable {
         }
     }
 
-    function setConfig(Config calldata cfg) external onlyOwner {
+    function setConfig(Config memory cfg) public onlyOwner {
         config = cfg;
         // safe check
         require(cfg.basisPointsRate < _FEE_UNIT, "INVALID_RATE");

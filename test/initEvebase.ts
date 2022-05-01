@@ -8,7 +8,6 @@ const store = require('data-store')({
   path: process.cwd() + '/testInfo.json',
 });
 
-
 export const initEvebase = async function initEvebase() {
   // Hardhat always runs the compile task when running scripts with its command
   const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
@@ -37,7 +36,6 @@ export const initEvebase = async function initEvebase() {
   // 5
   const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
-
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     evabaseConfig.address,
     evaFlowChecker.address,
@@ -48,7 +46,6 @@ export const initEvebase = async function initEvebase() {
 
     // store.get("linkToken"),
     store.get('chainlinkKeeperRegistry'),
-    0,
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
@@ -66,5 +63,4 @@ export const initEvebase = async function initEvebase() {
     evaFlowChecker,
     EvaFlowChainLinkKeeperBot,
   };
-
 };
