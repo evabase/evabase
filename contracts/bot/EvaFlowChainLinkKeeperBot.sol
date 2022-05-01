@@ -39,7 +39,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         config = IEvabaseConfig(config_);
         evaFlowChecker = EvaFlowChecker(evaFlowChecker_);
         _keeperRegistry = KeeperRegistryInterface(keeperRegistry_);
-        lastMoveTime = block.timestamp;
+        lastMoveTime = block.timestamp; // solhint-disable
     }
 
     function checkUpkeep(bytes calldata checkData)
@@ -77,8 +77,9 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
     }
 
     function setLastMoveTime() public {
+        // solhint-disable
         if (block.timestamp - lastMoveTime >= 10 seconds) {
-            lastMoveTime = block.timestamp;
+            lastMoveTime = block.timestamp; // solhint-disable
         }
     }
 }
