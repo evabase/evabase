@@ -355,7 +355,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require((keeper != flow.lastKeeper && flow.keepNetWork == KeepNetWork.ChainLink), "expect next keeper");
+        require((keeper != flow.lastKeeper ||  flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");

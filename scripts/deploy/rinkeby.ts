@@ -62,7 +62,7 @@ async function main() {
     // evaFlowController.address,
     // store.get("linkToken"),
     store.get('chainlinkKeeperRegistry'),
-    0,
+
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
@@ -274,7 +274,6 @@ async function main() {
     evabaseConfig.address,
     evaFlowChecker.address,
     // evaFlowController.address,
-    1, // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
