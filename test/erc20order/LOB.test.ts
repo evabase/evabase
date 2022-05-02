@@ -24,7 +24,7 @@ type OrderInfo = {
   outputToken: string;
   expiration: number;
   receiptor: string;
-  foc: boolean;
+  minInputPer: BigNumberish;
 };
 
 describe('EvabaseConfig', function () {
@@ -60,7 +60,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -70,7 +70,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -80,7 +80,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -90,7 +90,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -100,7 +100,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 9,
           minRate: '6',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -110,7 +110,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '9',
           expiration: 7,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -120,7 +120,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 9,
-          foc: false,
+          minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
           owner: '0x0000000000000000000000000000000000000001',
@@ -130,7 +130,7 @@ describe('EvabaseConfig', function () {
           inputAmount: 5,
           minRate: '6',
           expiration: 7,
-          foc: true,
+          minInputPer: '0x0000000000000000000000000000000000000009',
         },
       ];
 
@@ -152,7 +152,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
-        foc: false,
+        minInputPer: 1,
       };
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_INPUT_OWNER');
     });
@@ -165,7 +165,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: 0,
         receiptor: me.address,
-        foc: false,
+        minInputPer: 1,
       };
       // 不低于10分钟
       order.expiration = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
@@ -185,7 +185,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
-        foc: false,
+        minInputPer: 2,
       };
       await USDC.connect(me).mint(order.inputAmount);
       await USDC.connect(me).approve(exchange.address, order.inputAmount);
@@ -203,7 +203,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: (await help.getBlockTime()) + 60 * 60 * 24,
         receiptor: me.address,
-        foc: false,
+        minInputPer: 1,
       };
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_INPUT_AMOUNT');
 
@@ -222,7 +222,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
-        foc: false,
+        minInputPer: 1,
       };
 
       // approve
@@ -250,7 +250,7 @@ describe('EvabaseConfig', function () {
       expect(orderInfo[0].outputToken).to.eq(order.outputToken);
       expect(orderInfo[0].expiration).to.eq(order.expiration);
       expect(orderInfo[0].receiptor).to.eq(order.receiptor);
-      expect(orderInfo[0].foc).to.eq(order.foc);
+      expect(orderInfo[0].minInputPer).to.eq(order.minInputPer);
 
       expect(orderInfo[1].balance).to.eq(order.inputAmount - fee);
       expect(orderInfo[1].paused).to.eq(false);
@@ -281,7 +281,7 @@ describe('EvabaseConfig', function () {
         outputToken: WBTC.address,
         expiration: (await help.getBlockTime()) + maxWaitTime,
         receiptor: user.address,
-        foc: foc,
+        minInputPer: foc ? inputAmount : 0,
       };
 
       // approve
@@ -345,8 +345,8 @@ describe('EvabaseConfig', function () {
 
     it('failed when multi deal for FOC order', async function () {
       const info = await createNewOrder(me, '1000000000000000001', 3600 * 24, 1 / 4000, true);
-      await expect(exchange.executeOrder(info.orderId, strategy.address, '1000000000000000000', '0x')).to.revertedWith(
-        'ORDER_FOC',
+      await expect(exchange.executeOrder(info.orderId, strategy.address, '999000000000000000', '0x')).to.revertedWith(
+        'ORDER_INPUT_LESS',
       );
     });
 

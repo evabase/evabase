@@ -39,7 +39,7 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
             order.minRate
         );
 
-        if (output == 0) {
+        if (output == 0 || input < order.minInputPer) {
             return (false, bytes(""));
         }
 

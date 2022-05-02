@@ -27,7 +27,7 @@ type OrderInfo = {
   outputToken: string;
   expiration: number;
   receiptor: string;
-  foc: boolean;
+  minInputPer: number;
 };
 
 describe('ERC20 Limit Order', function () {
@@ -71,7 +71,7 @@ describe('ERC20 Limit Order', function () {
       outputToken: '',
       expiration: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
       receiptor: bob,
-      foc: false,
+      minInputPer: 1,
     };
 
     before(async function () {

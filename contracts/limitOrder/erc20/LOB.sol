@@ -65,6 +65,7 @@ contract LOB is Ownable {
                 order.expiration <= block.timestamp + _ORDER_MAX_AGE, //solhint-disable  not-rely-on-time
             "WRONG_EXPIRATION"
         );
+        require(order.minInputPer <= order.inputAmount, "WRONG_INPUT_AMOUNT");
         require(_orders[orderId].owner == address(0), "ORDER_EXIST");
 
         (address feeTo, uint256 fee) = getFee(order.inputAmount);
@@ -117,10 +118,10 @@ contract LOB is Ownable {
         Order memory order = _orders[orderId];
         require(isActiveOrder(orderId), "ORDER_NOT_ACTIVE");
 
-        if (order.foc) {
-            // full deal or cancel
-            require(input == uint256(_orderStatus[orderId].balance), "ORDER_FOC");
-        }
+        // check input
+        uint256 balance = _orderStatus[orderId].balance;
+        uint256 minInput = balance <= order.minInputPer ? balance : order.minInputPer;
+        require(input >= minInput, "ORDER_INPUT_LESS");
 
         // Pull amount to strategy
         _transferOutBalance(orderId, address(strategy), input);
@@ -169,7 +170,7 @@ contract LOB is Ownable {
                     o.inputAmount,
                     o.minRate,
                     o.expiration,
-                    o.foc
+                    o.minInputPer
                 )
             );
     }
