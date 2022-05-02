@@ -65,7 +65,11 @@ contract LOB is Ownable {
                 order.expiration <= block.timestamp + _ORDER_MAX_AGE, //solhint-disable  not-rely-on-time
             "WRONG_EXPIRATION"
         );
-        require(order.minInputPer <= order.inputAmount, "WRONG_INPUT_AMOUNT");
+        if (order.minInputPer == 0) {
+            order.minInputPer = order.inputAmount; // FOC order type
+        } else {
+            require(order.minInputPer <= order.inputAmount, "WRONG_INPUT_AMOUNT");
+        }
         require(_orders[orderId].owner == address(0), "ORDER_EXIST");
 
         (address feeTo, uint256 fee) = getFee(order.inputAmount);
