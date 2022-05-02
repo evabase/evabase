@@ -5,9 +5,6 @@ import "../interfaces/IStrategy.sol";
 import "./StrategyBase.sol";
 
 contract UniswapV2Strategy is IStrategy, StrategyBase {
-    mapping(address => bool) public executors;
-    event ExecutorChanged(address acct, bool added);
-
     constructor(IUniswapV2Router02 _router, uint256 bp) StrategyBase(_router, bp) {} // solhint-disable no-empty-blocks
 
     function getRouter(
@@ -33,17 +30,6 @@ contract UniswapV2Strategy is IStrategy, StrategyBase {
         address outputToken,
         bytes calldata execData
     ) external override {
-        require(executors[msg.sender], "NO_EXECUTOR");
         _swap(inputToken, outputToken, execData);
-    }
-
-    // admin
-    function setExecutor(address acct, bool add) external onlyOwner {
-        if (add) {
-            executors[acct] = true;
-        } else {
-            delete executors[acct];
-        }
-        emit ExecutorChanged(acct, add);
     }
 }
