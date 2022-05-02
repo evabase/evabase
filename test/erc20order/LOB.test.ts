@@ -1,8 +1,9 @@
+'use strict';
 import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
 // eslint-disable-next-line node/no-missing-import
-import { help } from '../help';
+import { help } from '../../scripts/help';
 
 // eslint-disable-next-line node/no-missing-import
 import type {
@@ -42,11 +43,9 @@ describe('EvabaseConfig', function () {
     signers = await ethers.getSigners();
     me = signers[1];
     strategy = (await help.deploy('MockSwapStrategy')) as MockSwapStrategy;
-    exchange = (await help.deploy('LOBExchange', [strategy.address])) as LOBExchange;
+    exchange = (await help.deploy('LOBExchange', [strategy.address, exchangeConfig])) as LOBExchange;
     USDC = (await help.deployERC20('USDC')) as MockERC20;
     WBTC = (await help.deployERC20('WBTC', 8)) as MockERC20;
-
-    await exchange.setConfig(exchangeConfig);
   });
 
   describe('createOrder', function () {

@@ -1,12 +1,17 @@
 'use strict';
-
-import { ethers } from 'hardhat';
+import path from 'path';
+import { ethers, network } from 'hardhat';
 import { ethers as ethersV5 } from 'ethers';
 
 let zeros = '0';
 while (zeros.length < 256) {
   zeros += zeros;
 }
+
+const { Store } = require('data-store');
+export const store = new Store({
+  path: path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'),
+});
 
 class Help {
   public readonly ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
