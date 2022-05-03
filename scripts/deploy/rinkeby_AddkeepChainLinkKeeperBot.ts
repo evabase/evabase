@@ -28,7 +28,9 @@ async function main() {
   const evabaseConfigContract = EvabaseConfig.attach(store.get('evabaseConfig'));
   const tx = await evabaseConfigContract.addKeeper(store.get('evaFlowChainLinkKeeperBot'), 0);
   tx.wait();
-  console.log(tx);
+  const tx1 = await evabaseConfigContract.addKeeper(store.get('evaBaseServerBot'), 1);
+  tx1.wait();
+  // console.log(tx);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
