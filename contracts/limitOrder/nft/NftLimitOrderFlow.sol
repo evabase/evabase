@@ -9,22 +9,13 @@ import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
 import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
-// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-// import "hardhat/console.sol";
+
 contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     using AddressUpgradeable for address;
 
-    // struct Order {
-    //     address owner; //拥有人
-    //     address assetToken; //资产合约地址
-    //     uint256 amount; //NFT数量
-    //     uint256 price; //NFT价格
-    //     uint256 expireTime; //订单过期时间 s
-    //     uint256 tokenId;
-    //     uint256 salt; //随机数
-    // }
+
     bytes32 constant _ORDER_TYPEHASH =
         keccak256(
             "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
@@ -32,9 +23,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
     address private _owner;
-    // bool isInitialized;
 
-    // mapping(bytes32 => bool) public orderExist;
     mapping(bytes32 => OrderExist) public orderExists;
 
     constructor(
@@ -47,7 +36,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         // require(isInitialized == false, "Already initialized");
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
-        // isInitialized = true;
         config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         _owner = msg.sender;
@@ -80,7 +68,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             executeData,
             (Order, bytes, bytes[])
         );
-        // _atomicMatch(order, signature, data, _assetTokenIds);
         _atomicMatch(order, signature, data);
     }
 
@@ -109,10 +96,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bool pause,
         uint256 flowId
     ) public override {
-        // require(
-        //     address(0) != evaSafesFactory.get(msg.sender),
-        //     "only owner can change status order"
-        // );
 
         OrderExist memory orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
@@ -126,10 +109,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     }
 
     function cancelOrder(bytes32 orderId, uint256 flowId) public override {
-        // require(
-        //     address(0) != evaSafesFactory.get(msg.sender),
-        //     "only owner can cancel order"
-        // );
 
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
@@ -156,12 +135,10 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(_order.owner != address(0), "order owner addrss is 0x");
         uint256 _amount = _order.amount;
         require(_amount > 0, "execute amount gt 0");
-        // require(_assetTokenIds.length == _data.length, "length should be same");
 
         require(_order.expireTime >= block.timestamp, "order time is end");
         require(
             msg.sender == evaSafesFactory.get(orderExist.owner),
-            // msg.sender == evaSafesFactory.calcSafes(_order.owner),
             " should exected by safes"
         );
 
@@ -175,24 +152,15 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             (address target, bytes memory input, uint256 value) = abi.decode(_data[i], (address, bytes, uint256));
             require(target != address(this), "FORBIDDEN safes address");
             require(target != msg.sender, "FORBIDDEN self");
-            results[i] = target.functionCallWithValue(
-                // target,
+            target.functionCallWithValue(
                 input,
                 value,
                 "CallFailed"
             );
-            require(!Utils.hashCompareInternal(results[i], bytes("CallFailed")), "_atomicMatch failed");
 
             total += value;
-
-            // console.log("target:",target);
-            // console.logBytes(input);
-            // console.log("value:",value);
-
           
         }
-
-
 
         orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
 
@@ -219,15 +187,10 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     function verifyOrder(Order memory order, bytes memory signature) public view returns (bool) {
         bytes32 messageHash = hashOrder(order);
-        // bytes32 ethSignedMessageHash = Utils.getEthSignedMessageHash(
-        //     messageHash
-        // );
 
         bytes32 ethSignedMessageHash = _hashTypedDataV4(messageHash);
 
         return SignatureChecker.isValidSignatureNow(order.owner, ethSignedMessageHash, signature);
-        // return
-        //     Utils.recoverSigner(ethSignedMessageHash, signature) == order.owner;
     }
 
     /**
