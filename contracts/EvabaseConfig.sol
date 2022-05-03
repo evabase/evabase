@@ -58,8 +58,8 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
     }
 
     function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWorks) external override {
-        require(arr.length == keepNetWorks.length, "arr length not equal keepNetWorks length");
-        require(msg.sender == owner(), "only owner can add keeper");
+        require(arr.length == keepNetWorks.length, "invalid length");
+        require(msg.sender == owner(), "only owner");
         for (uint256 i = 0; i < arr.length; i++) {
             // if (!keepBots.contains(arr[i])) {
             //     keepBots.add(arr[i]);
