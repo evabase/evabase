@@ -6,10 +6,12 @@
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
-const store = require('data-store')({
-  // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + '/scripts/deploy/rinkeby.json',
-});
+// eslint-disable-next-line node/no-missing-import
+import { store } from '../help';
+// const store = require('data-store')({
+//   // path: process.cwd() + "/deployInfo.json",
+//   path: process.cwd() + '/scripts/deploy/rinkeby.json',
+// });
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -278,6 +280,10 @@ async function main() {
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
   store.set('evaBaseServerBot', evaBaseServerBot.address);
+
+  await evabaseConfig.addKeeper(evaBaseServerBot.address, 1);
+
+  await evabaseConfig.addKeeper(evaFlowChainLinkKeeperBot.address, 0);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

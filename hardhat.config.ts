@@ -94,7 +94,7 @@ module.exports = {
     version: '0.8.4',
     settings: {
       optimizer: {
-        enabled: withOptimizations,
+        enabled: true,
         runs: 200,
       },
     },
@@ -134,7 +134,7 @@ module.exports = {
       // allowUnlimitedContractSize: !withOptimizations,
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       gas: 26000000,
-      // gasPrice: 50000000000,
+      gasPrice: 150000000000,
       // timeout: 20000,
     },
   },

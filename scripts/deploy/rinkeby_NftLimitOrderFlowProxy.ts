@@ -5,10 +5,10 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
-import { config } from 'dotenv';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
 import { store } from '../help';
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -21,13 +21,17 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
-  const evabaseConfigContract = EvabaseConfig.attach(store.get('evabaseConfig'));
-  const tx = await evabaseConfigContract.addKeeper(store.get('evaFlowChainLinkKeeperBot'), 0);
-  tx.wait();
-  const tx1 = await evabaseConfigContract.addKeeper(store.get('evaBaseServerBot'), 1);
-  tx1.wait();
-  // console.log(tx);
+  const NftLimitOrderFlowProxy = await ethers.getContractFactory('NftLimitOrderFlowProxy');
+  const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(
+    store.get('evabaseConfig'),
+    store.get('evaSafesFactory'),
+    'EVABASE',
+    '1',
+  );
+
+  await nftLimitOrderFlowProxy.deployed();
+  console.log('NftLimitOrderFlow deployed to:', nftLimitOrderFlowProxy.address);
+  store.set('NftLimitOrderFlow', nftLimitOrderFlowProxy.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
