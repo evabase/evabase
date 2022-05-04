@@ -5,12 +5,9 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
-import { config } from 'dotenv';
 import { ethers } from 'hardhat';
-const store = require('data-store')({
-  // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + '/scripts/deploy/rinkeby.json',
-});
+// eslint-disable-next-line node/no-missing-import
+import { store } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command

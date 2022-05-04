@@ -9,11 +9,10 @@ import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
 import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
-    using AddressUpgradeable for address;
+    using Address for address;
 
 
     bytes32 constant _ORDER_TYPEHASH =
@@ -32,8 +31,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         string memory name,
         string memory version
     ) public {
-        // constructor(address _evaSafesFactory) {
-        // require(isInitialized == false, "Already initialized");
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
@@ -113,13 +110,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
-        delete orderExists[orderId];
         uint256 remain = orderExist.balance;
+        delete orderExists[orderId];
         if (remain > 0) {
             (bool succeed, ) = orderExist.owner.call{value: remain}("");
             require(succeed, "Failed to transfer Ether");
         }
-
         emit OrderCancel(msg.sender, flowId, orderId);
     }
 
