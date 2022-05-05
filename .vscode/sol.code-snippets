@@ -20,5 +20,10 @@
     "scope": "solidity",
     "prefix": "head",
     "body": ["//SPDX-License-Identifier: MIT", "//author: Evabase core team", "\npragma solidity ^0.8.0;\n\n"]
+  },
+  "Import console": {
+    "scope": "solidity",
+    "prefix": "hard",
+    "body": ["import \"hardhat/console.sol\";\n"]
   }
 }
