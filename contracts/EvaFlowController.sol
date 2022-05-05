@@ -29,7 +29,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     // using LibSingleList for LibSingleList.Iterate;
     // LibSingleList.List _vaildFlows;
 
-    uint256 public constant MAX_INT = 2 ^ (256 - 1);
+    uint256 public constant MAX_INT = (2**256)-1;
 
     //可提取的手续费
     uint256 public paymentEthAmount;
