@@ -17,10 +17,7 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
     mapping(address => bool) public keeps;
     uint32 private constant _EXEC_GAS_LIMIT = 8_000_000;
 
-    constructor(
-        address _config,
-        address _evaFlowChecker
-    ) {
+    constructor(address _config, address _evaFlowChecker) {
         // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         require(_evaFlowChecker != address(0), "addess is 0x");

@@ -40,5 +40,4 @@ interface IEvabaseConfig {
     function getKeepBot(address add) external view returns (KeepStruct memory);
 
     function isActiveControler(address add) external view returns (bool);
-
 }

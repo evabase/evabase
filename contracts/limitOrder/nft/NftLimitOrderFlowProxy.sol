@@ -11,7 +11,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         address _evaSafesFactory,
         string memory name,
         string memory version
-    ) NftLimitOrderFlow(_config, _evaSafesFactory, name, version) {}
+    ) NftLimitOrderFlow(_config, _evaSafesFactory, name, version) {} //solhint-disable
 
     function create(
         IEvaFlowController ser,
