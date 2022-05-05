@@ -13,6 +13,38 @@ export const store = new Store({
   path: path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'),
 });
 
+// console.log('path:', path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'));
+
+export enum HowToCall {
+  Call,
+  Delegate,
+}
+
+export enum CompareOperator {
+  Eq,
+  Ne,
+  Ge,
+  Gt,
+  Le,
+  Lt,
+}
+
+export enum FlowStatus {
+  Active, // 可执行
+  Paused,
+  Destroyed,
+  Expired,
+  Completed,
+  Unknown,
+}
+
+export enum KeepNetWork {
+  ChainLink,
+  Evabase,
+  Gelato,
+  Others,
+}
+
 class Help {
   public readonly ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 

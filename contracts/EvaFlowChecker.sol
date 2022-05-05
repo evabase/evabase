@@ -10,8 +10,7 @@ import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 contract EvaFlowChecker {
     IEvabaseConfig public config;
 
-    uint32 public constant CHECK_GASLIMIT_MIN = 4_000_0;
-    uint32 private constant _GAS_LIMIT = 2_000_000;
+    uint32 private constant _GAS_SAVE = 60_000;
     uint256 private constant _TIME_SOLT = 10 seconds;
 
     constructor(address _config) {
@@ -107,33 +106,33 @@ contract EvaFlowChecker {
             bytes[] memory _arrayBytes
         )
     {
-        uint256 totalGas;
         bytes[] memory datas = _executeDataArray;
         uint256[] memory tmp = _tmp;
         uint256 jj = j;
-
+        if (gasleft() <= _GAS_SAVE) {
+            return (tmp, jj, datas);
+        }
         IEvaFlowController ctr = IEvaFlowController(config.control());
         for (uint256 i = _start; i < _end; i++) {
-            uint256 beforGas = gasleft();
             uint256 index = ctr.getIndexVaildFlow(i, keepNetWork);
-
             // checkGasLimit/checkdata?
             if (index != uint256(0)) {
                 EvaFlowMeta memory meta = ctr.getFlowMetas(index);
-                (bool needExec, bytes memory executeData) = IEvaFlow(meta.lastVersionflow).check(meta.checkData);
-
-                uint256 afterGas = gasleft();
-                totalGas = totalGas + beforGas - afterGas;
-                if (totalGas > _GAS_LIMIT || afterGas < CHECK_GASLIMIT_MIN) {
-                    return (tmp, jj, datas);
-                }
-                if (needExec) {
-                    tmp[jj++] = index;
-                    datas[jj++] = executeData;
-                }
+                try IEvaFlow(meta.lastVersionflow).check(meta.checkData) returns (
+                    bool needExec,
+                    bytes memory executeData
+                ) {
+                    if (needExec) {
+                        tmp[jj++] = index;
+                        datas[jj++] = executeData;
+                    }
+                    // solhint-disable
+                } catch {} //ignore error
+            }
+            if (gasleft() <= _GAS_SAVE) {
+                break;
             }
         }
-
         return (tmp, jj, datas);
     }
 
