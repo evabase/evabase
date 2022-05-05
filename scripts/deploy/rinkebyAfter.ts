@@ -6,10 +6,8 @@
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
-const store = require('data-store')({
-  // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + '/scripts/deploy/bsctest.json',
-});
+// eslint-disable-next-line node/no-missing-import
+import { store } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command

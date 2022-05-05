@@ -1,6 +1,14 @@
+/* eslint-disable node/no-missing-import */
 'use strict';
 import { ethers } from 'hardhat';
-import { EvabaseConfig, EvaFlowController, EvaSafesFactory } from '../typechain/index';
+import {
+  EvabaseConfig,
+  EvaFlowController,
+  EvaSafesFactory,
+  EvaBaseServerBot,
+  EvaFlowChecker,
+  NftLimitOrderFlowProxy,
+} from '../typechain/index';
 import { initEvebase } from './initEvebase';
 
 export enum HowToCall {
@@ -37,12 +45,18 @@ export class App {
   public config!: EvabaseConfig;
   public safesFactory!: EvaSafesFactory;
   public controler!: EvaFlowController;
+  public evaFlowChecker!: EvaFlowChecker;
+  public evaBaseServerBot!: EvaBaseServerBot;
+  public nftLimitOrderFlowProxy!: NftLimitOrderFlowProxy;
 
   async deploy() {
     const result = await initEvebase();
     this.config = result.evabaseConfig as EvabaseConfig;
     this.safesFactory = result.evaSafesFactory as EvaSafesFactory;
     this.controler = result.evaFlowController as EvaFlowController;
+    this.evaFlowChecker = result.evaFlowChecker as EvaFlowChecker;
+    this.evaBaseServerBot = result.evaBaseServerBot as EvaBaseServerBot;
+    this.nftLimitOrderFlowProxy = result.nftLimitOrderFlowProxy as NftLimitOrderFlowProxy;
   }
 
   async createOrLoadWalletSeafes(acct: string) {

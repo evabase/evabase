@@ -21,20 +21,17 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
-
-  const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
+  const NftLimitOrderFlowProxy = await ethers.getContractFactory('NftLimitOrderFlowProxy');
+  const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(
     store.get('evabaseConfig'),
-    store.get('evaFlowChecker'),
-    // evaFlowControler.address,
-    // store.get("linkToken"),
-    store.get('chainlinkKeeperRegistry'),
-
-    // store.get("chainlinkUpkeepRegistrationRequests")
+    store.get('evaSafesFactory'),
+    'EVABASE',
+    '1',
   );
-  await evaFlowChainLinkKeeperBot.deployed();
-  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
-  store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
+
+  await nftLimitOrderFlowProxy.deployed();
+  console.log('NftLimitOrderFlow deployed to:', nftLimitOrderFlowProxy.address);
+  store.set('NftLimitOrderFlow', nftLimitOrderFlowProxy.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

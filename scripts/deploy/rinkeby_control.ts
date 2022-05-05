@@ -6,10 +6,8 @@
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
-const store = require('data-store')({
-  // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + '/scripts/deploy/rinkeby.json',
-});
+// eslint-disable-next-line node/no-missing-import
+import { store } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -60,19 +58,19 @@ async function main() {
 
   console.log(`data: ${myStructData}`);
 
-  await evaFlowController.createFlow(
-    'ACE',
-    1, // evabaseKeep
-    store.get('NftLimitOrderFlow'),
-    myStructData,
-    200000,
-    {
-      value: ethers.utils.parseEther('0.01'),
-    },
-  );
+  // await evaFlowController.createFlow(
+  //   'ACE',
+  //   1, // evabaseKeep
+  //   store.get('NftLimitOrderFlow'),
+  //   myStructData,
+  //   200000,
+  //   {
+  //     value: ethers.utils.parseEther('0.01'),
+  //   },
+  // );
 
-  await evaFlowController.pauseFlow(1, myStructData);
-  await evaFlowController.startFlow(1, myStructData);
+  // await evaFlowController.pauseFlow(1, myStructData);
+  // await evaFlowController.startFlow(1, myStructData);
   // await evabaseConfig.setControl(evaFlowController.address);
   // await evaFlowController.addEvabaseFlowByOwner(
   //   store.get("NftLimitOrderFlow"),
