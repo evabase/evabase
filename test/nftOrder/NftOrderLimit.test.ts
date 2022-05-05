@@ -194,7 +194,7 @@ describe('NFTLimitOrder', function () {
         evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, dataAfter, {
           value: ethers.utils.parseEther('0.01'),
         }),
-      ).to.revertedWith('order time is end');
+      ).to.revertedWith('invalid order.expireTime');
     });
     it('failed when exist', async function () {
       const order = {
