@@ -2,7 +2,6 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 
-import "../../lib/Constants.sol";
 import "./interfaces/IStrategy.sol";
 import "../../lib/TransferHelper.sol";
 import {Order} from "./interfaces/ILOBExchange.sol";
