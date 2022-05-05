@@ -25,7 +25,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     uint256 private constant _REGISTRY_GAS_OVERHEAD = 80_000;
 
-    uint256 public constant MAX_INT = type(uint256).max;
+    uint256 private constant _MAX_INT = type(uint256).max;
 
     //可提取的手续费
     uint256 public paymentEthAmount;
@@ -44,7 +44,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             EvaFlowMeta({
                 flowStatus: FlowStatus.Unknown,
                 keepNetWork: KeepNetWork.ChainLink,
-                maxVaildBlockNumber: MAX_INT,
+                maxVaildBlockNumber: _MAX_INT,
                 admin: msg.sender,
                 lastKeeper: address(0),
                 lastExecNumber: block.number,
@@ -117,7 +117,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             EvaFlowMeta({
                 flowStatus: FlowStatus.Active,
                 keepNetWork: network,
-                maxVaildBlockNumber: MAX_INT,
+                maxVaildBlockNumber: _MAX_INT,
                 admin: msg.sender,
                 lastKeeper: address(0),
                 lastExecNumber: 0,
