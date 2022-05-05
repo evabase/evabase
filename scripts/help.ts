@@ -13,8 +13,6 @@ export const store = new Store({
   path: path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'),
 });
 
-// console.log('path:', path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'));
-
 export enum HowToCall {
   Call,
   Delegate,
@@ -47,7 +45,6 @@ export enum KeepNetWork {
 
 class Help {
   public readonly ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-
   toUnits(decimals: number) {
     return 1 + zeros.substring(0, decimals);
   }
