@@ -131,7 +131,7 @@ module.exports = {
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      allowUnlimitedContractSize: !withOptimizations,
+      // allowUnlimitedContractSize: !withOptimizations,
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       gas: 26000000,
       // gasPrice: 50000000000,

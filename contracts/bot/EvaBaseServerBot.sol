@@ -19,8 +19,7 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
 
     constructor(
         address _config,
-        address _evaFlowChecker,
-        KeepNetWork keepNetWork
+        address _evaFlowChecker
     ) {
         // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
@@ -32,8 +31,8 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
         // execAddress = _execAddress;
         config = IEvabaseConfig(_config);
         keeps[msg.sender] = true;
-        config.addKeeper(address(this), keepNetWork);
-        keepBotId = config.keepBotSizes(keepNetWork);
+        // config.addKeeper(address(this), keepNetWork);
+        // keepBotId = config.keepBotSizes(keepNetWork);
     }
 
     function checkUpkeep(bytes calldata checkData)

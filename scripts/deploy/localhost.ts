@@ -7,10 +7,12 @@
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
-const store = require('data-store')({
-  // path: process.cwd() + "/deployInfo.json",
-  path: process.cwd() + '/scripts/deploy/localhost.json',
-});
+// eslint-disable-next-line node/no-missing-import
+import { store } from '../help';
+// const store = require('data-store')({
+//   // path: process.cwd() + "/deployInfo.json",
+//   path: process.cwd() + '/scripts/deploy/localhost.json',
+// });
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -72,7 +74,7 @@ async function main() {
     // evaFlowController.address,
     // store.get("linkToken"),
     store.get('chainlinkKeeperRegistry'),
-    0,
+
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
   await evaFlowChainLinkKeeperBot.deployed();
@@ -296,7 +298,6 @@ async function main() {
     evabaseConfig.address,
     evaFlowChecker.address,
     // evaFlowController.address,
-    1, // KeepNetWork.Evabase
   );
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
