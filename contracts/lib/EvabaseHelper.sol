@@ -35,8 +35,8 @@ library EvabaseHelper {
     }
 
     function add(UintSet storage self, uint256 value) internal {
-        require(value != uint256(0), "LibAddressSet: value can't be 0x0");
-        require(!contains(self, value), "LibAddressSet: value already exists in the set.");
+        require(value != uint256(0), "value=0");
+        require(!contains(self, value), "value exists");
         self.values.push(value);
         self.indexMapping[value] = self.values.length;
     }
@@ -46,7 +46,7 @@ library EvabaseHelper {
     }
 
     function remove(UintSet storage self, uint256 value) internal {
-        require(contains(self, value), "LibAddressSet: value doesn't exist.");
+        require(contains(self, value), "value doesn't exist");
         uint256 toDeleteindexMapping = self.indexMapping[value] - 1;
         uint256 lastindexMapping = self.values.length - 1;
         uint256 lastValue = self.values[lastindexMapping];
@@ -75,6 +75,7 @@ library EvabaseHelper {
 
     function toBytes(uint256 x) internal pure returns (bytes memory b) {
         b = new bytes(32);
+        // solhint-disable no-inline-assembly
         assembly {
             mstore(add(b, 32), x)
         }

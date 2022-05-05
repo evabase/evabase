@@ -151,6 +151,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         //create
         address addr;
         uint256 size;
+        // solhint-disable no-inline-assembly
         assembly {
             addr := create(0, add(_flowCode, 0x20), mload(_flowCode))
             size := extcodesize(addr)
@@ -255,25 +256,21 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     function withdrawFundByUser(address tokenAdress, uint256 amount) external override nonReentrant {
         address safeWallet = msg.sender;
-        // require(safeWallet != address(0), "safe wallet is 0x");
-        // require(msg.sender == flowAdmin, "flow's owner is not y");
 
         uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
         uint256 minTotalGas = minTotalFlow > minConfig.minGasFundForUser ? minTotalFlow : minConfig.minGasFundForUser;
 
         if (tokenAdress == address(0)) {
-            require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
-            userMetaMap[safeWallet].ethBal = userMetaMap[safeWallet].ethBal - Utils.toUint120(amount);
-            (bool sent, ) = safeWallet.call{value: amount}("");
-            require(sent, "Failed to send Ether");
+            require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
+            userMetaMap[safeWallet].ethBal -= Utils.toUint120(amount);
+            TransferHelper.safeTransferETH(safeWallet, amount);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
+            require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
 
-            require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas);
+            userMetaMap[safeWallet].gasTokenBal -= Utils.toUint120(amount);
 
-            userMetaMap[safeWallet].gasTokenBal = userMetaMap[safeWallet].gasTokenBal - Utils.toUint120(amount);
-
-            IERC20(tokenAdress).transfer(safeWallet, amount);
+            TransferHelper.safeTransfer(tokenAdress, safeWallet, amount);
         }
     }
 
@@ -351,7 +348,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require((keeper != flow.lastKeeper ||  flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
+        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
         // 检查是否 flow 的网络是否和 keeper 匹配
         require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
@@ -381,6 +378,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             payAmountByETH = Utils.toUint120(_calculatePaymentAmount(usedGas));
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
+            // solhint-disable avoid-tx-origin
             if (tx.origin == address(0)) {
                 //是默认交易，在check完成后将模拟调用
                 require(bal >= payAmountByETH, "insufficient fund");

@@ -20,7 +20,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
 
     KeeperRegistryInterface private immutable _keeperRegistry;
 
-     event SetEvaCheck(address indexed evaCheck);
+    event SetEvaCheck(address indexed evaCheck);
 
     constructor(
         address config_,
