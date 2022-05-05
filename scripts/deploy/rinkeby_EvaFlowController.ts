@@ -20,21 +20,13 @@ async function main() {
   // We get the contract to deploy
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
-  console.log(`store : ${store}`);
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
-  const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
-    store.get('evabaseConfig'),
-    store.get('evaFlowChecker'),
-    // evaFlowControler.address,
-    // store.get("linkToken"),
-    store.get('chainlinkKeeperRegistry'),
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
+  const evaFlowController = await EvaFlowController.deploy(store.get('evabaseConfig'), store.get('evaSafesFactory'));
 
-    // store.get("chainlinkUpkeepRegistrationRequests")
-  );
-  await evaFlowChainLinkKeeperBot.deployed();
-  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
-  store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
+  await evaFlowController.deployed();
+  console.log('NftLimitOrderFlow deployed to:', evaFlowController.address);
+  store.set('NftLimitOrderFlow', evaFlowController.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

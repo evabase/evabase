@@ -16,15 +16,11 @@ import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable {
     uint32 private constant _CHECK_GAS_LIMIT = 2_000_000;
     uint32 private constant _EXEC_GAS_LIMIT = 2_000_000;
-    // KeeperRegistryInterface private immutable keeperRegistryInterface;
-    // uint32 public keepBotId;
     uint256 public lastMoveTime;
-    // uint256 public chainLinkKeepId;
-    // address public linkToken;
-    // uint256 lastBlockNum;
+
     KeeperRegistryInterface private immutable _keeperRegistry;
 
-    // address private regiesterRequest;
+     event SetEvaCheck(address indexed evaCheck);
 
     constructor(
         address config_,
@@ -81,5 +77,10 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         if (block.timestamp - lastMoveTime >= 10 seconds) {
             lastMoveTime = block.timestamp; // solhint-disable
         }
+    }
+
+    function setEvaCheck(address evaFlowChecker_) external onlyOwner {
+        evaFlowChecker = EvaFlowChecker(evaFlowChecker_);
+        emit SetEvaCheck(evaFlowChecker_);
     }
 }
