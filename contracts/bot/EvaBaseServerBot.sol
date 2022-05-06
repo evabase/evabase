@@ -5,7 +5,7 @@ import {KeeperRegistryInterface} from "../keeper/chainlink/KeeperRegistryInterfa
 import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
-import {EvaFlowChecker} from "../EvaFlowChecker.sol";
+import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
 import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -17,13 +17,12 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
     mapping(address => bool) public keeps;
     uint32 private constant _EXEC_GAS_LIMIT = 8_000_000;
 
-    constructor(address _config, address _evaFlowChecker) {
-        require(_config != address(0), "addess is 0x");
-        require(_evaFlowChecker != address(0), "addess is 0x");
+    constructor(IEvabaseConfig _config, IEvaFlowChecker _evaFlowChecker) {
+        require(address(_config) != address(0), "addess is 0x");
+        require(address(_evaFlowChecker) != address(0), "addess is 0x");
 
-        config = IEvabaseConfig(_config);
-        evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
-        config = IEvabaseConfig(_config);
+        config = _config;
+        evaFlowChecker = _evaFlowChecker;
         keeps[msg.sender] = true;
     }
 

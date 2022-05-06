@@ -6,8 +6,8 @@ import {
   EvaFlowController,
   EvaSafesFactory,
   EvaBaseServerBot,
-  EvaFlowChecker,
   NftLimitOrderFlowProxy,
+  IEvaFlowChecker,
 } from '../typechain/index';
 import { initEvebase } from './initEvebase';
 
@@ -45,7 +45,7 @@ export class App {
   public config!: EvabaseConfig;
   public safesFactory!: EvaSafesFactory;
   public controler!: EvaFlowController;
-  public evaFlowChecker!: EvaFlowChecker;
+  public evaFlowChecker!: IEvaFlowChecker;
   public evaBaseServerBot!: EvaBaseServerBot;
   public nftLimitOrderFlowProxy!: NftLimitOrderFlowProxy;
 
@@ -54,7 +54,7 @@ export class App {
     this.config = result.evabaseConfig as EvabaseConfig;
     this.safesFactory = result.evaSafesFactory as EvaSafesFactory;
     this.controler = result.evaFlowController as EvaFlowController;
-    this.evaFlowChecker = result.evaFlowChecker as EvaFlowChecker;
+    this.evaFlowChecker = result.evaFlowChecker as IEvaFlowChecker;
     this.evaBaseServerBot = result.evaBaseServerBot as EvaBaseServerBot;
     this.nftLimitOrderFlowProxy = result.nftLimitOrderFlowProxy as NftLimitOrderFlowProxy;
   }

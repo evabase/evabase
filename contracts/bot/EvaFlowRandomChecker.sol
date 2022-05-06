@@ -6,8 +6,9 @@ import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {IEvaFlowController, EvaFlowMeta} from "../interfaces/IEvaFlowController.sol";
 import {Utils} from "../lib/Utils.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
+import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
 
-contract EvaFlowRandomChecker {
+contract EvaFlowRandomChecker is IEvaFlowChecker {
     IEvabaseConfig public config;
 
     uint32 private constant _GAS_SAVE = 60_000;
@@ -33,7 +34,7 @@ contract EvaFlowRandomChecker {
         uint256 keepbotId,
         uint256 lastMoveTime,
         KeepNetWork keepNetWork
-    ) external view returns (bool needExec, bytes memory execData) {
+    ) external view override returns (bool needExec, bytes memory execData) {
         Args memory args;
         args.controller = IEvaFlowController(config.control());
         args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);

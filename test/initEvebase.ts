@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 /* eslint-disable prettier/prettier */
 // import chai, { expect } from "chai";
 import { ethers } from 'hardhat';
+import { help } from '../scripts/help';
+import { EvaFlowRandomChecker } from '../typechain';
 
 const store = require('data-store')({
   path: process.cwd() + '/testInfo.json',
@@ -30,9 +32,7 @@ export const initEvebase = async function initEvebase() {
   await evaFlowController.deployed();
   console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4
-  const EvaFlowChecker = await ethers.getContractFactory('EvaFlowChecker');
-  const evaFlowChecker = await EvaFlowChecker.deploy(evabaseConfig.address);
-  await evaFlowChecker.deployed();
+  const evaFlowChecker = (await help.deploy('EvaFlowRandomChecker', [evabaseConfig.address])) as EvaFlowRandomChecker;
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   // 5
   const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
@@ -57,11 +57,7 @@ export const initEvebase = async function initEvebase() {
   // await config.addKeeper(anyKeeper.address);
 
   const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
-  const evaBaseServerBot = await EvaBaseServerBot.deploy(
-    evabaseConfig.address,
-    evaFlowChecker.address,
-
-  );
+  const evaBaseServerBot = await EvaBaseServerBot.deploy(evabaseConfig.address, evaFlowChecker.address);
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
   await evabaseConfig.setControl(evaFlowController.address);
