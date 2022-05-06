@@ -148,8 +148,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             total += value;
         }
 
-        orderExist.amount =  Utils.toUint8(_order.amount) - Utils.toUint8(_data.length);
-
+        //Increase in the number of completed purchases
+        orderExist.amount = Utils.toUint8(_data.length)+orderExist.amount;
+        //Decrease in funds deposited for purchases
         orderExist.balance = orderExist.balance - Utils.toUint96(total);
 
         emit OrderExecute(msg.sender, ordeId, _data.length, total);
