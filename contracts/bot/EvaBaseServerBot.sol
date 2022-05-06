@@ -18,18 +18,13 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
     uint32 private constant _EXEC_GAS_LIMIT = 8_000_000;
 
     constructor(address _config, address _evaFlowChecker) {
-        // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         require(_evaFlowChecker != address(0), "addess is 0x");
 
-        // evaFlowControler = IEvaFlowControler(_evaFlowControler);
         config = IEvabaseConfig(_config);
         evaFlowChecker = EvaFlowChecker(_evaFlowChecker);
-        // execAddress = _execAddress;
         config = IEvabaseConfig(_config);
         keeps[msg.sender] = true;
-        // config.addKeeper(address(this), keepNetWork);
-        // keepBotId = config.keepBotSizes(keepNetWork);
     }
 
     function checkUpkeep(bytes calldata checkData)

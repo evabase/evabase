@@ -40,19 +40,9 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(_config != address(0), "addess is 0x");
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         config = IEvabaseConfig(_config);
-        _flowMetas.push(
-            EvaFlowMeta({
-                flowStatus: FlowStatus.Unknown,
-                keepNetWork: KeepNetWork.ChainLink,
-                maxVaildBlockNumber: _MAX_INT,
-                admin: msg.sender,
-                lastKeeper: address(0),
-                lastExecNumber: block.number,
-                lastVersionflow: address(0),
-                flowName: "init",
-                checkData: ""
-            })
-        );
+
+        EvaFlowMeta memory f;
+        _flowMetas.push(f); //storage a solt, flow id starts with 1.
     }
 
     function setMinConfig(MinConfig memory _minConfig) external onlyOwner {
@@ -88,8 +78,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     function _beforeCreateFlow(KeepNetWork _keepNetWork) internal view {
         require(uint256(_keepNetWork) <= uint256(KeepNetWork.Others), "invalid netWork");
-        IEvaSafes safes = IEvaSafes(msg.sender);
-        require(safes.isEvaSafes(), "should be safes");
+        require(IEvaSafes(msg.sender).isEvaSafes(), "should be safes");
     }
 
     function isValidFlow(address flow) public pure returns (bool) {
@@ -211,23 +200,17 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 _flowId) external override {
-        require(_flowId < _flowMetas.length, "over bound");
-        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
-        require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
-        if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // _vaildFlows.remove(_flowId);
-            KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            _vaildFlows[keepNetWork].remove(_flowId);
+    function destroyFlow(uint256 flowId) external override {
+        EvaFlowMeta memory meta = _flowMetas[flowId];
+        require(msg.sender == meta.admin, "only for flow admin");
+        require(meta.flowStatus != FlowStatus.Destroyed, "have destroyed");
+        // remove from valid when flow is active.
+        if (meta.flowStatus == FlowStatus.Active) {
+            userMetaMap[msg.sender].vaildFlowsNum -= 1;
+            _vaildFlows[meta.keepNetWork].remove(flowId);
         }
-
-        _flowMetas[_flowId].lastExecNumber = block.number;
-        _flowMetas[_flowId].flowStatus = FlowStatus.Destroyed;
-        // _flowMetas[_flowId].lastVersionflow = address(0);
-
-        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum - 1;
-
-        emit FlowDestroyed(msg.sender, _flowId);
+        _flowMetas[flowId].flowStatus = FlowStatus.Destroyed;
+        emit FlowDestroyed(msg.sender, flowId);
     }
 
     function addFundByUser(
@@ -314,21 +297,13 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     function batchExecFlow(
         address keeper,
         bytes memory data,
-        uint256 gasLimit
+        uint256
     ) external override {
-        uint256 gasTotal = 0;
-        // uint256[] memory arr = Utils.decodeUints(data);
         (uint256[] memory arr, bytes[] memory executeDataArray) = Utils._decodeTwoArr(data);
-
-        require(arr.length == executeDataArray.length, "arr is empty");
-
+        require(arr.length == executeDataArray.length, "invalid array len");
         for (uint256 i = 0; i < arr.length; i++) {
             if (arr[i] > 0) {
-                uint256 before = gasleft();
                 execFlow(keeper, arr[i], executeDataArray[i]);
-                if (gasTotal + before - gasleft() > gasLimit) {
-                    return;
-                }
             }
         }
     }
