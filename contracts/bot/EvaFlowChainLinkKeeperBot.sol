@@ -5,7 +5,7 @@ import {KeeperRegistryInterface} from "../keeper/chainlink/KeeperRegistryInterfa
 import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
-import {EvaFlowChecker} from "../EvaFlowChecker.sol";
+import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
 import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
@@ -33,7 +33,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         require(keeperRegistry_ != address(0), "addess is 0x");
 
         config = IEvabaseConfig(config_);
-        evaFlowChecker = EvaFlowChecker(evaFlowChecker_);
+        evaFlowChecker = IEvaFlowChecker(evaFlowChecker_);
         _keeperRegistry = KeeperRegistryInterface(keeperRegistry_);
         lastMoveTime = block.timestamp; // solhint-disable
     }
@@ -53,13 +53,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
 
     function _check(bytes memory _checkdata) internal view override returns (bool needExec, bytes memory execdata) {
         uint32 keepBotId = abi.decode(_checkdata, (uint32));
-        (needExec, execdata) = evaFlowChecker.check(
-            keepBotId,
-            // _CHECK_GAS_LIMIT,
-            // _checkdata,
-            lastMoveTime,
-            KeepNetWork.ChainLink
-        );
+        (needExec, execdata) = evaFlowChecker.check(keepBotId, lastMoveTime, KeepNetWork.ChainLink);
     }
 
     function _exec(bytes memory execdata) internal override {
@@ -79,8 +73,9 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         }
     }
 
-    function setEvaCheck(address evaFlowChecker_) external onlyOwner {
-        evaFlowChecker = EvaFlowChecker(evaFlowChecker_);
-        emit SetEvaCheck(evaFlowChecker_);
+    function setEvaCheck(IEvaFlowChecker evaFlowChecker_) external onlyOwner {
+        require(address(evaFlowChecker_) != address(0), "addess is 0x");
+        evaFlowChecker = evaFlowChecker_;
+        emit SetEvaCheck(address(evaFlowChecker_));
     }
 }

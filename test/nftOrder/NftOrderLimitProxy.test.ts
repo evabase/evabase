@@ -9,13 +9,7 @@ import { help } from '../../scripts/help';
 import { App, HowToCall, KeepNetWork } from '../app';
 
 import {
-  EvabaseConfig,
-  EvaFlowController,
-  EvaSafesFactory,
-  EvaBaseServerBot,
-  EvaFlowChecker,
   EvaSafes,
-  NftLimitOrderFlowProxy,
   // eslint-disable-next-line node/no-missing-import
 } from '../../typechain/index';
 

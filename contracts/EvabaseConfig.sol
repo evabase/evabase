@@ -16,7 +16,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
     address public override control;
 
-    uint32 public override batchFlowNum = 2;
+    uint32 public override batchFlowNum = 60;
 
     function setBatchFlowNum(uint32 num) external override onlyOwner {
         batchFlowNum = num;

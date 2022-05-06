@@ -56,6 +56,22 @@ class Help {
     return num.toLocaleString('fullwide', { useGrouping: false });
   }
 
+  async admin() {
+    // only for testnet
+    const list = await ethers.getSigners();
+    const a = list.find((r) => r.address === '0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF');
+    if (a === undefined) {
+      const err = 'please import the private key of admin(0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF) to your env';
+      throw err;
+    }
+    return a;
+  }
+
+  setStore(key: string, value: any) {
+    console.log(`update ${key} config: ${store.get(key)} --> ${value}`);
+    store.set(key, value);
+  }
+
   async deploy(contractName: string, args?: any[], signer?: ethersV5.Signer) {
     const factory = await ethers.getContractFactory(contractName, signer);
     const contract = args ? await factory.deploy(...args) : await factory.deploy();

@@ -84,6 +84,14 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
   }
 });
 
+//load keys
+var accounts = [];
+for (var item of Object.keys(process.env)) {
+  if (item.endsWith('PRIVATE_KEY')) {
+    accounts.push(process.env[item]);
+  }
+}
+
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 /**
@@ -121,18 +129,17 @@ module.exports = {
     ropsten: {
       url: process.env.ROPSTEN_URL || '',
       allowUnlimitedContractSize: !withOptimizations,
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: accounts,
     },
     bscTest: {
       url: process.env.BSCTEST_URL || '',
       allowUnlimitedContractSize: !withOptimizations,
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: accounts,
       gas: 26000000,
     },
     rinkeby: {
       url: process.env.RINKEBY_URL || '',
-      // allowUnlimitedContractSize: !withOptimizations,
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: accounts,
       gas: 26000000,
       // gasPrice: 50000000000,
       // timeout: 20000,
