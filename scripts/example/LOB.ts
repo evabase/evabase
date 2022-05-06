@@ -13,14 +13,17 @@ type TokenInfo = {
 };
 
 async function main() {
-  const [me] = await ethers.getSigners();
-
   // await newOrder();
-  // await exchangeCheck('0x9b1d2c81ffadba2bfcd8072f0fee2f9cf8ebc14953ab8d6e6bd10f8db415ffd0');
-  // await chainLinkCheck('0x0000000000000000000000000000000000000000000000000000000000000001');
-
+  // 0x3045d749c917522c3870f08d23053d19e3d5858edca1c1bbfe6e36deb3f75d09
+  // 0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f
+  // await exchangeCheck('0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f');
+  await chainLinkCheck('0x0000000000000000000000000000000000000000000000000000000000000001');
+  // await tryExec('0x0000000000000000000000000000000000000000000000000000000000000001');
   // await checkAmount();
   // await cancelOrder(me, 4);
+  // const admin = await help.admin();
+  // const config = await ethers.getContractAt('EvabaseConfig', store.get('evabaseConfig'));
+  // await config.connect(admin!).setBatchFlowNum(60);
 }
 
 async function cancelOrder(user: SignerWithAddress, flowId: number) {
@@ -52,24 +55,46 @@ async function exchangeCheck(orderId: string) {
   console.log(result);
 }
 
-async function chainLinkCheck(checkdata: string) {
+async function tryExec(checkdata: string) {
+  const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
   const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
+  const result = await bot.checkUpkeep(checkdata);
+
+  const keeper = new ethers.VoidSigner('0x426a9b94ae341751cb248d81ddbe3cccd16dc493', ethers.provider);
+  console.log(await chainlink.connect(keeper).callStatic.performUpkeep(314, result.performData));
+  const info = await bot.connect(keeper).callStatic.performUpkeep(result.performData);
+  console.log(info);
+}
+
+async function chainLinkCheck(checkdata: string) {
+  const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
+
+  const keeper = '0x426a9b94ae341751cb248d81ddbe3cccd16dc493';
+  const zero = new ethers.VoidSigner(ethers.constants.AddressZero, ethers.provider);
+  console.log(await chainlink.connect(zero).checkUpkeep(314, keeper));
+  // const config = await ethers.getContractAt('EvabaseConfig', store.get('evabaseConfig'));
+
+  // console.log(await config.batchFlowNum());
+  // console.log(await config.keepBotSizes(KeepNetWork.ChainLink));
+  const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
+  // const checker = await ethers.getContractAt('EvaFlowRandomChecker', store.get('EvaFlowRandomChecker'));
+  // console.log(await checker.config());
+  // await checker.check(1, Math.ceil(new Date().getTime() / 1000), KeepNetWork.ChainLink);
+  // console.log(await bot.evaFlowChecker());
   const result = await bot.checkUpkeep(checkdata);
 
   console.log(result);
 }
 
 async function newOrder() {
-  const [me] = await ethers.getSigners();
-
-  const user = me;
+  const user = await help.me();
   const inputToken = { address: help.ETH_ADDRESS, decimals: 18, symbol: 'ETH' } as TokenInfo;
   const outputToken = { address: store.get('others.DAI'), decimals: 18, symbol: 'DAI' } as TokenInfo;
 
   const amount0 = 0.00001;
-  const price = 7728000; // 1 ETH = 11844100 DAI
-  const gasFundETH = 0.1;
-  await crateOrder(user, inputToken, outputToken, amount0, price, gasFundETH);
+  const price = 7028000;
+  const gasFundETH = 0.01;
+  await crateOrder(user!, inputToken, outputToken, amount0, price, gasFundETH);
 }
 
 async function createSafes(who: SignerWithAddress): Promise<EvaSafes> {

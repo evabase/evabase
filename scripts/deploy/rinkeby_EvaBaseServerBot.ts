@@ -22,7 +22,7 @@ async function main() {
   console.log(`deployer owner : ${ownerO[0].address}`);
 
   const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
-  const evaBaseServerBot = await EvaBaseServerBot.deploy(store.get('evabaseConfig'), store.get('evaFlowChecker'));
+  const evaBaseServerBot = await EvaBaseServerBot.deploy(store.get('evabaseConfig'), store.get('EvaFlowRandomChecker'));
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
   store.set('evaBaseServerBot', evaBaseServerBot.address);
