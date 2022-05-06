@@ -160,7 +160,7 @@ describe('NFT Limit Order', function () {
       // 注册
       const tx = await app.evaBaseServerBot.performUpkeep(p4);
       console.log('p5: ');
-      await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
+      await expect(tx).to.emit(app.controler, 'FlowExecuteFailed');
       // const callData = await help.encodeFunctionData('EvaBaseServerBot', 'performUpkeep', [p4]);
       // console.log('callData :', callData);
 
