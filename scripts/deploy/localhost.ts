@@ -73,7 +73,7 @@ async function main() {
     evaFlowChecker.address,
     // evaFlowController.address,
     // store.get("linkToken"),
-    store.get('chainlinkKeeperRegistry'),
+    store.get('others.ChainlinkKeeperRegistry'),
 
     // store.get("chainlinkUpkeepRegistrationRequests")
   );

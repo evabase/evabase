@@ -35,26 +35,6 @@ export const initEvebase = async function initEvebase() {
   const evaFlowChecker = (await help.deploy('EvaFlowRandomChecker', [evabaseConfig.address])) as EvaFlowRandomChecker;
   console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   // 5
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
-
-  const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
-    evabaseConfig.address,
-    evaFlowChecker.address,
-
-    // evaFlowController.address,
-
-    // evaFlowController.address,
-
-    // store.get("linkToken"),
-    store.get('chainlinkKeeperRegistry'),
-    // store.get("chainlinkUpkeepRegistrationRequests")
-  );
-  await evaFlowChainLinkKeeperBot.deployed();
-
-  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
-
-  // await config.setWalletFactory(factory.address);
-  // await config.addKeeper(anyKeeper.address);
 
   const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
   const evaBaseServerBot = await EvaBaseServerBot.deploy(evabaseConfig.address, evaFlowChecker.address);
@@ -72,7 +52,6 @@ export const initEvebase = async function initEvebase() {
     evaSafesFactory,
     evaFlowController,
     evaFlowChecker,
-    evaFlowChainLinkKeeperBot,
     evaBaseServerBot,
     nftLimitOrderFlowProxy,
   };

@@ -2,6 +2,7 @@
 import path from 'path';
 import { ethers, network } from 'hardhat';
 import { ethers as ethersV5 } from 'ethers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 let zeros = '0';
 while (zeros.length < 256) {
@@ -44,7 +45,16 @@ export enum KeepNetWork {
 }
 
 class Help {
+  public readonly adminMap: Map<string, string>;
   public readonly ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  private _admin?: SignerWithAddress;
+  private _me?: SignerWithAddress;
+
+  constructor() {
+    this.adminMap = new Map<string, string>();
+    this.adminMap.set('rinkeby', '0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF');
+  }
+
   toUnits(decimals: number) {
     return 1 + zeros.substring(0, decimals);
   }
@@ -57,14 +67,29 @@ class Help {
   }
 
   async admin() {
-    // only for testnet
-    const list = await ethers.getSigners();
-    const a = list.find((r) => r.address === '0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF');
-    if (a === undefined) {
-      const err = 'please import the private key of admin(0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF) to your env';
-      throw err;
+    if (this._admin === undefined) {
+      return ethers.getSigners().then((list) => {
+        const v = this.adminMap.get(network.name);
+        this._admin = list.find((r) => r.address === v);
+        this._me = list.find((r) => r.address !== v);
+        return this._admin;
+      });
+    } else {
+      return this._admin;
     }
-    return a;
+  }
+
+  async me() {
+    if (this._me === undefined) {
+      return ethers.getSigners().then((list) => {
+        const v = this.adminMap.get(network.name);
+        this._admin = list.find((r) => r.address === v);
+        this._me = list.find((r) => r.address !== v);
+        return this._me;
+      });
+    } else {
+      return this._me;
+    }
   }
 
   setStore(key: string, value: any) {
