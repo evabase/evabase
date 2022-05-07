@@ -9,11 +9,8 @@ import "./uniswapv2/IUniswapV2Factory.sol";
 import "./uniswapv2/IUniswapV2Pair.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract StrategyBase is Ownable {
-    using SafeMath for uint256;
     uint256 public constant DEADLINE = 30 minutes;
     address private immutable _WETH; //solhint-disable
     uint256 private immutable _BP; //base point=997 //solhint-disable
@@ -33,36 +30,36 @@ contract StrategyBase is Ownable {
         _BP = bp_; //997
     }
 
-    function calcMaxInput(
+    function getAmountsOut(
         address inputToken,
         address outputToken,
+        uint256 maxInput,
         uint256 minRate
-    ) public view returns (uint256 amountIn) {
+    ) public view returns (uint256 amountIn, uint256 amountOut) {
         IUniswapV2Factory factory = IUniswapV2Factory(router.factory());
 
         IUniswapV2Pair pair = IUniswapV2Pair(factory.getPair(inputToken, outputToken));
         if (address(pair) == address(0)) {
-            return 0;
+            return (0, 0);
         }
 
-        (uint112 r0, uint112 r1, ) = pair.getReserves();
+        (uint256 r0, uint256 r1, ) = pair.getReserves();
 
         (r0, r1) = inputToken < outputToken ? (r0, r1) : (r1, r0);
 
+        // R=MinRate
         // (in*0.997*R1)/(R0+in*0.997) >= in*MinRate
         // =>  in <= (997*R1 - 1000*MinRate*R0)/(997*MinRate)
-        uint256 a = _BP.mul(uint256(r1));
-        uint256 b = minRate.mul(uint256(r0)).mul(1000).div(1e18);
+        // =>  in <= R1/R - 1000 * R0 / BP
+        uint256 a = (r1 * 1e18) / minRate;
+        uint256 b = (1000 * r0) / _BP;
         if (b >= a) {
-            return 0;
+            return (0, 0);
         }
-        uint256 c = _BP.mul(minRate).div(1e18);
-        amountIn = (a - b).div(c);
-    }
-
-    function _getAmountsOut(uint256 amountIn, address[] memory path) internal view returns (uint256 amountOut) {
-        uint256[] memory amounts = router.getAmountsOut(amountIn, path);
-        amountOut = amounts[amounts.length - 1];
+        amountIn = a - b > maxInput ? maxInput : a - b;
+        amountOut = (amountIn * _BP * r1) / (r0 * 1000 + amountIn * _BP);
+        //safe check
+        require((amountIn * minRate) / 1e18 <= amountOut, "invalid amountIn");
     }
 
     function _checkRouter(
@@ -89,18 +86,13 @@ contract StrategyBase is Ownable {
         path[0] = inputToken;
         path[1] = outputToken;
 
-        uint256 canInput = calcMaxInput(inputToken, outputToken, minRate);
-        if (canInput > maxInput) {
-            canInput = maxInput;
+        (input, output) = getAmountsOut(inputToken, outputToken, maxInput, minRate);
+        if (input > 0) {
+            execData = abi.encode(
+                // solhint-disable not-rely-on-time
+                SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + DEADLINE})
+            );
         }
-        uint256[] memory amounts = router.getAmountsOut(canInput, path);
-
-        output = amounts[amounts.length - 1];
-        input = amounts[0];
-        execData = abi.encode(
-            // solhint-disable not-rely-on-time
-            SwapArgs({path: path, amountIn: input, amountOutMin: output, deadline: block.timestamp + DEADLINE})
-        );
     }
 
     function _swap(
@@ -111,7 +103,8 @@ contract StrategyBase is Ownable {
         SwapArgs memory args = abi.decode(execData, (SwapArgs));
 
         address inputReal = inputToken == TransferHelper.ETH_ADDRESS ? _WETH : inputToken;
-        address outputReal = inputToken == TransferHelper.ETH_ADDRESS ? _WETH : inputToken;
+        address outputReal = outputToken == TransferHelper.ETH_ADDRESS ? _WETH : outputToken;
+
         require(inputReal == args.path[0], "INVALID_PATH[0]");
         require(outputReal == args.path[args.path.length - 1], "INVALID_PATH[-1]");
 
@@ -141,7 +134,7 @@ contract StrategyBase is Ownable {
         }
 
         //check bought amount
-        bought = TransferHelper.balanceOf(outputToken, address(this)).sub(preSwapBalance);
+        bought = TransferHelper.balanceOf(outputToken, address(this)) - preSwapBalance;
         require(bought >= args.amountOutMin, "INSUFFICIENT_OUTPUT_AMOUNT");
 
         //transfer
