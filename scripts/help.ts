@@ -98,8 +98,13 @@ class Help {
   }
 
   async deploy(contractName: string, args?: any[], signer?: ethersV5.Signer) {
+    if (signer === undefined) {
+      signer = await this.admin();
+    }
     const factory = await ethers.getContractFactory(contractName, signer);
-    const contract = args ? await factory.deploy(...args) : await factory.deploy();
+    const op = { gasPrice: 10 * 1e9 };
+    const contract = args ? await factory.deploy(...args, op) : await factory.deploy(op);
+    console.log(`deploy ${contractName} ${contract.deployTransaction.hash}`);
     await contract.deployed();
     return contract;
   }
