@@ -25,10 +25,10 @@ async function main() {
 
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
     store.get('evabaseConfig'),
-    store.get('evaFlowChecker'),
+    store.get('EvaFlowRandomChecker'),
     // evaFlowControler.address,
     // store.get("linkToken"),
-    store.get('chainlinkKeeperRegistry'),
+    store.get('others.ChainlinkKeeperRegistry'),
 
     // store.get("chainlinkUpkeepRegistrationRequests")
   );
