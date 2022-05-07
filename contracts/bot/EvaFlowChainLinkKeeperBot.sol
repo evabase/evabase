@@ -62,6 +62,10 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         lastMoveTime = block.timestamp; // solhint-disable
 
         address keeper = tx.origin; // solhint-disable
+        //off-chain try execute
+        if (keeper == address(0)) {
+            keeper = msg.sender;
+        }
         IEvaFlowController(config.control()).batchExecFlow(keeper, execdata, _EXEC_GAS_LIMIT);
     }
 

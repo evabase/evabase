@@ -8,7 +8,7 @@ import '@openzeppelin/hardhat-upgrades';
 import { config } from 'dotenv';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store } from '../help';
+import { help, KeepNetWork, store } from '../help';
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -16,17 +16,15 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-
   // We get the contract to deploy
-  const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
-
-  const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
-  const evabaseConfigContract = EvabaseConfig.attach(store.get('evabaseConfig'));
-  const tx = await evabaseConfigContract.addKeeper(store.get('evaFlowChainLinkKeeperBot'), 0);
+  const ownerO = await help.admin()!;
+  const config = await ethers.getContractAt('EvabaseConfig', store.get('evabaseConfig'), ownerO);
+  const tx = await config.addKeeper(store.get('evaFlowChainLinkKeeperBot'), KeepNetWork.ChainLink, {
+    gasPrice: 1e10,
+  });
   tx.wait();
-  const tx1 = await evabaseConfigContract.addKeeper(store.get('evaBaseServerBot'), 1);
-  tx1.wait();
+  // const tx1 = await config.addKeeper(store.get('evaBaseServerBot'), 1);
+  // tx1.wait();
   // console.log(tx);
 }
 

@@ -7,9 +7,11 @@
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store } from '../help';
+import { help, KeepNetWork, store } from '../help';
 
 async function main() {
+  await removeKeepers(store.get('evaFlowChainLinkKeeperBot'));
+  return;
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
   //
@@ -18,23 +20,33 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
+  const admin = (await help.admin())!;
+  console.log(`deployer owner : ${admin.address}`);
   console.log(`store : ${store}`);
-  const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
 
-  const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(
+  const oldBot = store.get('evaFlowChainLinkKeeperBot');
+  const evaFlowChainLinkKeeperBot = await help.deploy('EvaFlowChainLinkKeeperBot', [
     store.get('evabaseConfig'),
     store.get('EvaFlowRandomChecker'),
-    // evaFlowControler.address,
-    // store.get("linkToken"),
     store.get('others.ChainlinkKeeperRegistry'),
+  ]);
 
-    // store.get("chainlinkUpkeepRegistrationRequests")
-  );
-  await evaFlowChainLinkKeeperBot.deployed();
-  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
-  store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
+  help.setStore('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
+
+  // remove old
+  await removeKeepers(oldBot);
+}
+
+async function removeKeepers(bot: string) {
+  const ownerO = await help.admin()!;
+  const config = await ethers.getContractAt('EvabaseConfig', store.get('evabaseConfig'), ownerO);
+  console.log('size:', await config.keepBotSizes(KeepNetWork.ChainLink));
+  const tx = await config.removeKeeper(bot, {
+    nonce: undefined,
+    gasPrice: 1e10,
+  });
+  await tx.wait();
+  console.log('size:', await config.keepBotSizes(KeepNetWork.ChainLink));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
