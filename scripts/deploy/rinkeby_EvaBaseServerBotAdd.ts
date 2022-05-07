@@ -21,12 +21,16 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
-  const evaFlowController = await EvaFlowController.deploy(store.get('evabaseConfig'), store.get('evaSafesFactory'));
+  // const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
+  // const evaBaseServerBot = await EvaBaseServerBot.deploy(store.get('evabaseConfig'), store.get('evaFlowChecker'));
+  // await evaBaseServerBot.deployed();
+  // console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
+  // store.set('evaBaseServerBot', evaBaseServerBot.address);
 
-  await evaFlowController.deployed();
-  console.log('evaFlowController deployed to:', evaFlowController.address);
-  store.set('evaFlowController', evaFlowController.address);
+  const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
+  const evaBaseServerBot = EvaBaseServerBot.attach(store.get('evaBaseServerBot'));
+  const safesOwner = await evaBaseServerBot.setEBSKeepStatus('0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF', true);
+  console.log(`safesOwner: ${safesOwner}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

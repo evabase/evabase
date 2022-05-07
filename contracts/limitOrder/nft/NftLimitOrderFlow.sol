@@ -76,8 +76,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(order.assetToken != address(0), "invalid order.assetToken");
         require(order.expireTime > block.timestamp, "invalid order.expireTime"); //solhint-disable
 
-        uint256 total = order.amount * order.price;
-        require(total <= msg.value, "invalid msg value");
+        uint256 totalOrder = order.amount * order.price;
+        uint256 total = msg.value;
+        require(total>=totalOrder,"invalid msg value");
 
         orderId = hashOrder(order);
         require(orderExists[orderId].owner == address(0), "order exist");
@@ -147,8 +148,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             total += value;
         }
 
-        orderExist.amount = orderExist.amount - Utils.toUint8(_data.length);
-
+        //Increase in the number of completed purchases
+        orderExist.amount = Utils.toUint8(_data.length)+orderExist.amount;
+        //Decrease in funds deposited for purchases
         orderExist.balance = orderExist.balance - Utils.toUint96(total);
 
         emit OrderExecute(msg.sender, ordeId, _data.length, total);
