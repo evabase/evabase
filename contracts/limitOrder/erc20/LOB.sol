@@ -20,7 +20,7 @@ contract LOB is Ownable {
     // using Fabric for bytes32;
 
     uint256 private constant _FEE_UNIT = 10000;
-    uint256 private constant _ORDER_MIN_AGE = 10 minutes;
+    uint256 private constant _ORDER_MIN_AGE = 9 minutes;
     uint256 private constant _ORDER_MAX_AGE = 90 days;
     mapping(bytes32 => Order) private _orders;
     mapping(bytes32 => OrderStatus) private _orderStatus;

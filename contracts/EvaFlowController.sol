@@ -42,6 +42,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function setMinConfig(MinConfig memory _minConfig) external onlyOwner {
+        require(_minConfig.ppb >= 10000 && _minConfig.ppb <= 15000, "invalid ppb");
         minConfig = _minConfig;
         emit SetMinConfig(
             msg.sender,
