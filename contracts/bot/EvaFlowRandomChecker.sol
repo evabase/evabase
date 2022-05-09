@@ -34,25 +34,27 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
         uint256 keepbotId,
         uint256 lastMoveTime,
         KeepNetWork keepNetWork
-    ) external  override returns (bool needExec, bytes memory execData) {
-        Args memory args;
-        args.controller = IEvaFlowController(config.control());
-        args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);
+    ) external override returns (bool needExec, bytes memory execData) {
+        if (tx.origin == address(0)) {
+            Args memory args;
+            args.controller = IEvaFlowController(config.control());
+            args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);
 
-        if (args.flowCount > 0) {
-            args.keepbotId = keepbotId;
-            args.network = keepNetWork;
-            args.maxCheck = config.batchFlowNum();
-            args.keeperCount = config.keepBotSizes(keepNetWork);
-            require(args.keeperCount > 0, "keeper is zero");
-            require(args.maxCheck > 0, "max check is zero");
-            args.startIndex = _selectBeginIndex(args.flowCount, lastMoveTime);
+            if (args.flowCount > 0) {
+                args.keepbotId = keepbotId;
+                args.network = keepNetWork;
+                args.maxCheck = config.batchFlowNum();
+                args.keeperCount = config.keepBotSizes(keepNetWork);
+                require(args.keeperCount > 0, "keeper is zero");
+                require(args.maxCheck > 0, "max check is zero");
+                args.startIndex = _selectBeginIndex(args.flowCount, lastMoveTime);
 
-            (uint256[] memory flows, bytes[] memory datas) = _checkFlows(args);
+                (uint256[] memory flows, bytes[] memory datas) = _checkFlows(args);
 
-            if (flows.length > 0) {
-                needExec = true;
-                execData = abi.encode(flows, datas);
+                if (flows.length > 0) {
+                    needExec = true;
+                    execData = abi.encode(flows, datas);
+                }
             }
         }
     }
@@ -66,7 +68,7 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
         }
     }
 
-    function _checkFlows(Args memory args) internal  returns (uint256[] memory flows, bytes[] memory datas) {
+    function _checkFlows(Args memory args) internal returns (uint256[] memory flows, bytes[] memory datas) {
         uint256 mod = (args.flowCount % args.keeperCount);
         uint256 max = args.flowCount / args.keeperCount;
         max += mod > 0 && args.keepbotId <= mod ? 1 : 0;
@@ -83,15 +85,15 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
             uint256 flowId = args.controller.getIndexVaildFlow(nextIndex, args.network);
             EvaFlowMeta memory meta = args.controller.getFlowMetas(flowId);
             try IEvaFlow(meta.lastVersionflow).check(meta.checkData) returns (bool needExec, bytes memory executeData) {
-               bool success;
-               if(tx.origin == address(0)){
-                ( success,)=address(args.controller).call{value:0}(abi.encodeWithSelector(IEvaFlowController.execFlow.selector, address(this),flowId,executeData));
-               }
-               
-                if (needExec && success) {
-                    flowsAll[needExecCount] = flowId;
-                    datasAll[needExecCount] = executeData;
-                    needExecCount++;
+                if (needExec) {
+                    (bool success, ) = address(args.controller).call{value: 0}(
+                        abi.encodeWithSelector(IEvaFlowController.execFlow.selector, address(this), flowId, executeData)
+                    );
+                    if (success) {
+                        flowsAll[needExecCount] = flowId;
+                        datasAll[needExecCount] = executeData;
+                        needExecCount++;
+                    }
                 }
                 // solhint-disable
             } catch {} //ignore error

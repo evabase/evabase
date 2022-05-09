@@ -18,12 +18,7 @@ interface INftLimitOrder {
         address owner; //  msg.sender== safes(owner)
         uint96 balance; //可提取金额
     }
-    event OrderExecute(
-        address indexed user,
-        bytes32 orderId,
-        uint256 amount,
-        uint256 value
-    );
+    event OrderExecute(address indexed user, bytes32 orderId, uint256 amount, uint256 value);
 
     event OrderCancel(address indexed user, uint256 indexed flowId, bytes32 orderId);
 

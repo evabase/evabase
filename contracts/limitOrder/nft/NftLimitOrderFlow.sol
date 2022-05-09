@@ -78,7 +78,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
         uint256 totalOrder = order.amount * order.price;
         uint256 total = msg.value;
-        require(total>=totalOrder,"invalid msg value");
+        require(total >= totalOrder, "invalid msg value");
 
         orderId = hashOrder(order);
         require(orderExists[orderId].owner == address(0), "order exist");
@@ -111,7 +111,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         uint256 remain = orderExist.balance;
         address user = orderExist.owner;
         delete orderExists[orderId];
-        if (remain > 0 && user!=address(0)) {
+        if (remain > 0) {
             (bool succeed, ) = user.call{value: remain}(""); //solhint-disable
             require(succeed, "Failed to transfer Ether");
         }
@@ -150,10 +150,10 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         }
 
         //Increase in the number of completed purchases
-        orderExist.amount = Utils.toUint8(_data.length)+orderExist.amount;
+        orderExist.amount = Utils.toUint8(_data.length) + orderExist.amount;
         //Decrease in funds deposited for purchases
-        uint96 totalUsed=Utils.toUint96(total);
-        require(orderExist.balance>=totalUsed,"invalid balance");
+        uint96 totalUsed = Utils.toUint96(total);
+        require(orderExist.balance >= totalUsed, "invalid balance");
         orderExist.balance = orderExist.balance - totalUsed;
 
         emit OrderExecute(msg.sender, ordeId, _data.length, total);

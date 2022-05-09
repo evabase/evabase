@@ -2,7 +2,6 @@
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
 import "../../interfaces/IEvaFlowProxy.sol";
-// import "../../interfaces/INftLimitOrder.sol";
 import "./NftLimitOrderFlow.sol";
 
 contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
@@ -42,16 +41,12 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         ser.pauseFlow(flowId);
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, true, flowId);
-
-        // emit OrderPause(msg.sender, flowId, orderId);
     }
 
     function startFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.startFlow(flowId);
         (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
         nftLimitOrder.changeStatus(orderId, false, flowId);
-
-        // emit OrderStart(msg.sender, flowId, orderId);
     }
 
     function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {

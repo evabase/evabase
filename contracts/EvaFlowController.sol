@@ -8,21 +8,12 @@ import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-// import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
+contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     EvaFlowMeta[] private _flowMetas;
     MinConfig public minConfig;
     mapping(address => EvaUserMeta) public userMetaMap;
-    
+
     ////need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
@@ -39,7 +30,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
 
     IEvabaseConfig public config;
 
-    function initialize(address _config, address _evaSafesFactory)initializer  public {
+    function initialize(address _config, address _evaSafesFactory) external initializer {
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         __Ownable_init();
@@ -129,10 +120,8 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         uint256 _flowId,
         string memory _flowName,
         bytes memory _flowCode
-    ) external override  {
+    ) external override {
         require(_flowId < _flowMetas.length, "over bound");
-        // address safeWallet = evaSafesFactory.get(msg.sender);
-        // require(safeWallet != address(0), "safe wallet is 0x");
         require(msg.sender == _flowMetas[_flowId].admin, "flow's owner is not y");
         require(
             FlowStatus.Active == _flowMetas[_flowId].flowStatus || FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
@@ -180,9 +169,6 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
             _vaildFlows[keepNetWork].remove(_flowId);
         }
-        //pause flow IEvaFlow
-        // IEvaFlow(_flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
-
         emit FlowPaused(msg.sender, _flowId);
     }
 
@@ -223,12 +209,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         uint256 amount,
         // address user
         address flowAdmin
-    ) public payable override  {
-        // address safeWallet = evaSafesFactory.get(user);
-        // require(safeWallet != address(0), "safe wallet is 0x");
-        // require(msg.sender == flowAdmin, "flow's owner is not y");
-        // require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
-
+    ) public payable override {
         if (tokenAdress == address(0)) {
             require(msg.value == amount, "value is not equal");
 
@@ -238,11 +219,11 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
 
             userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
 
-            IERC20Upgradeable(tokenAdress).safeTransferFrom(msg.sender, address(this), amount);
+            TransferHelper.safeTransferFrom(tokenAdress, msg.sender, address(this), amount);
         }
     }
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount) external override  {
+    function withdrawFundByUser(address tokenAdress, uint256 amount) external override {
         address safeWallet = msg.sender;
 
         uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
@@ -271,7 +252,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(paymentGasAmount >= amount, "");
-            IERC20Upgradeable(tokenAdress).transfer(msg.sender, amount);
+            TransferHelper.safeTransfer(tokenAdress, msg.sender, amount);
         }
     }
 
@@ -317,28 +298,27 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         address keeper,
         uint256 flowId,
         bytes memory execData
-    ) public override  {
+    ) public override {
         EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
         // 检查是否 flow 的网络是否和 keeper 匹配
-        if(tx.origin!=address(0)){
+        if (tx.origin != address(0)) {
             require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
             require(ks.isActive, "exect keeper is not whitelist");
-
         }
 
         uint256 before = gasleft();
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink ), "expect next keeper");
+        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
-        
+
         //  flow 必须被 Safes 创建，否则无法执行execFlow
         IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
-        
+
         try safes.execFlow(flow.lastVersionflow, execData) {
             success = true;
         } catch Error(string memory reason) {
@@ -346,7 +326,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         } catch {
             failedReason = "F"; //assert
         }
-        
+
         // update
         _flowMetas[flowId].lastExecNumber = block.number;
         _flowMetas[flowId].lastKeeper = keeper;
@@ -370,7 +350,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
         } else {
             revert("TODO");
         }
-        
+
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
@@ -383,7 +363,7 @@ contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
 
         uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
         // uint256 premium = minConfig.add(config.paymentPremiumPPB);
-        total = weiForGas * (10000+minConfig.ppb)/(10000);
+        total = (weiForGas * (10000 + minConfig.ppb)) / (10000);
 
         //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
         return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX
