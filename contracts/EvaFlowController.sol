@@ -14,7 +14,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     MinConfig public minConfig;
     mapping(address => EvaUserMeta) public userMetaMap;
 
-    ////need exec flows
+    //need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
 
@@ -22,7 +22,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     uint256 private constant _MAX_INT = type(uint256).max;
 
-    //可提取的手续费
+    //Withdrawable fees
     uint256 public paymentEthAmount;
     uint256 public paymentGasAmount;
 
@@ -55,9 +55,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function _checkEnoughGas() internal view {
-        // 需要修正
         bool isEnoughGas = true;
-
         if (minConfig.feeToken == address(0)) {
             isEnoughGas =
                 (userMetaMap[msg.sender].ethBal >= minConfig.minGasFundForUser) &&
@@ -79,7 +77,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     function isValidFlow(address flow) public pure returns (bool) {
         require(flow != address(0), "flow is 0x");
-        return true; //TODO: 需要维护合法Flow清单
+        return true; //TODO: Valid Flows
     }
 
     function _appendFee(address acct, uint256 amount) private {
@@ -95,8 +93,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         require(isValidFlow(flow), "invalid flow");
         _beforeCreateFlow(network);
         _appendFee(msg.sender, msg.value);
-        userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // 如果溢出则报错
-        //检查Gas费余额是否足够
+        userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // Error if overflow
+        //Check if the Gas fee balance is sufficient
         _checkEnoughGas();
         _flowMetas.push(
             EvaFlowMeta({
@@ -207,7 +205,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     function addFundByUser(
         address tokenAdress,
         uint256 amount,
-        // address user
         address flowAdmin
     ) public payable override {
         if (tokenAdress == address(0)) {
@@ -247,8 +244,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (tokenAdress == address(0)) {
             require(paymentEthAmount >= amount, "");
             TransferHelper.safeTransferETH(msg.sender, amount);
-            // (bool sent, ) = msg.sender.call{value: amount}("");
-            // require(sent, "Failed to send Ether");
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(paymentGasAmount >= amount, "");
@@ -302,11 +297,13 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
-        // 检查是否 flow 的网络是否和 keeper 匹配
-        
-        require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
-        require(ks.isActive, "exect keeper is not whitelist");
-        
+        // Let pre-execution pass
+        // solhint-disable avoid-tx-origin
+        if (tx.origin != address(0)) {
+            // Check if the flow's network matches the keeper
+            require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
+            require(ks.isActive, "exect keeper is not whitelist");
+        }
 
         uint256 before = gasleft();
         require(flow.admin != address(0), "task not found");
@@ -337,15 +334,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         uint120 payAmountByFeeToken = 0;
 
         if (minConfig.feeToken == address(0)) {
-            payAmountByETH = Utils.toUint120(_calculatePaymentAmount(usedGas));
+            payAmountByETH = _calculatePaymentAmount(usedGas);
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
-            // solhint-disable avoid-tx-origin
-            // if (tx.origin == address(0)) {
-                //是默认交易，在check完成后将模拟调用
             require(bal >= payAmountByETH, "insufficient fund");
-            // }
-
             userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
         } else {
             revert("TODO");
@@ -358,15 +350,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         }
     }
 
-    function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint96 payment) {
-        uint256 total;
-
+    function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint120 payment) {
         uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
-        // uint256 premium = minConfig.add(config.paymentPremiumPPB);
-        total = (weiForGas * (10000 + minConfig.ppb)) / (10000);
-
-        //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
-        return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX
+        uint256 total = (weiForGas * minConfig.ppb) / 10000;
+        return uint120(total);
     }
 
     function getSafes(address user) external view override returns (address) {

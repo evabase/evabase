@@ -28,7 +28,6 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         address evaFlowChecker_,
         address keeperRegistry_
     ) {
-        // require(_evaFlowControler != address(0), "addess is 0x");
         require(config_ != address(0), "addess is 0x");
         require(evaFlowChecker_ != address(0), "addess is 0x");
         require(keeperRegistry_ != address(0), "addess is 0x");
@@ -58,8 +57,9 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
 
     function _exec(bytes memory execdata) internal override {
         //Removal of pre-execution by chainlink keeper
-        if(tx.origin == address(0)) {
-                return;
+        // solhint-disable avoid-tx-origin
+        if (tx.origin == address(0)) {
+            return;
         }
 
         require(msg.sender == address(_keeperRegistry), "only for keeperRegistry");

@@ -15,7 +15,6 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
     uint256 private constant _TIME_SOLT = 12 seconds;
 
     constructor(address _config) {
-        // require(_evaFlowControler != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
     }
@@ -35,6 +34,7 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
         uint256 lastMoveTime,
         KeepNetWork keepNetWork
     ) external override returns (bool needExec, bytes memory execData) {
+        // solhint-disable avoid-tx-origin
         if (tx.origin == address(0)) {
             Args memory args;
             args.controller = IEvaFlowController(config.control());
@@ -56,6 +56,8 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
                     execData = abi.encode(flows, datas);
                 }
             }
+        } else {
+            revert("F");
         }
     }
 
