@@ -131,4 +131,14 @@ describe('EvaFlowRandomChecker', function () {
       expect(result.needExec).to.equal(false);
     }
   });
+  it('should be checked By Zero address', async function () {
+    await cancelAllTask();
+    const zero = new ethers.VoidSigner(ethers.constants.AddressZero, ethers.provider);
+    await createTask();
+    const now = Math.ceil(new Date().getTime() / 1000);
+    await app.config.addKeeper(checker.address, network);
+    const result = await checker.check(1, now, network);
+    console.log(result);
+    // expect(result.needExec).to.equal(true);
+  });
 });

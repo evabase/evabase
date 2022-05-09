@@ -41,7 +41,6 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
 
     function checkUpkeep(bytes calldata checkData)
         external
-        view
         override
         returns (bool upkeepNeeded, bytes memory performData)
     {
@@ -52,7 +51,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
         _exec(performData);
     }
 
-    function _check(bytes memory _checkdata) internal view override returns (bool needExec, bytes memory execdata) {
+    function _check(bytes memory _checkdata) internal override returns (bool needExec, bytes memory execdata) {
         uint32 keepBotId = abi.decode(_checkdata, (uint32));
         (needExec, execdata) = evaFlowChecker.check(keepBotId, lastMoveTime, KeepNetWork.ChainLink);
     }

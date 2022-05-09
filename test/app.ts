@@ -7,7 +7,8 @@ import {
   EvaSafesFactory,
   EvaBaseServerBot,
   NftLimitOrderFlowProxy,
-  IEvaFlowChecker,
+  EvaFlowChainLinkKeeperBot,
+  EvaFlowRandomChecker,
 } from '../typechain/index';
 import { initEvebase } from './initEvebase';
 
@@ -45,18 +46,20 @@ export class App {
   public config!: EvabaseConfig;
   public safesFactory!: EvaSafesFactory;
   public controler!: EvaFlowController;
-  public evaFlowChecker!: IEvaFlowChecker;
+  public evaFlowChecker!: EvaFlowRandomChecker;
   public evaBaseServerBot!: EvaBaseServerBot;
   public nftLimitOrderFlowProxy!: NftLimitOrderFlowProxy;
+  public evaFlowChainLinkKeeperBot!: EvaFlowChainLinkKeeperBot;
 
   async deploy() {
     const result = await initEvebase();
     this.config = result.evabaseConfig as EvabaseConfig;
     this.safesFactory = result.evaSafesFactory as EvaSafesFactory;
     this.controler = result.evaFlowController as EvaFlowController;
-    this.evaFlowChecker = result.evaFlowChecker as IEvaFlowChecker;
+    this.evaFlowChecker = result.evaFlowChecker as EvaFlowRandomChecker;
     this.evaBaseServerBot = result.evaBaseServerBot as EvaBaseServerBot;
     this.nftLimitOrderFlowProxy = result.nftLimitOrderFlowProxy as NftLimitOrderFlowProxy;
+    this.evaFlowChainLinkKeeperBot = result.evaFlowChainLinkKeeperBot as EvaFlowChainLinkKeeperBot;
   }
 
   async createOrLoadWalletSeafes(acct: string) {

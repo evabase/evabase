@@ -18,7 +18,7 @@ async function main() {
     console.log(`
     UniswapV2Router02: ${router}
     swapFee:${swapFee}`);
-    
+
     const c = await help.deploy('UniswapV2Strategy', [router, (1 - swapFee) * 1000]);
 
     console.log(`\tdeploy UniswapV2Router02 success: ${c.address}`);

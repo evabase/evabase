@@ -7,18 +7,22 @@ import {Utils} from "./lib/Utils.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+// import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+contract EvaFlowController is IEvaFlowController,OwnableUpgradeable  {
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     EvaFlowMeta[] private _flowMetas;
     MinConfig public minConfig;
     mapping(address => EvaUserMeta) public userMetaMap;
-
+    
     ////need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
@@ -35,9 +39,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     IEvabaseConfig public config;
 
-    constructor(address _config, address _evaSafesFactory) {
+    function initialize(address _config, address _evaSafesFactory)initializer  public {
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
+        __Ownable_init();
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         config = IEvabaseConfig(_config);
 
@@ -124,7 +129,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint256 _flowId,
         string memory _flowName,
         bytes memory _flowCode
-    ) external override nonReentrant {
+    ) external override  {
         require(_flowId < _flowMetas.length, "over bound");
         // address safeWallet = evaSafesFactory.get(msg.sender);
         // require(safeWallet != address(0), "safe wallet is 0x");
@@ -218,7 +223,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint256 amount,
         // address user
         address flowAdmin
-    ) public payable override nonReentrant {
+    ) public payable override  {
         // address safeWallet = evaSafesFactory.get(user);
         // require(safeWallet != address(0), "safe wallet is 0x");
         // require(msg.sender == flowAdmin, "flow's owner is not y");
@@ -233,11 +238,11 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
             userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
 
-            IERC20(tokenAdress).safeTransferFrom(msg.sender, address(this), amount);
+            IERC20Upgradeable(tokenAdress).safeTransferFrom(msg.sender, address(this), amount);
         }
     }
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount) external override nonReentrant {
+    function withdrawFundByUser(address tokenAdress, uint256 amount) external override  {
         address safeWallet = msg.sender;
 
         uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
@@ -266,7 +271,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(paymentGasAmount >= amount, "");
-            IERC20(tokenAdress).transfer(msg.sender, amount);
+            IERC20Upgradeable(tokenAdress).transfer(msg.sender, amount);
         }
     }
 
@@ -312,26 +317,28 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         address keeper,
         uint256 flowId,
         bytes memory execData
-    ) public override nonReentrant {
+    ) public override  {
+        EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
-        require(ks.isActive, "exect keeper is not whitelist");
+        // 检查是否 flow 的网络是否和 keeper 匹配
+        if(tx.origin!=address(0)){
+            require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
+            require(ks.isActive, "exect keeper is not whitelist");
+
+        }
 
         uint256 before = gasleft();
-
-        EvaFlowMeta memory flow = _flowMetas[flowId];
-
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
+        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink ), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
-        // 检查是否 flow 的网络是否和 keeper 匹配
-        require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
-
+        
         //  flow 必须被 Safes 创建，否则无法执行execFlow
         IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
+        
         try safes.execFlow(flow.lastVersionflow, execData) {
             success = true;
         } catch Error(string memory reason) {
@@ -339,7 +346,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         } catch {
             failedReason = "F"; //assert
         }
-
+        
         // update
         _flowMetas[flowId].lastExecNumber = block.number;
         _flowMetas[flowId].lastKeeper = keeper;
@@ -363,7 +370,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         } else {
             revert("TODO");
         }
-
+        
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
@@ -376,7 +383,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
         uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
         // uint256 premium = minConfig.add(config.paymentPremiumPPB);
-        total = weiForGas * (minConfig.ppb);
+        total = weiForGas * (10000+minConfig.ppb)/(10000);
 
         //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
         return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX

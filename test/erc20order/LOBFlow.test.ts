@@ -24,7 +24,7 @@ type OrderInfo = {
   inputToken: string;
   minRate: BigNumberish;
   outputToken: string;
-  expiration: number;
+  deadline: number;
   receiptor: string;
   minInputPer: number;
 };
@@ -68,7 +68,7 @@ describe('ERC20 Limit Order', function () {
       inputToken: help.ETH_ADDRESS,
       minRate: ethers.utils.parseUnits('1', 18),
       outputToken: '',
-      expiration: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
+      deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
       receiptor: bob,
       minInputPer: 1,
     };

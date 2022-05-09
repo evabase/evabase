@@ -23,7 +23,7 @@ type OrderInfo = {
   assetToken: string;
   amount: BigNumberish;
   price: BigNumberish;
-  expireTime: BigNumberish;
+  deadline: BigNumberish;
   tokenId: BigNumberish;
   salt: BigNumberish;
 };
@@ -55,7 +55,7 @@ describe('NFT Limit Order', function () {
       assetToken: '0xed5af388653567af2f388e6224dc7c4b3241c544',
       amount: 1,
       price: 1,
-      expireTime: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
+      deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
       tokenId: 5964,
       salt: 1649944095,
     };
@@ -100,7 +100,7 @@ describe('NFT Limit Order', function () {
       //   assetToken: '0x9af3444aacb49006a19ecdd70da21490cf5ca394',
       //   amount: '1',
       //   price: _price,
-      //   expireTime: 1652605145,
+      //   deadline: 1652605145,
       //   tokenId: 1,
       //   salt: 1651741145,
       // };
@@ -114,7 +114,7 @@ describe('NFT Limit Order', function () {
         [opeaseaAddress, opeasea, _openseaPrice],
       );
 
-      console.log(`p1 : ${myOpenseaData}`);
+      // console.log(`p1 : ${myOpenseaData}`);
 
       // p2 byteOne =abi.encode(Order order, bytes signature, bytes[] byteOpenseas)
       const signature =
@@ -129,14 +129,14 @@ describe('NFT Limit Order', function () {
           order.assetToken,
           order.amount,
           order.price,
-          order.expireTime,
+          order.deadline,
           order.tokenId,
           order.salt,
           signature,
           arr,
         ],
       );
-      console.log(`p2 : ${p2}`);
+      // console.log(`p2 : ${p2}`);
 
       // p3 byteArr[i]= abi.encode(bytes byteOne,uint value)value 为所需ETH总数量
 
@@ -150,10 +150,10 @@ describe('NFT Limit Order', function () {
       const data = [p2];
 
       const p4 = ethers.utils.AbiCoder.prototype.encode(['uint256[]', 'bytes[]'], [flows, data]);
-      console.log(`p4 : ${p4}`);
+      // console.log(`p4 : ${p4}`);
       // 注册
       const tx = await app.evaBaseServerBot.performUpkeep(p4);
-      console.log('p5: ');
+
       await expect(tx).to.emit(app.controler, 'FlowExecuteFailed');
       // const callData = await help.encodeFunctionData('EvaBaseServerBot', 'performUpkeep', [p4]);
       // console.log('callData :', callData);

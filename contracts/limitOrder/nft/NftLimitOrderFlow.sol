@@ -16,7 +16,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     bytes32 private constant _ORDER_TYPEHASH =
         keccak256(
-            "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 expireTime,uint256 tokenId,uint256 salt)"
+            "Order(address owner,address assetToken,uint256 amount,uint256 price,uint256 deadline,uint256 tokenId,uint256 salt)"
         );
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
@@ -74,18 +74,18 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(order.price > 0, "invalid order.price");
 
         require(order.assetToken != address(0), "invalid order.assetToken");
-        require(order.expireTime > block.timestamp, "invalid order.expireTime"); //solhint-disable
+        require(order.deadline > block.timestamp, "invalid order.deadline"); //solhint-disable
 
         uint256 totalOrder = order.amount * order.price;
         uint256 total = msg.value;
-        require(total >= totalOrder, "invalid msg value");
+        require(total>=totalOrder,"invalid msg value");
 
         orderId = hashOrder(order);
         require(orderExists[orderId].owner == address(0), "order exist");
 
         orderExists[orderId] = OrderExist({amount: 0, owner: order.owner, balance: Utils.toUint96(total)});
 
-        emit OrderCreated(msg.sender, flowId, orderId);
+        emit OrderCreated(msg.sender, flowId, order);
     }
 
     function changeStatus(
@@ -109,9 +109,10 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
         uint256 remain = orderExist.balance;
+        address user = orderExist.owner;
         delete orderExists[orderId];
-        if (remain > 0) {
-            (bool succeed, ) = orderExist.owner.call{value: remain}(""); //solhint-disable
+        if (remain > 0 && user!=address(0)) {
+            (bool succeed, ) = user.call{value: remain}(""); //solhint-disable
             require(succeed, "Failed to transfer Ether");
         }
         emit OrderCancel(msg.sender, flowId, orderId);
@@ -130,7 +131,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         uint256 _amount = _order.amount;
         require(_amount > 0, "execute amount gt 0");
 
-        require(_order.expireTime >= block.timestamp, "order time is end"); //solhint-disable
+        require(_order.deadline >= block.timestamp, "order time is end"); //solhint-disable
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "should exected by safes");
 
         uint256 total = 0;
@@ -149,9 +150,11 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         }
 
         //Increase in the number of completed purchases
-        orderExist.amount = Utils.toUint8(_data.length) + orderExist.amount;
+        orderExist.amount = Utils.toUint8(_data.length)+orderExist.amount;
         //Decrease in funds deposited for purchases
-        orderExist.balance = orderExist.balance - Utils.toUint96(total);
+        uint96 totalUsed=Utils.toUint96(total);
+        require(orderExist.balance>=totalUsed,"invalid balance");
+        orderExist.balance = orderExist.balance - totalUsed;
 
         emit OrderExecute(msg.sender, ordeId, _data.length, total);
     }
@@ -165,7 +168,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
                     order.assetToken,
                     order.amount,
                     order.price,
-                    order.expireTime,
+                    order.deadline,
                     order.tokenId,
                     order.salt
                 )

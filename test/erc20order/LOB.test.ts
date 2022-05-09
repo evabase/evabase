@@ -22,7 +22,7 @@ type OrderInfo = {
   inputToken: string;
   minRate: BigNumberish;
   outputToken: string;
-  expiration: number;
+  deadline: number;
   receiptor: string;
   minInputPer: BigNumberish;
 };
@@ -59,7 +59,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -69,7 +69,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -79,7 +79,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -89,7 +89,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000009',
           inputAmount: 5,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -99,7 +99,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 9,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -109,7 +109,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '9',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -119,7 +119,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '6',
-          expiration: 9,
+          deadline: 9,
           minInputPer: '0x0000000000000000000000000000000000000008',
         },
         {
@@ -129,7 +129,7 @@ describe('EvabaseConfig', function () {
           receiptor: '0x0000000000000000000000000000000000000004',
           inputAmount: 5,
           minRate: '6',
-          expiration: 7,
+          deadline: 7,
           minInputPer: '0x0000000000000000000000000000000000000009',
         },
       ];
@@ -150,30 +150,30 @@ describe('EvabaseConfig', function () {
         inputToken: USDC.address,
         minRate: ethers.utils.parseUnits('4800', 18),
         outputToken: WBTC.address,
-        expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
+        deadline: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         minInputPer: 1,
       };
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_INPUT_OWNER');
     });
-    it('failed when expiration over', async function () {
+    it('failed when deadline over', async function () {
       const order = {
         owner: signers[1].address,
         inputAmount: 1,
         inputToken: USDC.address,
         minRate: ethers.utils.parseUnits('4800', 18),
         outputToken: WBTC.address,
-        expiration: 0,
+        deadline: 0,
         receiptor: me.address,
         minInputPer: 1,
       };
       // 不低于10分钟
-      order.expiration = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
+      order.deadline = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
       console.log('time2:', await help.getBlockTime());
 
       // 不超过90天
-      order.expiration = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
+      order.deadline = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
     });
     it('failed when exist', async function () {
@@ -183,7 +183,7 @@ describe('EvabaseConfig', function () {
         inputToken: USDC.address,
         minRate: ethers.utils.parseUnits('4800', 18),
         outputToken: WBTC.address,
-        expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
+        deadline: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         minInputPer: 2,
       };
@@ -201,7 +201,7 @@ describe('EvabaseConfig', function () {
         inputToken: help.ETH_ADDRESS,
         minRate: ethers.utils.parseUnits('4800', 18),
         outputToken: WBTC.address,
-        expiration: (await help.getBlockTime()) + 60 * 60 * 24,
+        deadline: (await help.getBlockTime()) + 60 * 60 * 24,
         receiptor: me.address,
         minInputPer: 1,
       };
@@ -220,7 +220,7 @@ describe('EvabaseConfig', function () {
         inputToken: USDC.address,
         minRate: ethers.utils.parseUnits('4800', 18),
         outputToken: WBTC.address,
-        expiration: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
+        deadline: Math.ceil(new Date().getTime() / 1000) + 10 * 1000,
         receiptor: me.address,
         minInputPer: 1,
       };
@@ -248,7 +248,7 @@ describe('EvabaseConfig', function () {
       expect(orderInfo[0].inputToken).to.eq(order.inputToken);
       expect(orderInfo[0].minRate).to.eq(order.minRate);
       expect(orderInfo[0].outputToken).to.eq(order.outputToken);
-      expect(orderInfo[0].expiration).to.eq(order.expiration);
+      expect(orderInfo[0].deadline).to.eq(order.deadline);
       expect(orderInfo[0].receiptor).to.eq(order.receiptor);
       expect(orderInfo[0].minInputPer).to.eq(order.minInputPer);
 
@@ -279,7 +279,7 @@ describe('EvabaseConfig', function () {
         inputToken: USDC.address,
         minRate: ethers.utils.parseUnits(price.toString(), 18).mul(u2).div(u1),
         outputToken: WBTC.address,
-        expiration: (await help.getBlockTime()) + maxWaitTime,
+        deadline: (await help.getBlockTime()) + maxWaitTime,
         receiptor: user.address,
         minInputPer: foc ? inputAmount : 0,
       };
@@ -311,7 +311,7 @@ describe('EvabaseConfig', function () {
     it('failed when order is expired', async function () {
       const info = await createNewOrder(me, 30, 60 * 11);
 
-      await help.setNextBlockTimestamp(info.order.expiration + 1);
+      await help.setNextBlockTimestamp(info.order.deadline + 1);
       await expect(exchange.executeOrder(info.orderId, strategy.address, info.order.inputToken, '0x')).to.revertedWith(
         'ORDER_NOT_ACTIVE',
       );

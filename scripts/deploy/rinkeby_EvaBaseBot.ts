@@ -26,7 +26,7 @@ async function main() {
     assetToken: string;
     amount: BigNumberish;
     price: BigNumberish;
-    expireTime: BigNumberish;
+    deadline: BigNumberish;
     tokenId: BigNumberish;
     salt: BigNumberish;
   };
@@ -49,7 +49,7 @@ async function main() {
     assetToken: '0x9af3444aacb49006a19ecdd70da21490cf5ca394',
     amount: '1',
     price: _price,
-    expireTime: 1652605145,
+    deadline: 1652605145,
     tokenId: 1,
     salt: 1651741145,
   };
@@ -78,7 +78,7 @@ async function main() {
       order.assetToken,
       order.amount,
       order.price,
-      order.expireTime,
+      order.deadline,
       order.tokenId,
       order.salt,
       signature,

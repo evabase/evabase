@@ -142,7 +142,7 @@ async function crateOrder(
     inputToken: inputToken.address,
     minRate: help.toFullNum(rate),
     outputToken: outputToken.address,
-    expiration: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24, // 1days
+    deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24, // 1days
     receiptor: user.address,
     minInputPer: help.toFullNum(amount0 * 0.1),
   };
