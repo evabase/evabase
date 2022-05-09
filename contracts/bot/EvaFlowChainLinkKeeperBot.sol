@@ -57,6 +57,11 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
     }
 
     function _exec(bytes memory execdata) internal override {
+        //Removal of pre-execution by chainlink keeper
+        if(tx.origin == address(0)) {
+                return;
+        }
+
         require(msg.sender == address(_keeperRegistry), "only for keeperRegistry");
         lastMoveTime = block.timestamp; // solhint-disable
 

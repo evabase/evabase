@@ -303,10 +303,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
         // 检查是否 flow 的网络是否和 keeper 匹配
-        if (tx.origin != address(0)) {
-            require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
-            require(ks.isActive, "exect keeper is not whitelist");
-        }
+        
+        require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
+        require(ks.isActive, "exect keeper is not whitelist");
+        
 
         uint256 before = gasleft();
         require(flow.admin != address(0), "task not found");
@@ -341,10 +341,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
             // solhint-disable avoid-tx-origin
-            if (tx.origin == address(0)) {
+            // if (tx.origin == address(0)) {
                 //是默认交易，在check完成后将模拟调用
-                require(bal >= payAmountByETH, "insufficient fund");
-            }
+            require(bal >= payAmountByETH, "insufficient fund");
+            // }
 
             userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
         } else {
