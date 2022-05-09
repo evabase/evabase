@@ -7,19 +7,14 @@ import {Utils} from "./lib/Utils.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
-
+contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     EvaFlowMeta[] private _flowMetas;
     MinConfig public minConfig;
     mapping(address => EvaUserMeta) public userMetaMap;
 
-    ////need exec flows
+    //need exec flows
     using EvabaseHelper for EvabaseHelper.UintSet;
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
 
@@ -27,7 +22,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     uint256 private constant _MAX_INT = type(uint256).max;
 
-    //可提取的手续费
+    //Withdrawable fees
     uint256 public paymentEthAmount;
     uint256 public paymentGasAmount;
 
@@ -35,9 +30,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     IEvabaseConfig public config;
 
-    constructor(address _config, address _evaSafesFactory) {
+    function initialize(address _config, address _evaSafesFactory) external initializer {
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
+        __Ownable_init();
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
         config = IEvabaseConfig(_config);
 
@@ -46,6 +42,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     }
 
     function setMinConfig(MinConfig memory _minConfig) external onlyOwner {
+        require(_minConfig.ppb >= 10000 && _minConfig.ppb <= 15000, "invalid ppb");
         minConfig = _minConfig;
         emit SetMinConfig(
             msg.sender,
@@ -59,9 +56,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     }
 
     function _checkEnoughGas() internal view {
-        // 需要修正
         bool isEnoughGas = true;
-
         if (minConfig.feeToken == address(0)) {
             isEnoughGas =
                 (userMetaMap[msg.sender].ethBal >= minConfig.minGasFundForUser) &&
@@ -83,7 +78,7 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
     function isValidFlow(address flow) public pure returns (bool) {
         require(flow != address(0), "flow is 0x");
-        return true; //TODO: 需要维护合法Flow清单
+        return true; //TODO: Valid Flows
     }
 
     function _appendFee(address acct, uint256 amount) private {
@@ -99,8 +94,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         require(isValidFlow(flow), "invalid flow");
         _beforeCreateFlow(network);
         _appendFee(msg.sender, msg.value);
-        userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // 如果溢出则报错
-        //检查Gas费余额是否足够
+        userMetaMap[msg.sender].vaildFlowsNum += uint8(1); // Error if overflow
+        //Check if the Gas fee balance is sufficient
         _checkEnoughGas();
         _flowMetas.push(
             EvaFlowMeta({
@@ -124,10 +119,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint256 _flowId,
         string memory _flowName,
         bytes memory _flowCode
-    ) external override nonReentrant {
+    ) external override {
         require(_flowId < _flowMetas.length, "over bound");
-        // address safeWallet = evaSafesFactory.get(msg.sender);
-        // require(safeWallet != address(0), "safe wallet is 0x");
         require(msg.sender == _flowMetas[_flowId].admin, "flow's owner is not y");
         require(
             FlowStatus.Active == _flowMetas[_flowId].flowStatus || FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
@@ -175,9 +168,6 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
             KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
             _vaildFlows[keepNetWork].remove(_flowId);
         }
-        //pause flow IEvaFlow
-        // IEvaFlow(_flowMetas[_flowId].lastVersionflow).pause(_flowId, _flowCode);
-
         emit FlowPaused(msg.sender, _flowId);
     }
 
@@ -216,14 +206,8 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
     function addFundByUser(
         address tokenAdress,
         uint256 amount,
-        // address user
         address flowAdmin
-    ) public payable override nonReentrant {
-        // address safeWallet = evaSafesFactory.get(user);
-        // require(safeWallet != address(0), "safe wallet is 0x");
-        // require(msg.sender == flowAdmin, "flow's owner is not y");
-        // require(evaSafesFactory.get(user) != address(0), "safe wallet is 0x");
-
+    ) public payable override {
         if (tokenAdress == address(0)) {
             require(msg.value == amount, "value is not equal");
 
@@ -233,11 +217,11 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
 
             userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
 
-            IERC20(tokenAdress).safeTransferFrom(msg.sender, address(this), amount);
+            TransferHelper.safeTransferFrom(tokenAdress, msg.sender, address(this), amount);
         }
     }
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount) external override nonReentrant {
+    function withdrawFundByUser(address tokenAdress, uint256 amount) external override {
         address safeWallet = msg.sender;
 
         uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
@@ -261,12 +245,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         if (tokenAdress == address(0)) {
             require(paymentEthAmount >= amount, "");
             TransferHelper.safeTransferETH(msg.sender, amount);
-            // (bool sent, ) = msg.sender.call{value: amount}("");
-            // require(sent, "Failed to send Ether");
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(paymentGasAmount >= amount, "");
-            IERC20(tokenAdress).transfer(msg.sender, amount);
+            TransferHelper.safeTransfer(tokenAdress, msg.sender, amount);
         }
     }
 
@@ -312,26 +294,29 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         address keeper,
         uint256 flowId,
         bytes memory execData
-    ) public override nonReentrant {
+    ) public override {
+        EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
-        require(ks.isActive, "exect keeper is not whitelist");
+        // Let pre-execution pass
+        // solhint-disable avoid-tx-origin
+        if (tx.origin != address(0)) {
+            // Check if the flow's network matches the keeper
+            require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
+            require(ks.isActive, "exect keeper is not whitelist");
+        }
 
         uint256 before = gasleft();
-
-        EvaFlowMeta memory flow = _flowMetas[flowId];
-
         require(flow.admin != address(0), "task not found");
         require(flow.flowStatus == FlowStatus.Active, "task is not active");
         require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
         require(flow.maxVaildBlockNumber >= block.number, "invalid task");
-        // 检查是否 flow 的网络是否和 keeper 匹配
-        require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
 
         //  flow 必须被 Safes 创建，否则无法执行execFlow
         IEvaSafes safes = IEvaSafes(flow.admin);
         bool success;
         string memory failedReason;
+
         try safes.execFlow(flow.lastVersionflow, execData) {
             success = true;
         } catch Error(string memory reason) {
@@ -350,15 +335,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         uint120 payAmountByFeeToken = 0;
 
         if (minConfig.feeToken == address(0)) {
-            payAmountByETH = Utils.toUint120(_calculatePaymentAmount(usedGas));
+            payAmountByETH = _calculatePaymentAmount(usedGas);
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
-            // solhint-disable avoid-tx-origin
-            if (tx.origin == address(0)) {
-                //是默认交易，在check完成后将模拟调用
-                require(bal >= payAmountByETH, "insufficient fund");
-            }
-
+            require(bal >= payAmountByETH, "insufficient fund");
             userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
         } else {
             revert("TODO");
@@ -371,15 +351,10 @@ contract EvaFlowController is IEvaFlowController, Ownable, ReentrancyGuard {
         }
     }
 
-    function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint96 payment) {
-        uint256 total;
-
+    function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint120 payment) {
         uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
-        // uint256 premium = minConfig.add(config.paymentPremiumPPB);
-        total = weiForGas * (minConfig.ppb);
-
-        //require(total <= LINK_TOTAL_SUPPLY, "payment greater than all LINK");
-        return uint96(total); // LINK_TOTAL_SUPPLY < UINT96_MAX
+        uint256 total = (weiForGas * minConfig.ppb) / 10000;
+        return uint120(total);
     }
 
     function getSafes(address user) external view override returns (address) {

@@ -24,7 +24,7 @@ chai.use(solidity);
 //   assetToken: string;
 //   amount: BigNumberish;
 //   price: BigNumberish;
-//   expireTime: BigNumberish;
+//   deadline: BigNumberish;
 //   tokenId: BigNumberish;
 //   salt: BigNumberish;
 // };
@@ -51,10 +51,13 @@ describe('NFTLimitOrder', function () {
       'EVABASE',
       '1',
     ])) as NftLimitOrderFlowProxy;
-    evaFlowController = (await help.deploy('EvaFlowController', [
-      evabaseConfig.address,
-      evaSafesFactory.address,
-    ])) as EvaFlowController;
+    // evaFlowController = (await help.deploy('EvaFlowController', [
+    //   evabaseConfig.address,
+    //   evaSafesFactory.address,
+    // ])) as EvaFlowController;
+
+    evaFlowController = (await help.deploy('EvaFlowController', [])) as EvaFlowController;
+    await evaFlowController.initialize(evabaseConfig.address, evaSafesFactory.address);
 
     await evaSafesFactory.create(me.address);
 
@@ -72,7 +75,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: 100,
           price: 12,
-          expireTime: 1681,
+          deadline: 1681,
           tokenId: 12,
           salt: 80912,
         },
@@ -81,7 +84,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000003',
           amount: '100',
           price: '12',
-          expireTime: '16897001',
+          deadline: '16897001',
           tokenId: '12',
           salt: '809887712',
         },
@@ -90,7 +93,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: '101',
           price: '12',
-          expireTime: '16897001',
+          deadline: '16897001',
           tokenId: '12',
           salt: '809887712',
         },
@@ -99,7 +102,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: '100',
           price: '13',
-          expireTime: '16897001',
+          deadline: '16897001',
           tokenId: '12',
           salt: '809887712',
         },
@@ -108,7 +111,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: '100',
           price: '12',
-          expireTime: '16897002',
+          deadline: '16897002',
           tokenId: '12',
           salt: '809887712',
         },
@@ -117,7 +120,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: '100',
           price: '12',
-          expireTime: '16897001',
+          deadline: '16897001',
           tokenId: '13',
           salt: '809887712',
         },
@@ -126,7 +129,7 @@ describe('NFTLimitOrder', function () {
           assetToken: '0x0000000000000000000000000000000000000002',
           amount: '100',
           price: '12',
-          expireTime: '16897001',
+          deadline: '16897001',
           tokenId: '12',
           salt: '809887713',
         },
@@ -147,7 +150,7 @@ describe('NFTLimitOrder', function () {
         assetToken: '0x0000000000000000000000000000000000000002',
         amount: '100',
         price: '12',
-        expireTime: '16897001',
+        deadline: '16897001',
         tokenId: '12',
         salt: '809887713',
       };
@@ -155,19 +158,19 @@ describe('NFTLimitOrder', function () {
         'only safes can creat order',
       );
     });
-    it('failed when expireTime over', async function () {
+    it('failed when deadline over', async function () {
       const order = {
         owner: signers[0].address,
         assetToken: '0x0000000000000000000000000000000000000002',
         amount: '100',
         price: '12',
-        expireTime: 1000000,
+        deadline: 1000000,
         tokenId: '12',
         salt: '809887713',
       };
 
       // 正常
-      order.expireTime = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
+      order.deadline = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
 
       const dataBefore = await help.encodeFunctionData('NftLimitOrderFlowProxy', 'create', [
         evaFlowController.address,
@@ -180,7 +183,7 @@ describe('NFTLimitOrder', function () {
       await evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, dataBefore, {
         value: ethers.utils.parseEther('0.01'),
       });
-      order.expireTime = (await help.getBlockTime()) - 1;
+      order.deadline = (await help.getBlockTime()) - 1;
 
       const dataAfter = await help.encodeFunctionData('NftLimitOrderFlowProxy', 'create', [
         evaFlowController.address,
@@ -194,7 +197,7 @@ describe('NFTLimitOrder', function () {
         evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, dataAfter, {
           value: ethers.utils.parseEther('0.01'),
         }),
-      ).to.revertedWith('invalid order.expireTime');
+      ).to.revertedWith('invalid order.deadline');
     });
     it('failed when exist', async function () {
       const order = {
@@ -202,11 +205,11 @@ describe('NFTLimitOrder', function () {
         assetToken: '0x0000000000000000000000000000000000000002',
         amount: '100',
         price: '12',
-        expireTime: 98899999,
+        deadline: 98899999,
         tokenId: '12',
         salt: '809887713',
       };
-      order.expireTime = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
+      order.deadline = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
       const data = await help.encodeFunctionData('NftLimitOrderFlowProxy', 'create', [
         evaFlowController.address,
         nftLimitOrderFlowProxy.address,
@@ -231,7 +234,7 @@ describe('NFTLimitOrder', function () {
         assetToken: '0x0000000000000000000000000000000000000002',
         amount: '100',
         price: '12',
-        expireTime: 99999999,
+        deadline: 99999999,
         tokenId: '12',
         salt: '809887713',
       };
@@ -255,7 +258,7 @@ describe('NFTLimitOrder', function () {
         assetToken: user.address,
         amount: '1000',
         price: '1',
-        expireTime: '1680355507',
+        deadline: '1680355507',
         tokenId: 342905,
         salt: '1899909',
       };
@@ -269,7 +272,7 @@ describe('NFTLimitOrder', function () {
       ]);
 
       await evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, data, {
-        value: ethers.utils.parseEther('0.01'),
+        value: ethers.utils.parseEther('0.1'),
       });
 
       // console.log('create order:', order);

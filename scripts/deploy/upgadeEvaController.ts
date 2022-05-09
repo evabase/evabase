@@ -18,26 +18,33 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
 
+  // 6 NftLimitOrder upgrade
   const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
-  // const evaFlowController = await EvaFlowController.deploy(store.get('evabaseConfig'), store.get('evaSafesFactory'));
 
-  const evaFlowController = await upgrades.deployProxy(
-    EvaFlowController,
-    [store.get('evabaseConfig'), store.get('evaSafesFactory')],
-    { unsafeAllow: ['delegatecall'] },
-  );
-  await evaFlowController.deployed();
+  // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
+  // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
 
-  console.log('evaFlowController deployed to:', evaFlowController.address);
-  store.set('evaFlowController', evaFlowController.address);
+  // const factory = store.get("evaSafesFactory");
+  // const upgrade = await upgrades.upgradeProxy(NftLimitOrderFlow, [
+  //   factory,
+  //   "EVABASE",
+  //   "1",
+  // ]);
 
-  // 设置config
-  // const evabaseConfig = await ethers.getContractFactory('EvabaseConfig');
-  // const configContract = evabaseConfig.attach(store.get('evabaseConfig'));
-  // await configContract.setControl(evaFlowController.address);
+  // await upgrade.deployed();
+  // console.log("NftLimitOrderFlow deployed to:", upgrade.address);
+  // store.set("NftLimitOrderFlow", upgrade.address);
+
+  // const BoxV2 = await ethers.getContractFactory("BoxV2");
+  await upgrades.upgradeProxy(store.get('evaFlowController'), EvaFlowController, { unsafeAllow: ['delegatecall'] });
+  console.log('NftLimitOrderFlow upgraded');
+
+  // await evaFlowControler.addEvabaseFlowByOwner(
+  //   upgrade.address,
+  //   1, // KeepNetWork.Evabase
+  //   "NFTLimitOrderFlow"
+  // );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

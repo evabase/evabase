@@ -111,7 +111,7 @@ async function main() {
   //   { name: "assetToken", type: "addess" },
   //   { name: "amount", type: "uint256" },
   //   { name: "price", type: "uint256" },
-  //   { name: "expireTime", type: "uint256" },
+  //   { name: "deadline", type: "uint256" },
   //   { name: "tokenId", type: "uint256" },
   //   { name: "salt", type: "uint256" },
   // ];
@@ -121,7 +121,7 @@ async function main() {
   //   assetToken: string;
   //   amount: BigNumberish;
   //   price: BigNumberish;
-  //   expireTime: BigNumberish;
+  //   deadline: BigNumberish;
   //   tokenId: BigNumberish;
   //   salt: BigNumberish;
   // }
@@ -140,7 +140,7 @@ async function main() {
     assetToken: ownerO[0].address,
     amount: '1000',
     price: '1',
-    expireTime: '1680355507',
+    deadline: '1680355507',
     tokenId: 342905,
     salt: '1899909',
   };

@@ -141,7 +141,7 @@ module.exports = {
       url: process.env.RINKEBY_URL || '',
       accounts: accounts,
       gas: 29999972,
-      gasPrice: 8000000000,
+      // gasPrice: 8000000000,
     },
   },
   gasReporter: {

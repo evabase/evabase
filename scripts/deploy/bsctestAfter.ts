@@ -31,7 +31,7 @@ async function main() {
     assetToken: ownerO[0].address,
     amount: '1000',
     price: '1',
-    expireTime: '1680355507',
+    deadline: '1680355507',
     tokenId: 342905,
     salt: '1899909',
   };

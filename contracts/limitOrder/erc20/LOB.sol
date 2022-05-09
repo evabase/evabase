@@ -20,7 +20,7 @@ contract LOB is Ownable {
     // using Fabric for bytes32;
 
     uint256 private constant _FEE_UNIT = 10000;
-    uint256 private constant _ORDER_MIN_AGE = 10 minutes;
+    uint256 private constant _ORDER_MIN_AGE = 9 minutes;
     uint256 private constant _ORDER_MAX_AGE = 90 days;
     mapping(bytes32 => Order) private _orders;
     mapping(bytes32 => OrderStatus) private _orderStatus;
@@ -60,8 +60,8 @@ contract LOB is Ownable {
 
         require(order.owner == msg.sender, "WRONG_INPUT_OWNER");
         require(
-            order.expiration >= block.timestamp + _ORDER_MIN_AGE && //solhint-disable  not-rely-on-time
-                order.expiration <= block.timestamp + _ORDER_MAX_AGE, //solhint-disable  not-rely-on-time
+            order.deadline >= block.timestamp + _ORDER_MIN_AGE && //solhint-disable  not-rely-on-time
+                order.deadline <= block.timestamp + _ORDER_MAX_AGE, //solhint-disable  not-rely-on-time
             "WRONG_EXPIRATION"
         );
         require(order.minInputPer <= order.inputAmount, "WRONG_INPUT_AMOUNT");
@@ -152,7 +152,7 @@ contract LOB is Ownable {
     function isActiveOrder(bytes32 orderId) public view returns (bool) {
         OrderStatus memory status = _orderStatus[orderId];
         //solhint-disable  not-rely-on-time
-        return !status.paused && status.balance > 0 && _orders[orderId].expiration >= block.timestamp;
+        return !status.paused && status.balance > 0 && _orders[orderId].deadline >= block.timestamp;
     }
 
     /**
@@ -168,7 +168,7 @@ contract LOB is Ownable {
                     o.outputToken,
                     o.inputAmount,
                     o.minRate,
-                    o.expiration,
+                    o.deadline,
                     o.minInputPer
                 )
             );

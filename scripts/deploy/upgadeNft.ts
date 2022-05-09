@@ -20,7 +20,7 @@ async function main() {
   // We get the contract to deploy
 
   // 6 NftLimitOrder upgrade
-  const NftLimitOrderFlow = await ethers.getContractFactory('NftLimitOrderFlow');
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
 
   // console.log("NftLimitOrderFlow deployed to:", NftLimitOrderFlow.address);
   // store.set("NftLimitOrderFlow", NftLimitOrderFlow.address);
@@ -37,7 +37,7 @@ async function main() {
   // store.set("NftLimitOrderFlow", upgrade.address);
 
   // const BoxV2 = await ethers.getContractFactory("BoxV2");
-  await upgrades.upgradeProxy(store.get('NftLimitOrderFlow'), NftLimitOrderFlow);
+  await upgrades.upgradeProxy(store.get('evaFlowController'), EvaFlowController);
   console.log('NftLimitOrderFlow upgraded');
 
   // await evaFlowControler.addEvabaseFlowByOwner(
@@ -45,18 +45,6 @@ async function main() {
   //   1, // KeepNetWork.Evabase
   //   "NFTLimitOrderFlow"
   // );
-
-  // // 7 evabase bot
-  // const EvaBaseServerBot = await ethers.getContractFactory("EvaBaseServerBot");
-  // const evaBaseServerBot = await EvaBaseServerBot.deploy(
-  //   evabaseConfig.address,
-  //   evaFlowChecker.address,
-  //   evaFlowControler.address,
-  //   1 // KeepNetWork.Evabase
-  // );
-  // await evaBaseServerBot.deployed();
-  // console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
-  // store.set("evaBaseServerBot", evaBaseServerBot.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

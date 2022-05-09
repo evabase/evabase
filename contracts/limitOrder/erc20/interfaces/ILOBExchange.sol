@@ -8,7 +8,7 @@ struct Order {
     address inputToken;
     uint96 minRate;
     address outputToken;
-    uint64 expiration;
+    uint64 deadline;
     address receiptor;
     uint96 minInputPer;
 }

@@ -25,7 +25,7 @@ type OrderInfo = {
   inputToken: string;
   minRate: BigNumberish;
   outputToken: string;
-  expiration: number;
+  deadline: number;
   receiptor: string;
   minInputPer: number;
 };
@@ -69,7 +69,7 @@ describe('ERC20 Limit Order', function () {
       inputToken: help.ETH_ADDRESS,
       minRate: ethers.utils.parseUnits('1', 18),
       outputToken: '',
-      expiration: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
+      deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 24,
       receiptor: bob,
       minInputPer: 1,
     };
@@ -124,7 +124,7 @@ describe('ERC20 Limit Order', function () {
     it('shouled be support ERC20', async function () {
       order.inputToken = USDC.address;
       order.outputToken = WBTC.address;
-      order.expiration += 1;
+      order.deadline += 1;
 
       const gasFund = 1e18;
       const callData = exchange.interface.encodeFunctionData('create', [
@@ -153,7 +153,7 @@ describe('ERC20 Limit Order', function () {
     it('restart order', async function () {
       order.inputToken = USDC.address;
       order.outputToken = WBTC.address;
-      order.expiration += 1;
+      order.deadline += 1;
 
       const gasFund = 1e18;
       const callData = exchange.interface.encodeFunctionData('create', [
