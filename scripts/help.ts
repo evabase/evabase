@@ -102,8 +102,8 @@ class Help {
       signer = await this.admin();
     }
     const factory = await ethers.getContractFactory(contractName, signer);
-    const op = { gasPrice: 10 * 1e9 };
-    const contract = args ? await factory.deploy(...args, op) : await factory.deploy(op);
+    // const op = { gasPrice: 30 * 1e9 };
+    const contract = args ? await factory.deploy(...args) : await factory.deploy();
     console.log(`deploy ${contractName} ${contract.deployTransaction.hash}`);
     await contract.deployed();
     return contract;
