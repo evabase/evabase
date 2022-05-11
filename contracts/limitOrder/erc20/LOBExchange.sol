@@ -22,8 +22,13 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
         revert("F");
     }
 
-    function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
-        bytes32 key = abi.decode(checkData, (bytes32));
+    function check(bytes memory orderIdData)
+        external
+        view
+        override
+        returns (bool needExecute, bytes memory executeData)
+    {
+        bytes32 key = abi.decode(orderIdData, (bytes32));
 
         if (!isActiveOrder(key)) {
             return (false, bytes(""));
@@ -46,12 +51,25 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
         return (true, abi.encode(key, strategy, input, execData));
     }
 
-    function execute(bytes memory executeData) external override {
-        (bytes32 key, IStrategy s, uint256 input, bytes memory data) = abi.decode(
+    function needClose(bytes memory orderIdData) external view override returns (bool yes) {
+        bytes32 orderId = abi.decode(orderIdData, (bytes32));
+        yes = orderExpired(orderId);
+    }
+
+    function close(bytes memory orderIdData) external override {
+        bytes32 orderId = abi.decode(orderIdData, (bytes32));
+        closeOrder(orderId);
+    }
+
+    function execute(bytes memory executeData) external override returns (bool canDestoryFlow) {
+        (bytes32 orderId, IStrategy s, uint256 input, bytes memory data) = abi.decode(
             executeData,
             (bytes32, IStrategy, uint256, bytes)
         );
-        executeOrder(key, s, input, data);
+        (, uint256 balance) = executeOrder(orderId, s, input, data);
+
+        // can destory flow when order is completed.
+        canDestoryFlow = balance == 0;
     }
 
     function setStrategy(address s) external onlyOwner {

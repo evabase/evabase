@@ -117,6 +117,7 @@ describe('ERC20 Limit Order', function () {
       await expect(tx).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
       await expect(tx).to.emit(exchange, 'OrderExecuted');
+      await expect(tx).to.emit(app.controler, 'FlowDestroyed').withArgs(orderFlowInfo.admin, flowId);
     });
   });
 });
