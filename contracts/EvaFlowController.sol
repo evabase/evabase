@@ -27,8 +27,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     uint256 public paymentGasAmount;
 
     IEvaSafesFactory public evaSafesFactory;
-
     IEvabaseConfig public config;
+    mapping(address => bool) public flowOperators;
+
+    event FlowOperatorChanged(address op, bool removed);
 
     function initialize(address _config, address _evaSafesFactory) external initializer {
         require(_evaSafesFactory != address(0), "addess is 0x");
@@ -39,6 +41,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
         EvaFlowMeta memory f;
         _flowMetas.push(f); //storage a solt, flow id starts with 1.
+
+        flowOperators[msg.sender] = true;
     }
 
     function setMinConfig(MinConfig memory _minConfig) external onlyOwner {
@@ -53,6 +57,15 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             _minConfig.ppb,
             _minConfig.blockCountPerTurn
         );
+    }
+
+    function setFlowOperators(address op, bool remove) external onlyOwner {
+        if (remove) {
+            flowOperators[op] = true;
+        } else {
+            delete flowOperators[op];
+        }
+        emit FlowOperatorChanged(op, remove);
     }
 
     function _checkEnoughGas() internal view {
@@ -157,7 +170,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         require(_flowId < _flowMetas.length, "over bound");
         require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
         require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
-        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
+        _requireFlowOperator(_flowMetas[_flowId].admin);
         _flowMetas[_flowId].lastExecNumber = block.number;
         _flowMetas[_flowId].flowStatus = FlowStatus.Paused;
 
@@ -174,7 +187,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     function startFlow(uint256 _flowId) external override {
         require(_flowId < _flowMetas.length, "over bound");
 
-        require(msg.sender == _flowMetas[_flowId].admin || msg.sender == owner(), "flow's owner is not y");
+        _requireFlowOperator(_flowMetas[_flowId].admin);
         require(FlowStatus.Paused == _flowMetas[_flowId].flowStatus, "flow's status is error");
         _flowMetas[_flowId].lastExecNumber = block.number;
         _flowMetas[_flowId].flowStatus = FlowStatus.Active;
@@ -192,15 +205,19 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     function destroyFlow(uint256 flowId) external override {
         EvaFlowMeta memory meta = _flowMetas[flowId];
-        require(msg.sender == meta.admin, "only for flow admin");
+        _requireFlowOperator(meta.admin);
         require(meta.flowStatus != FlowStatus.Destroyed, "have destroyed");
+        _destroyFlow(flowId, meta);
+    }
+
+    function _destroyFlow(uint256 flowId, EvaFlowMeta memory meta) internal {
         // remove from valid when flow is active.
         if (meta.flowStatus == FlowStatus.Active) {
-            userMetaMap[msg.sender].vaildFlowsNum -= 1;
+            userMetaMap[meta.admin].vaildFlowsNum -= 1;
             _vaildFlows[meta.keepNetWork].remove(flowId);
         }
         _flowMetas[flowId].flowStatus = FlowStatus.Destroyed;
-        emit FlowDestroyed(msg.sender, flowId);
+        emit FlowDestroyed(meta.admin, flowId);
     }
 
     function addFundByUser(
@@ -317,12 +334,16 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         bool success;
         string memory failedReason;
 
-        try safes.execFlow(flow.lastVersionflow, execData) {
+        try safes.execFlow(flow.lastVersionflow, execData) returns (bytes memory returnBytes) {
+            bool canDestoryFlow = abi.decode(returnBytes, (bool));
+            if (canDestoryFlow) {
+                _destroyFlow(flowId, flow);
+            }
             success = true;
         } catch Error(string memory reason) {
             failedReason = reason; // revert or require
         } catch {
-            failedReason = "F"; //assert
+            failedReason = "Reverted"; //assert
         }
 
         // update
@@ -364,5 +385,9 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     function getFlowCheckInfo(uint256 flowId) external view override returns (address flow, bytes memory checkData) {
         flow = _flowMetas[flowId].lastVersionflow;
         checkData = _flowMetas[flowId].checkData;
+    }
+
+    function _requireFlowOperator(address flowAdmin) private view {
+        require(flowAdmin == msg.sender || flowOperators[msg.sender], "only for op/admin");
     }
 }

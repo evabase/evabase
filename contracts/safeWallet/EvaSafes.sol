@@ -54,8 +54,13 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         }
     }
 
-    function execFlow(address flow, bytes calldata execData) external override onlyController {
-        flow.functionCall(abi.encodeWithSignature("execute(bytes)", execData));
+    function execFlow(address flow, bytes calldata execData)
+        external
+        override
+        onlyController
+        returns (bytes memory result)
+    {
+        result = flow.functionCall(abi.encodeWithSignature("execute(bytes)", execData));
     }
 
     function withdraw(address token, uint256 amount) external onlyOwner {

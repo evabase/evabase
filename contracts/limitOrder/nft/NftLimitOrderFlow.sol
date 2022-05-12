@@ -29,7 +29,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         address _evaSafesFactory,
         string memory name,
         string memory version
-    ) public {
+    ) {
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
@@ -42,8 +42,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         return _owner;
     }
 
-    function check(bytes memory checkData) external view override returns (bool needExecute, bytes memory executeData) {
-        return (false, checkData);
+    function check(bytes memory) external pure override returns (bool, bytes memory) {
+        revert("No support check");
     }
 
     function multicall(address target, bytes memory callData) external override {
@@ -59,12 +59,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         evaSafesFactory = IEvaSafesFactory(msg.sender);
     }
 
-    function execute(bytes memory executeData) external override {
+    function execute(bytes memory executeData) external override returns (bool canDestoryFlow) {
         (Order memory order, bytes memory signature, bytes[] memory data) = abi.decode(
             executeData,
             (Order, bytes, bytes[])
         );
-        _atomicMatch(order, signature, data);
+        canDestoryFlow = _atomicMatch(order, signature, data);
     }
 
     function createOrder(Order memory order, uint256 flowId) external payable override returns (bytes32 orderId) {
@@ -83,7 +83,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         orderId = hashOrder(order);
         require(orderExists[orderId].owner == address(0), "order exist");
 
-        orderExists[orderId] = OrderExist({amount: 0, owner: order.owner, balance: Utils.toUint96(total)});
+        orderExists[orderId] = OrderExist({
+            amount: 0,
+            owner: order.owner,
+            balance: Utils.toUint96(total),
+            deadline: Utils.toUint64(order.deadline)
+        });
 
         emit OrderCreated(msg.sender, flowId, order);
     }
@@ -107,7 +112,10 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
     function cancelOrder(bytes32 orderId, uint256 flowId) public override {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
-        require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
+
+        if (msg.sender != evaSafesFactory.get(orderExist.owner)) {
+            require(orderExpired(orderId), "order is active");
+        }
         uint256 remain = orderExist.balance;
         address user = orderExist.owner;
         delete orderExists[orderId];
@@ -118,11 +126,21 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         emit OrderCancel(msg.sender, flowId, orderId);
     }
 
+    function needClose(bytes memory orderIdData) external view override returns (bool yes) {
+        bytes32 orderId = abi.decode(orderIdData, (bytes32));
+        yes = orderExpired(orderId);
+    }
+
+    function close(bytes memory orderIdData) external override {
+        bytes32 orderId = abi.decode(orderIdData, (bytes32));
+        cancelOrder(orderId, 0);
+    }
+
     function _atomicMatch(
         Order memory _order,
         bytes memory _signature,
         bytes[] memory _data
-    ) internal returns (bytes[] memory results) {
+    ) internal returns (bool orderDone) {
         require(verifyOrder(_order, _signature), "signature is not valid");
         bytes32 ordeId = hashOrder(_order);
         OrderExist storage orderExist = orderExists[ordeId];
@@ -137,8 +155,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         uint256 total = 0;
 
         require(_data.length <= _order.amount - orderExist.amount, "Exceeded purchase");
-
-        results = new bytes[](_data.length);
 
         for (uint256 i = 0; i < _data.length; i++) {
             (address target, bytes memory input, uint256 value) = abi.decode(_data[i], (address, bytes, uint256));
@@ -156,6 +172,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(orderExist.balance >= totalUsed, "invalid balance");
         orderExist.balance = orderExist.balance - totalUsed;
 
+        orderDone = orderExist.amount == _order.amount;
         emit OrderExecute(msg.sender, ordeId, _data.length, total);
     }
 
@@ -181,6 +198,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bytes32 ethSignedMessageHash = _hashTypedDataV4(messageHash);
 
         return SignatureChecker.isValidSignatureNow(order.owner, ethSignedMessageHash, signature);
+    }
+
+    function orderExpired(bytes32 orderId) public view returns (bool) {
+        // solhint-disable
+        uint256 deadline = orderExists[orderId].deadline;
+        return deadline > 0 && deadline < block.timestamp;
     }
 
     /**

@@ -94,7 +94,7 @@ describe('ERC20 Limit Order', function () {
 
       // 取消订单时，将返还 ETH 给 receiptor
       console.log(me.address, receiptor.address);
-      await expect(await exchange.connect(me).cancelOrder(orderId))
+      await expect(await exchange.connect(me).closeOrder(orderId))
         .to.changeEtherBalance(receiptor, 9990)
         .to.changeEtherBalance(owner, 0);
     });

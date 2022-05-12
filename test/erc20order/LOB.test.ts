@@ -320,7 +320,7 @@ describe('EvabaseConfig', function () {
     it('failed when order is canceld', async function () {
       const info = await createNewOrder(me, 20, 3600 * 24);
 
-      await exchange.connect(me).cancelOrder(info.orderId);
+      await exchange.connect(me).closeOrder(info.orderId);
 
       await expect(exchange.executeOrder(info.orderId, strategy.address, info.order.inputToken, '0x')).to.revertedWith(
         'ORDER_NOT_ACTIVE',
