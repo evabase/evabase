@@ -9,7 +9,7 @@ import {IEvaFlowController, KeepNetWork} from "../interfaces/IEvaFlowController.
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 
 contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
-    event Performed(uint256 flowId, string result);
+    event PerformFailed(uint256 flowId, string err);
 
     uint64 public lastPerformTime;
     uint64 public perfromInterval;
@@ -89,9 +89,8 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
             try IEvaFlow(flow).close(flowCheckData) {
                 _controller.destroyFlow(flowId);
                 succCount++;
-                emit Performed(flowId, "SUCC");
             } catch Error(string memory err) {
-                emit Performed(flowId, err);
+                emit PerformFailed(flowId, err);
             }
         }
         // Eusure that invalid tx are not always minted.

@@ -29,7 +29,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         address _evaSafesFactory,
         string memory name,
         string memory version
-    ) public {
+    ) {
         require(_evaSafesFactory != address(0), "addess is 0x");
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
@@ -202,7 +202,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     function orderExpired(bytes32 orderId) public view returns (bool) {
         // solhint-disable
-        return orderExists[orderId].deadline < block.timestamp && orderExists[orderId].balance > 0;
+        uint256 deadline = orderExists[orderId].deadline;
+        return deadline > 0 && deadline < block.timestamp;
     }
 
     /**

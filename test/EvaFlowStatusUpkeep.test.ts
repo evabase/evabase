@@ -65,21 +65,19 @@ describe('EvaFlowController', function () {
     // close o1
     const result1 = await upkeep.connect(voidSigner).callStatic.checkUpkeep(checkNet1);
     expect(result1.upkeepNeeded).to.eq(true);
-    console.log('------1222------');
     const tx1 = await upkeep.performUpkeep(result1.performData);
 
+    console.log('--1');
     await tx1.wait();
-    await expect(tx1).to.emit(upkeep, 'Performed').withArgs(o1.flowId, 'SUCC');
-    console.log('------1------');
+    await expect(tx1).to.emit(flow, 'Closed').withArgs(o1.orderId);
     expect(upkeep.performUpkeep(result1.performData)).revertedWith('all failed');
-    console.log('------2------');
+    console.log('--2');
 
     // close 03
     const result3 = await upkeep.connect(voidSigner).callStatic.checkUpkeep(checkNet2);
     expect(result3.upkeepNeeded).to.eq(true);
     const tx3 = await upkeep.performUpkeep(result3.performData);
-    console.log('------------');
-    await expect(tx3).to.emit(upkeep, 'Performed').withArgs(o3.flowId, 'SUCC');
+    await expect(tx3).to.emit(flow, 'Closed').withArgs(o3.orderId);
 
     // // empty
     expect((await upkeep.connect(voidSigner).callStatic.checkUpkeep(checkNet1)).upkeepNeeded).to.eq(false);
