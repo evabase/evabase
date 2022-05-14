@@ -95,21 +95,20 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     function changeStatus(
         bytes32 orderId,
-        bool pause,
-        uint256 flowId
+        bool pause
     ) public override {
         OrderExist memory orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
 
         if (pause) {
-            emit OrderPause(msg.sender, flowId, orderId);
+            emit OrderPause(msg.sender, orderId);
         } else {
-            emit OrderStart(msg.sender, flowId, orderId);
+            emit OrderStart(msg.sender, orderId);
         }
     }
 
-    function cancelOrder(bytes32 orderId, uint256 flowId) public override {
+    function cancelOrder(bytes32 orderId) public override {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
 
@@ -123,7 +122,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             (bool succeed, ) = user.call{value: remain}(""); //solhint-disable
             require(succeed, "Failed to transfer Ether");
         }
-        emit OrderCancel(msg.sender, flowId, orderId);
+        emit OrderCancel(msg.sender, orderId);
     }
 
     function needClose(bytes memory orderIdData) external view override returns (bool yes) {
@@ -133,7 +132,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     function close(bytes memory orderIdData) external override {
         bytes32 orderId = abi.decode(orderIdData, (bytes32));
-        cancelOrder(orderId, 0);
+        cancelOrder(orderId);
     }
 
     function _atomicMatch(
@@ -173,6 +172,12 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         orderExist.balance = orderExist.balance - totalUsed;
 
         orderDone = orderExist.amount == _order.amount;
+        if (orderDone) {
+            if (orderExist.balance > 0) {
+                (bool succeed, ) = orderExist.owner.call{value: orderExist.balance}(""); //solhint-disable
+                require(succeed, "Failed to transfer Ether");
+            }
+        }
         emit OrderExecute(msg.sender, ordeId, _data.length, total);
     }
 

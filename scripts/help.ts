@@ -31,7 +31,7 @@ export enum CompareOperator {
 export enum FlowStatus {
   Active, // 可执行
   Paused,
-  Destroyed,
+  Closed,
   Expired,
   Completed,
   Unknown,
@@ -53,6 +53,7 @@ class Help {
   constructor() {
     this.adminMap = new Map<string, string>();
     this.adminMap.set('rinkeby', '0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF');
+    this.adminMap.set('localhost', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
   }
 
   toUnits(decimals: number) {

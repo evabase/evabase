@@ -283,7 +283,7 @@ describe('NFTLimitOrder', function () {
     });
 
     it('failed when order is canceld', async function () {
-      const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('destroyFlow', [
+      const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
         evaFlowController.address,
         1,
       ]);

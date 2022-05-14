@@ -15,38 +15,38 @@ export const initEvebase = async function initEvebase() {
   const EvabaseConfig = await ethers.getContractFactory('EvabaseConfig');
   const evabaseConfig = await EvabaseConfig.deploy();
   const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
+  // console.log(`deployer owner : ${ownerO[0].address}`);
   await evabaseConfig.deployed();
-  console.log(`evabaseConfig: ${evabaseConfig.address}`);
+  // console.log(`evabaseConfig: ${evabaseConfig.address}`);
 
   const EvaSafesFactory = await ethers.getContractFactory('EvaSafesFactory');
   const evaSafesFactory = await EvaSafesFactory.deploy(evabaseConfig.address);
 
   await evaSafesFactory.deployed();
 
-  console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
+  // console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
 
   // 3 EvaFlowController
   const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
   const evaFlowController = await EvaFlowController.deploy();
   await evaFlowController.deployed();
   await evaFlowController.initialize(evabaseConfig.address, evaSafesFactory.address);
-  console.log(`evaFlowController: ${evaFlowController.address}`);
+  // console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4
   const evaFlowChecker = (await help.deploy('EvaFlowRandomChecker', [evabaseConfig.address])) as EvaFlowRandomChecker;
-  console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
+  // console.log(`evaFlowChecker: ${evaFlowChecker.address}`);
   // 5
 
   const EvaFlowChainLinkKeeperBot = await ethers.getContractFactory('EvaFlowChainLinkKeeperBot');
   // eslint-disable-next-line max-len
   const evaFlowChainLinkKeeperBot = await EvaFlowChainLinkKeeperBot.deploy(evabaseConfig.address, evaFlowChecker.address, evaFlowController.address);
   await evaFlowChainLinkKeeperBot.deployed();
-  console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
+  // console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
 
   const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
   const evaBaseServerBot = await EvaBaseServerBot.deploy(evabaseConfig.address, evaFlowChecker.address);
   await evaBaseServerBot.deployed();
-  console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
+  // console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
 
 
   await evabaseConfig.setControl(evaFlowController.address);
@@ -55,7 +55,7 @@ export const initEvebase = async function initEvebase() {
   const factory = evaSafesFactory.address;
   const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(evabaseConfig.address, factory, 'EVABASE', '1');
   await nftLimitOrderFlowProxy.deployed();
-  console.log('NftLimitOrderFlowProxy:', nftLimitOrderFlowProxy.address);
+  // console.log('NftLimitOrderFlowProxy:', nftLimitOrderFlowProxy.address);
   return {
     evabaseConfig,
     evaSafesFactory,

@@ -62,14 +62,15 @@ describe('EvaFlowRandomChecker', function () {
 
     for (let i = 0; i < all; i++) {
       const flowId = await app.controler.getIndexVaildFlow(0, network);
-      const callData = flow.interface.encodeFunctionData('destroyFlow', [app.controler.address, flowId]);
+      const callData = flow.interface.encodeFunctionData('closeFlow', [app.controler.address, flowId]);
       await meSafes.proxy(flow.address, HowToCall.Delegate, callData);
     }
   };
 
   it('should be return false when flow is empty', async function () {
     const now = Math.ceil(new Date().getTime() / 1000);
-    const result = await checker.callStatic.check(1, now, network);
+    const zero = new ethers.VoidSigner(ethers.constants.AddressZero, ethers.provider);
+    const result = await checker.connect(zero).callStatic.check(1, now, network);
     expect(result.needExec).to.eq(false);
   });
 
@@ -77,8 +78,9 @@ describe('EvaFlowRandomChecker', function () {
     await createTask();
     await createTask();
     await createTask();
+    const zero = new ethers.VoidSigner(ethers.constants.AddressZero, ethers.provider);
     const now = Math.ceil(new Date().getTime() / 1000);
-    const result = await checker.callStatic.check(1, now, network);
+    const result = await checker.connect(zero).callStatic.check(1, now, network);
     expect(result.needExec).to.eq(true);
 
     // await flow.create(app.controler.address, flow.address, network, eth1, { value: eth1 });
@@ -95,9 +97,9 @@ describe('EvaFlowRandomChecker', function () {
 
     // 8个任务分配，应该是两个人三个，1个人两个
     const now = Math.ceil(new Date().getTime() / 1000);
-
+    const zero = new ethers.VoidSigner(ethers.constants.AddressZero, ethers.provider);
     for (let i = 0; i < 3; i++) {
-      const result = await checker.callStatic.check(i + 1, now, network);
+      const result = await checker.connect(zero).callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
       await app.controler
         .connect(keepers[0])
@@ -105,13 +107,13 @@ describe('EvaFlowRandomChecker', function () {
     }
     // 再次检查时 应该都为 False
     for (let i = 0; i < 3; i++) {
-      const result = await checker.callStatic.check(i + 1, now, network);
+      const result = await checker.connect(zero).callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(false);
     }
     // 增长一分钟，所有任务都可以被执行
     help.increaseBlockTime(60);
     for (let i = 0; i < 3; i++) {
-      const result = await checker.callStatic.check(i + 1, now, network);
+      const result = await checker.connect(zero).callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
     }
 
@@ -120,14 +122,14 @@ describe('EvaFlowRandomChecker', function () {
     await flow.execute(ethers.utils.defaultAbiCoder.encode(['uint256'], [5]));
 
     for (let i = 0; i < 3; i++) {
-      const result = await checker.callStatic.check(i + 1, now, network);
+      const result = await checker.connect(zero).callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
       await app.controler
         .connect(keepers[1])
         .batchExecFlow(keepers[1].address, result.execData, ethers.constants.MaxUint256);
     }
     for (let i = 0; i < 3; i++) {
-      const result = await checker.callStatic.check(i + 1, now, network);
+      const result = await checker.connect(zero).callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(false);
     }
   });
@@ -137,8 +139,8 @@ describe('EvaFlowRandomChecker', function () {
     await createTask();
     const now = Math.ceil(new Date().getTime() / 1000);
     await app.config.addKeeper(checker.address, network);
-    const result = await checker.callStatic.check(1, now, network);
-    console.log(result);
-    // expect(result.needExec).to.equal(true);
+    const result = await checker.connect(zero).callStatic.check(1, now, network);
+    // console.log(result);
+    expect(result.needExec).to.equal(true);
   });
 });

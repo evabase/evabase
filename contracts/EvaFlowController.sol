@@ -203,21 +203,21 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         emit FlowStart(msg.sender, _flowId);
     }
 
-    function destroyFlow(uint256 flowId) external override {
+    function closeFlow(uint256 flowId) external override {
         EvaFlowMeta memory meta = _flowMetas[flowId];
         _requireFlowOperator(meta.admin);
-        require(meta.flowStatus != FlowStatus.Destroyed, "have destroyed");
-        _destroyFlow(flowId, meta);
+        require(meta.flowStatus != FlowStatus.Closed, "have closeed");
+        _closeFlow(flowId, meta);
     }
 
-    function _destroyFlow(uint256 flowId, EvaFlowMeta memory meta) internal {
+    function _closeFlow(uint256 flowId, EvaFlowMeta memory meta) internal {
         // remove from valid when flow is active.
         if (meta.flowStatus == FlowStatus.Active) {
             userMetaMap[meta.admin].vaildFlowsNum -= 1;
             _vaildFlows[meta.keepNetWork].remove(flowId);
         }
-        _flowMetas[flowId].flowStatus = FlowStatus.Destroyed;
-        emit FlowDestroyed(meta.admin, flowId);
+        _flowMetas[flowId].flowStatus = FlowStatus.Closed;
+        emit FlowClosed(meta.admin, flowId);
     }
 
     function addFundByUser(
@@ -337,7 +337,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         try safes.execFlow(flow.lastVersionflow, execData) returns (bytes memory returnBytes) {
             bool canDestoryFlow = abi.decode(returnBytes, (bool));
             if (canDestoryFlow) {
-                _destroyFlow(flowId, flow);
+                _closeFlow(flowId, flow);
             }
             success = true;
         } catch Error(string memory reason) {

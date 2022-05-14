@@ -20,19 +20,18 @@ interface INftLimitOrder {
     }
     event OrderExecute(address indexed user, bytes32 orderId, uint256 amount, uint256 value); //TODO: remove flowId
 
-    event OrderCancel(address indexed user, uint256 indexed flowId, bytes32 orderId); //TODO: remove flowId
+    event OrderCancel(address indexed user, bytes32 orderId); //TODO: remove flowId
 
-    event OrderPause(address indexed user, uint256 indexed flowId, bytes32 orderId); //TODO: remove flowId
-    event OrderStart(address indexed user, uint256 indexed flowId, bytes32 orderId); //TODO: remove flowId
+    event OrderPause(address indexed user, bytes32 orderId); //TODO: remove flowId
+    event OrderStart(address indexed user, bytes32 orderId); //TODO: remove flowId
     event OrderCreated(address indexed user, uint256 indexed flowId, Order order);
 
     function createOrder(Order memory order, uint256 flowId) external payable returns (bytes32 orderId);
 
     function changeStatus(
         bytes32 orderId,
-        bool pause,
-        uint256 flowId
+        bool pause
     ) external;
 
-    function cancelOrder(bytes32 orderId, uint256 flowId) external;
+    function cancelOrder(bytes32 orderId) external;
 }

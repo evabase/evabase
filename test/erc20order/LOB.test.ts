@@ -27,7 +27,7 @@ type OrderInfo = {
   minInputPer: BigNumberish;
 };
 
-describe('EvabaseConfig', function () {
+describe('LOB', function () {
   let strategy: MockSwapStrategy;
   let USDC: MockERC20;
   let WBTC: MockERC20;
@@ -169,11 +169,13 @@ describe('EvabaseConfig', function () {
       };
       // 不低于10分钟
       order.deadline = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
-      await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
+
+      await expect(exchange.connect(me).createOrder(order)).to.revertedWith('STF');
       console.log('time2:', await help.getBlockTime());
 
       // 不超过90天
       order.deadline = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
+
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
     });
     it('failed when exist', async function () {
