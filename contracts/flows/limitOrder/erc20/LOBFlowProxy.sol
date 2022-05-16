@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: MIT
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
-import "../../interfaces/IEvaFlowController.sol";
-import "../../interfaces/IEvaFlowProxy.sol";
-import {KeepNetWork} from "../../lib/EvabaseHelper.sol";
+import "../../../interfaces/IEvaFlowController.sol";
+import "../../../interfaces/IEvaFlowProxy.sol";
+import {KeepNetWork} from "../../../lib/EvabaseHelper.sol";
 
-import "../../lib/TransferHelper.sol";
+import "../../../lib/TransferHelper.sol";
 
 import "./interfaces/ILOBExchange.sol";
 
@@ -68,7 +68,7 @@ contract LOBFlowProxy is IEvaFlowProxy {
     function closeFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.closeFlow(flowId);
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
-        exchange.cancelOrder(orderKey);
+        exchange.closeOrder(orderKey);
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)

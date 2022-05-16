@@ -28,10 +28,7 @@ interface INftLimitOrder {
 
     function createOrder(Order memory order, uint256 flowId) external payable returns (bytes32 orderId);
 
-    function changeStatus(
-        bytes32 orderId,
-        bool pause
-    ) external;
+    function changeStatus(bytes32 orderId, bool pause) external;
 
     function cancelOrder(bytes32 orderId) external;
 }

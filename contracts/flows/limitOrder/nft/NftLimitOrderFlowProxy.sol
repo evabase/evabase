@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
-import "../../interfaces/IEvaFlowProxy.sol";
+import "../../../interfaces/IEvaFlowProxy.sol";
 import "./NftLimitOrderFlow.sol";
 
 contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {

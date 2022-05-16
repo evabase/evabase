@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
-import "../../interfaces/IEvaFlow.sol";
-import "../../interfaces/EIP712.sol";
-import "../../lib/Utils.sol";
-import "../../interfaces/INftLimitOrder.sol";
-import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
-import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
-import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
-import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
+import "../../../interfaces/IEvaFlow.sol";
+import "../../../interfaces/EIP712.sol";
+import "../../../lib/Utils.sol";
+import "../../../interfaces/INftLimitOrder.sol";
+import {IEvabaseConfig} from "../../../interfaces/IEvabaseConfig.sol";
+import {IEvaSafes} from "../../../interfaces/IEvaSafes.sol";
+import {IEvaFlowController} from "../../../interfaces/IEvaFlowController.sol";
+import {IEvaSafesFactory} from "../../../interfaces/IEvaSafesFactory.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
@@ -42,7 +42,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         return _owner;
     }
 
-    function check(bytes memory) external pure override returns (bool, bytes memory) {
+    function check(bytes memory) external view override returns (bool, bytes memory) {
         revert("No support check");
     }
 
@@ -93,10 +93,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         emit OrderCreated(msg.sender, flowId, order);
     }
 
-    function changeStatus(
-        bytes32 orderId,
-        bool pause
-    ) public override {
+    function changeStatus(bytes32 orderId, bool pause) public override {
         OrderExist memory orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
@@ -141,8 +138,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bytes[] memory _data
     ) internal returns (bool orderDone) {
         require(verifyOrder(_order, _signature), "signature is not valid");
-        bytes32 ordeId = hashOrder(_order);
-        OrderExist storage orderExist = orderExists[ordeId];
+        bytes32 orderId = hashOrder(_order);
+        OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(_order.owner != address(0), "order owner addrss is 0x");
         uint256 _amount = _order.amount;
@@ -173,12 +170,14 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
         orderDone = orderExist.amount == _order.amount;
         if (orderDone) {
-            if (orderExist.balance > 0) {
-                (bool succeed, ) = orderExist.owner.call{value: orderExist.balance}(""); //solhint-disable
+            uint256 bal = orderExist.balance;
+            if (bal > 0) {
+                (bool succeed, ) = orderExist.owner.call{value: bal}(""); //solhint-disable
                 require(succeed, "Failed to transfer Ether");
             }
+            delete orderExists[orderId];
         }
-        emit OrderExecute(msg.sender, ordeId, _data.length, total);
+        emit OrderExecute(msg.sender, orderId, _data.length, total);
     }
 
     function hashOrder(Order memory order) public pure returns (bytes32) {
