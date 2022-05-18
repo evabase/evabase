@@ -18,10 +18,17 @@ jobs:
           cache: 'yarn'
       - run: npm install --global yarn
       - run: yarn install
-      - name: Clean project
-        run: yarn clean
+      - name: Prepare project
+        run: yarn buildPrepare
       - name: Run Slither
         uses: crytic/slither-action@v0.1.1
+        id: slither
         continue-on-error: true
         with:
           node-version: 16
+          ignore-compile: true
+          sarif: results.sarif
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.slither.outputs.sarif }}

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 interface IEvaSafesFactory {
     event ConfigChanged(address indexed newConfig);
 
-    event WalletCreated(address indexed user, address wallet, uint256);
+    event WalletCreated(address indexed user, address wallet);
 
     function get(address user) external view returns (address wallet);
 
