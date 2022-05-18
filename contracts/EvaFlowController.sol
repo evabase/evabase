@@ -91,8 +91,9 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         require(IEvaSafes(msg.sender).isEvaSafes(), "should be safes");
     }
 
-    function isValidFlow(address flow) public pure returns (bool) {
+    function isValidFlow(address flow) public view returns (bool) {
         require(flow != address(0), "flow is 0x");
+        require(flow != address(this), "invalid flow");
         return true; //TODO: Valid Flows
     }
 

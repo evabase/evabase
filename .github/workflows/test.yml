@@ -17,9 +17,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: "yarn"
+          cache: 'yarn'
       - run: npm install --global yarn
       - run: yarn install
+      - run: yarn buildPrepare
       - run: yarn lint
       - run: yarn test
         env:
@@ -38,9 +39,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: "yarn"
+          cache: 'yarn'
       - run: npm install --global yarn
       - run: yarn install
+      - run: yarn buildPrepare
       - run: yarn coverage
         env:
           NODE_OPTIONS: --max_old_space_size=4096

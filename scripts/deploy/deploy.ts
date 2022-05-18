@@ -300,6 +300,17 @@ async function main() {
   console.log('setFlowOperators hash=', tx.hash);
   console.log(`evaFlowStatusUpkeep: ${evaFlowStatusUpkeep.address}`);
   store.set('evaFlowStatusUpkeep', evaFlowStatusUpkeep.address);
+
+  // 9 EvaFlowExecutor
+  const EvaFlowExecutor = await ethers.getContractFactory('EvaFlowExecutor');
+  const evaFlowExecutor = await EvaFlowExecutor.deploy(evaFlowController.address);
+  tx = await evabaseConfig.setBytes32Item(
+    ethers.utils.keccak256(ethers.utils.toUtf8Bytes('FLOW_EXECUTOR')),
+    ethers.utils.hexZeroPad(evaFlowExecutor.address, 32),
+  );
+  console.log('setBytes32Item hash=', tx.hash);
+  console.log(`evaFlowExecutor: ${evaFlowExecutor.address}`);
+  store.set('evaFlowExecutor', evaFlowExecutor.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

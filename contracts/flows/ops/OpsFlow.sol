@@ -39,7 +39,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
     function multicall(address target, bytes memory callData) external override onlyOwner {
         require(target != address(this), "FORBIDDEN");
         require(target != owner(), "FORBIDDEN");
-        target.functionCall(callData, "CallFailed");
+        target.functionCall(callData, "ops multicall CallFailed");
         return;
     }
 

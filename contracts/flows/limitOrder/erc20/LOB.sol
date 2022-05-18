@@ -152,7 +152,7 @@ contract LOB is Ownable {
             order.receiptor != address(0) ? order.receiptor : order.owner,
             output
         );
-
+        orderBalance = _orderStatus[orderId].balance;
         emit OrderExecuted(orderId, input, output);
     }
 

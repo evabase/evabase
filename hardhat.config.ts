@@ -73,7 +73,7 @@ fs.stat(otherConfigs, function (_err, stats) {
   }
 });
 
-const withOptimizations = argv.enableGasReport || argv.compileMode === 'production';
+const withOptimizations = argv.COVERAGE || argv.enableGasReport || argv.compileMode === 'production';
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
