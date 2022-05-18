@@ -5519,6 +5519,11 @@ hardhat-deploy@^0.11.4:
     murmur-128 "^0.2.1"
     qs "^6.9.4"
 
+hardhat-erc1820@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmmirror.com/hardhat-erc1820/-/hardhat-erc1820-0.1.0.tgz#9bc5a2acc9c9b84f3be9041c25fa349010cd3192"
+  integrity sha512-oQxe7Li8Ev6/Gs6PMcH9+IjaXS+xh6HyPBTGnlRVG4yfmkYF7ajVvzxfYY/FGlM9/j+F2uZjRhxsc//qisC82A==
+
 hardhat-gas-reporter@^1.0.8:
   version "1.0.8"
   resolved "https://registry.npmmirror.com/hardhat-gas-reporter/-/hardhat-gas-reporter-1.0.8.tgz"
