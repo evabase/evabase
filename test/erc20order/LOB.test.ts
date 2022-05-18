@@ -27,7 +27,7 @@ type OrderInfo = {
   minInputPer: BigNumberish;
 };
 
-describe('EvabaseConfig', function () {
+describe('LOB', function () {
   let strategy: MockSwapStrategy;
   let USDC: MockERC20;
   let WBTC: MockERC20;
@@ -168,7 +168,7 @@ describe('EvabaseConfig', function () {
         minInputPer: 1,
       };
       // 不低于10分钟
-      order.deadline = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
+      order.deadline = (await help.getBlockTime()) + 60 * 9 - 10; // 9分钟-10秒
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
       console.log('time2:', await help.getBlockTime());
 
