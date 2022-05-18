@@ -3,13 +3,18 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IEvaFlow.sol";
+import "../interfaces/IEvaSubFlow.sol";
 import "../interfaces/IEvaFlowProxy.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
-contract MockTimeFlow is IEvaFlowProxy, IEvaFlow {
+contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
     Task[] public tasks;
+    mapping(uint256 => CallArgs[]) private _subTasks;
 
     event Executed(uint256 indexed id, uint256 times);
     event Closed(uint256 indexed id);
+
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
 
     struct Task {
         bool paused;
@@ -17,6 +22,33 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaFlow {
         bool canceled;
         uint256 lastTime;
         uint256 times;
+    }
+
+    function enableERC1820() external {
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24).setInterfaceImplementer(
+            address(this),
+            _SUB_FLOW_INTERFACE,
+            address(this)
+        );
+    }
+
+    function removeERC1820() external {
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24).setInterfaceImplementer(
+            address(this),
+            _SUB_FLOW_INTERFACE,
+            address(0)
+        );
+    }
+
+    function getSubCalls(bytes memory executeData) external view override returns (CallArgs[] memory subs) {
+        uint256 id = abi.decode(executeData, (uint256));
+        return _subTasks[id];
+    }
+
+    function setSubTask(uint256 id, CallArgs[] memory subs) external {
+        for (uint256 i = 0; i < subs.length; i++) {
+            _subTasks[id].push(subs[i]);
+        }
     }
 
     function taskCount() external view returns (uint256) {
