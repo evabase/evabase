@@ -18,5 +18,5 @@ interface ILOBExchange {
 
     function setPause(bytes32 key, bool pause) external;
 
-    function cancelOrder(bytes32 key) external;
+    function closeOrder(bytes32 key) external;
 }

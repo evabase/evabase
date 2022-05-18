@@ -35,29 +35,26 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
         KeepNetWork keepNetWork
     ) external override returns (bool needExec, bytes memory execData) {
         // solhint-disable avoid-tx-origin
-        if (tx.origin == address(0)) {
-            Args memory args;
-            args.controller = IEvaFlowController(config.control());
-            args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);
+        require(tx.origin == address(0), "only for off-chain");
+        Args memory args;
+        args.controller = IEvaFlowController(config.control());
+        args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);
 
-            if (args.flowCount > 0) {
-                args.keepbotId = keepbotId;
-                args.network = keepNetWork;
-                args.maxCheck = config.batchFlowNum();
-                args.keeperCount = config.keepBotSizes(keepNetWork);
-                require(args.keeperCount > 0, "keeper is zero");
-                require(args.maxCheck > 0, "max check is zero");
-                args.startIndex = _selectBeginIndex(args.flowCount, lastMoveTime);
+        if (args.flowCount > 0) {
+            args.keepbotId = keepbotId;
+            args.network = keepNetWork;
+            args.maxCheck = config.batchFlowNum();
+            args.keeperCount = config.keepBotSizes(keepNetWork);
+            require(args.keeperCount > 0, "keeper is zero");
+            require(args.maxCheck > 0, "max check is zero");
+            args.startIndex = _selectBeginIndex(args.flowCount, lastMoveTime);
 
-                (uint256[] memory flows, bytes[] memory datas) = _checkFlows(args);
+            (uint256[] memory flows, bytes[] memory datas) = _checkFlows(args);
 
-                if (flows.length > 0) {
-                    needExec = true;
-                    execData = abi.encode(flows, datas);
-                }
+            if (flows.length > 0) {
+                needExec = true;
+                execData = abi.encode(flows, datas);
             }
-        } else {
-            revert("F");
         }
     }
 
