@@ -3,15 +3,15 @@
 pragma solidity ^0.8.0;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {TransferHelper} from "../lib/TransferHelper.sol";
 import "../interfaces/IEvaSafes.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 
-contract EvaSafes is IEvaSafes, Context, Initializable {
+contract EvaSafes is IEvaSafes {
     using Address for address;
     event Revoked(bool revoked);
+
+    bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
     address public owner;
     address public config;
@@ -19,17 +19,12 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
     bool public revoked;
 
     modifier onlyOwner() {
-        require(owner == _msgSender(), "forbidden");
-        _;
-    }
-
-    modifier onlyController() {
-        require(!revoked && IEvabaseConfig(config).isActiveControler(msg.sender), "forbidden");
+        require(owner == msg.sender, "forbidden");
         _;
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _admin, address _config) external override initializer {
+    function initialize(address _admin, address _config) external override {
         require(owner == address(0), "forbidden");
         owner = _admin;
         config = _config;
@@ -44,7 +39,11 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         address dest,
         HowToCall howToCall,
         bytes memory data
-    ) external payable override onlyOwner returns (bytes memory ret) {
+    ) external payable override returns (bytes memory ret) {
+        require(
+            msg.sender == owner || msg.sender == IEvabaseConfig(config).getAddressItem(_FLOW_EXECUTOR),
+            "only for owner or executor"
+        );
         if (howToCall == HowToCall.Call) {
             ret = dest.functionCallWithValue(data, msg.value);
         } else if (howToCall == HowToCall.DelegateCall) {
@@ -52,15 +51,6 @@ contract EvaSafes is IEvaSafes, Context, Initializable {
         } else {
             revert("F");
         }
-    }
-
-    function execFlow(address flow, bytes calldata execData)
-        external
-        override
-        onlyController
-        returns (bytes memory result)
-    {
-        result = flow.functionCall(abi.encodeWithSignature("execute(bytes)", execData));
     }
 
     function withdraw(address token, uint256 amount) external onlyOwner {
