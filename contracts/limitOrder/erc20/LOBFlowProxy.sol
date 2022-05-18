@@ -68,7 +68,7 @@ contract LOBFlowProxy is IEvaFlowProxy {
     function destroyFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.destroyFlow(flowId);
         (ILOBExchange exchange, bytes32 orderKey) = _getInfo(ser, flowId);
-        exchange.cancelOrder(orderKey);
+        exchange.closeOrder(orderKey);
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)
