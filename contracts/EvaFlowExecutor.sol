@@ -10,8 +10,6 @@ import "./interfaces/IEvaFlowExecutor.sol";
 
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
-import "hardhat/console.sol";
-
 contract EvaFlowExecutor is IEvaFlowExecutor {
     bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
     IERC1820Registry private constant _ERC1820_REGISTRY =
