@@ -13,6 +13,7 @@ import {
   UniswapV2Strategy,
   LOBExchange,
   EvaFlowStatusUpkeep,
+  EvaFlowExecutor,
 } from '../typechain/index';
 import { initEvebase } from './initEvebase';
 
@@ -60,6 +61,7 @@ export class App {
   public uniStrategy!: UniswapV2Strategy;
   public lobExchange!: LOBExchange;
   public flowStatusUpKeep!: EvaFlowStatusUpkeep;
+  public flowExecutor!: EvaFlowExecutor;
 
   async deploy() {
     const admin = await ethers.provider.getSigner();
@@ -71,7 +73,7 @@ export class App {
     this.evaBaseServerBot = result.evaBaseServerBot as EvaBaseServerBot;
     this.nftLimitOrderFlowProxy = result.nftLimitOrderFlowProxy as NftLimitOrderFlowProxy;
     this.evaFlowChainLinkKeeperBot = result.evaFlowChainLinkKeeperBot as EvaFlowChainLinkKeeperBot;
-
+    this.flowExecutor = result.flowExecutor as EvaFlowExecutor;
     this.flowStatusUpKeep = (await help.deploy('EvaFlowStatusUpkeep', [
       this.controler.address,
       0,
