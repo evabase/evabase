@@ -52,7 +52,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         Task memory task = _tasks[taskId];
         require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
         //Can be closed or not
-        if (block.timestamp + task.interval > task.deadline) {
+        if (block.timestamp > task.deadline) {
             canDestoryFlow = true;
         } else {
             _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
@@ -78,7 +78,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
 
     function changeStatus(uint256 taskId, bool pause) public override {
         Task memory task = _tasks[taskId];
-        require(task.owner != address(0), "task not exist");
         require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
 
         if (pause) {
@@ -126,7 +125,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         return
             Utils.toUint64(block.timestamp) >= startTime &&
             deadline >= lastExecTime + interval &&
-            Utils.toUint64(block.timestamp) > lastExecTime + 1;
+            Utils.toUint64(block.timestamp) > lastExecTime + _MIN_INTERAL;
     }
 
     function needClose(bytes memory taskIdData) external view override returns (bool yes) {
