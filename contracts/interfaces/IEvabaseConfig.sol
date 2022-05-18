@@ -17,6 +17,10 @@ interface IEvabaseConfig {
     event SetControl(address indexed user, address control);
     event SetBatchFlowNum(address indexed user, uint32 num);
 
+    function getBytes32Item(bytes32 key) external view returns (bytes32);
+
+    function getAddressItem(bytes32 key) external view returns (address);
+
     function control() external view returns (address);
 
     function setControl(address control_) external;
