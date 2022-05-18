@@ -7,6 +7,8 @@ import {Utils} from "./lib/Utils.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
+import "./interfaces/IEvaFlowExecutor.sol";
+
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
@@ -19,8 +21,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
 
     uint256 private constant _REGISTRY_GAS_OVERHEAD = 80_000;
-
     uint256 private constant _MAX_INT = type(uint256).max;
+    bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
     //Withdrawable fees
     uint256 public paymentEthAmount;
@@ -324,31 +326,30 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         }
 
         uint256 before = gasleft();
-        require(flow.admin != address(0), "task not found");
-        require(flow.flowStatus == FlowStatus.Active, "task is not active");
-        require((keeper != flow.lastKeeper || flow.keepNetWork != KeepNetWork.ChainLink), "expect next keeper");
-        require(flow.maxVaildBlockNumber >= block.number, "invalid task");
 
-        //  flow 必须被 Safes 创建，否则无法执行execFlow
-        IEvaSafes safes = IEvaSafes(flow.admin);
-        bool success;
-        string memory failedReason;
-
-        try safes.execFlow(flow.lastVersionflow, execData) returns (bytes memory returnBytes) {
-            bool canDestoryFlow = abi.decode(returnBytes, (bool));
-            if (canDestoryFlow) {
-                _closeFlow(flowId, flow);
-            }
-            success = true;
-        } catch Error(string memory reason) {
-            failedReason = reason; // revert or require
-        } catch {
-            failedReason = "Reverted"; //assert
+        if (flow.keepNetWork != KeepNetWork.Evabase) {
+            require((keeper != flow.lastKeeper), "expect next keeper");
         }
 
-        // update
+        // update first.
         _flowMetas[flowId].lastExecNumber = block.number;
         _flowMetas[flowId].lastKeeper = keeper;
+
+        bool success;
+        string memory failedReason;
+        {
+            address executor = config.getAddressItem(_FLOW_EXECUTOR);
+            try IEvaFlowExecutor(executor).execute(flow, execData) returns (bool needCloseFlow) {
+                if (needCloseFlow) {
+                    _closeFlow(flowId, flow);
+                }
+                success = true;
+            } catch Error(string memory reason) {
+                failedReason = reason; // revert or require
+            } catch {
+                failedReason = "Reverted"; //assert
+            }
+        }
 
         uint256 usedGas = before - gasleft();
 

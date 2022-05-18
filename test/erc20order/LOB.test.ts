@@ -168,9 +168,8 @@ describe('LOB', function () {
         minInputPer: 1,
       };
       // 不低于10分钟
-      order.deadline = (await help.getBlockTime()) + 60 * 10 - 10; // 10分钟-10秒
-
-      await expect(exchange.connect(me).createOrder(order)).to.revertedWith('STF');
+      order.deadline = (await help.getBlockTime()) + 60 * 9 - 10; // 9分钟-10秒
+      await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
       console.log('time2:', await help.getBlockTime());
 
       // 不超过90天

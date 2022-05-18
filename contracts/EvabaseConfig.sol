@@ -3,20 +3,21 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/IEvabaseConfig.sol";
+
 import {EvabaseHelper, KeepNetWork} from "./lib/EvabaseHelper.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract EvabaseConfig is IEvabaseConfig, Ownable {
+    event ItemChanged(bytes32 indexed key, bytes32 newValue);
+
     mapping(address => KeepStruct) private _keepBotExists;
     mapping(KeepNetWork => uint32) public override keepBotSizes;
-    // uint32 public override keepBotSize;
-    // using EvabaseHelper for EvabaseHelper.AddressSet;
-    // EvabaseHelper.AddressSet keepBots;
 
     address public override control;
-
     uint32 public override batchFlowNum = 60;
+
+    mapping(bytes32 => bytes32) private _bytes32items;
 
     function setBatchFlowNum(uint32 num) external override onlyOwner {
         batchFlowNum = num;
@@ -112,25 +113,17 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         return control == add;
     }
 
-    // function keepBotSizes(KeepNetWork keepNetWork)
-    //     external
-    //     view
-    //     override
-    //     returns (uint32)
-    // {
-    //     return keepBotSizes[keepNetWork];
-    // }
+    function setBytes32Item(bytes32 key, bytes32 value) external onlyOwner {
+        _bytes32items[key] = value;
 
-    // function getAllKeepBots()
-    //     external
-    //     view
-    //     override
-    //     returns (address[] memory)
-    // {
-    //     return keepBots.getAll();
-    // }
+        emit ItemChanged(key, value);
+    }
 
-    // function getKeepBotSize() external view override returns (uint32) {
-    //     return uint32(keepBots.getSize());
-    // }
+    function getBytes32Item(bytes32 key) external view override returns (bytes32) {
+        return _bytes32items[key];
+    }
+
+    function getAddressItem(bytes32 key) external view override returns (address) {
+        return address(uint160(uint256(_bytes32items[key])));
+    }
 }

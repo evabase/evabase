@@ -7,6 +7,7 @@ import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
+import 'hardhat-erc1820';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 chai.use(solidity);

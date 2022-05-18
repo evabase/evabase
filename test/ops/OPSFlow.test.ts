@@ -51,10 +51,22 @@ describe('Ops Flow Task', function () {
 
     const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
     const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
-    inputs_ = [data, data2];
+    // inputs_ = [data, data2];
     contracts_ = [t1.address, t2.address];
     opsFlowProxy = (await help.deploy('OpsFlowProxy', [app.config.address, app.safesFactory.address])) as OpsFlowProxy;
     blockTime = await help.getBlockTime();
+
+    const myStructData1 = ethers.utils.AbiCoder.prototype.encode(
+      ['address', 'uint120', 'bytes'],
+      [contracts_[0], 0, data],
+    );
+
+    const myStructData2 = ethers.utils.AbiCoder.prototype.encode(
+      ['address', 'uint120', 'bytes'],
+      [contracts_[1], 0, data2],
+    );
+
+    inputs_ = [myStructData1, myStructData2];
   });
 
   describe('create task by walletSafes', function () {
@@ -89,7 +101,6 @@ describe('Ops Flow Task', function () {
         'ops',
         {
           owner: me.address,
-          contracts: contracts_,
           inputs: inputs_,
           startTime: blockTime + 2,
           deadline: blockTime + 2 + 32,
@@ -116,27 +127,40 @@ describe('Ops Flow Task', function () {
       const checkResult = await opsFlowProxy.check(orderFlowInfo.checkData);
 
       await expect(checkResult[0]).to.be.eq(true);
-
+      // console.log('checkResult:', checkResult);
+      console.log('blockTime:', await help.getBlockTime());
+      console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
+      // 1
       await help.increaseBlockTime(15);
       const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1]);
       const allow = await t1.allowance(opsFlowProxy.address, app.controler.address);
-      console.log('------allow==', allow);
+      console.log('blockTime:', await help.getBlockTime());
+      console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
       await expect(tx).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
-      await expect(tx).to.emit(opsFlowProxy, 'TaskExecute');
+      await expect(tx).to.emit(opsFlowProxy, 'TaskExecuted');
 
+      // 2
       await help.increaseBlockTime(15);
+      const checkResult1 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      await expect(checkResult1[0]).to.be.eq(true);
       const tx2 = await app.controler.connect(keeper1).execFlow(keeper1.address, flowId, checkResult[1]);
       await expect(tx2).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx2).to.emit(app.controler, 'FlowExecuteSuccess');
-      await expect(tx2).to.emit(opsFlowProxy, 'TaskExecute');
+      await expect(tx2).to.emit(opsFlowProxy, 'TaskExecuted');
+      console.log('blockTime:', await help.getBlockTime());
+      console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
 
-      console.log('------increaseBlockTime 30s');
+      // 3 over time
       await help.increaseBlockTime(15);
-      // const tx2 = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1]);
-      await expect(app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1])).revertedWith(
-        'task is not active',
-      );
+      const checkResult2 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      await expect(checkResult2[0]).to.be.eq(false);
+      // console.log('blockTime:', await help.getBlockTime()); //     1652876150
+      // console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
+      // // const tx2 = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1]);
+      // await expect(app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1])).revertedWith(
+      //   'task is not active',
+      // );
     });
   });
 });

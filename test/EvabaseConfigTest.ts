@@ -3,6 +3,7 @@
 import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
+import { EvabaseConfig } from '../typechain';
 
 chai.use(solidity);
 const help = require('./initEvebase.ts');
@@ -50,5 +51,13 @@ describe('EvabaseConfig', function () {
     // evabaseConfig.owner().then((owner: any) => {
     //   expect(owner.to.eq(ownerO[0].address));
     // });
+  });
+
+  it('Should be return address value item', async function () {
+    const cfg = app.evabaseConfig as EvabaseConfig;
+    const key = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('MY_ADDRESS'));
+    const address = '0x00f115a19107322cfbF1CdBc7Ea011c19EBdB400';
+    await cfg.setBytes32Item(key, ethers.utils.hexZeroPad(address, 32));
+    await expect(await cfg.getAddressItem(key)).to.eq(address);
   });
 });

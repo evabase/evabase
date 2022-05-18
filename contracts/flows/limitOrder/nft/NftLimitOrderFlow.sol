@@ -10,8 +10,9 @@ import {IEvaSafes} from "../../../interfaces/IEvaSafes.sol";
 import {IEvaFlowController} from "../../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../../interfaces/IEvaSafesFactory.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
+contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
     using Address for address;
 
     bytes32 private constant _ORDER_TYPEHASH =
@@ -34,29 +35,22 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
-        _owner = msg.sender;
         init(name, version);
-    }
-
-    function owner() public view returns (address) {
-        return _owner;
     }
 
     function check(bytes memory) external view override returns (bool, bytes memory) {
         revert("No support check");
     }
 
-    function multicall(address target, bytes memory callData) external override {
-        require(_owner == msg.sender, "only for owner");
+    function multicall(address target, bytes memory callData) external override onlyOwner {
         require(target != address(this), "FORBIDDEN");
-        require(target != _owner, "FORBIDDEN");
-        target.functionCall(callData, "CallFailed");
+        require(target != owner(), "FORBIDDEN");
+        target.functionCall(callData, "Multicall CallFailed");
         return;
     }
 
-    function setFactory() external {
-        require(_owner == msg.sender, "only for owner");
-        evaSafesFactory = IEvaSafesFactory(msg.sender);
+    function setFactory(address factory) external onlyOwner {
+        evaSafesFactory = IEvaSafesFactory(factory);
     }
 
     function execute(bytes memory executeData) external override returns (bool canDestoryFlow) {

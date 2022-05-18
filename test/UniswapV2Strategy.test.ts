@@ -36,7 +36,7 @@ describe('UniswapV2Strategy', function () {
       1,
       1,
       user.address,
-      Math.ceil(new Date().getTime() / 1000) + 1000,
+      ethers.constants.MaxUint256,
     );
 
     const amount = help.toFullNum(1e18);
@@ -59,15 +59,9 @@ describe('UniswapV2Strategy', function () {
     const amount1 = help.toFullNum(1000 * 1e18);
     const token1 = uni.token0! as ERC20;
     // 添加流动性
-    await router.addLiquidityETH(
-      token1.address,
-      amount1,
-      1,
-      1,
-      user.address,
-      Math.ceil(new Date().getTime() / 1000) + 1000,
-      { value: amount0 },
-    );
+    await router.addLiquidityETH(token1.address, amount1, 1, 1, user.address, ethers.constants.MaxUint256, {
+      value: amount0,
+    });
 
     const amount = help.toFullNum(1e18);
     const rate = help.toFullNum(0.8 * 1e18);
@@ -94,15 +88,9 @@ describe('UniswapV2Strategy', function () {
     const amount1 = help.toFullNum(1000 * 1e18);
     const token1 = uni.token0! as ERC20;
     // 添加流动性
-    await router.addLiquidityETH(
-      token1.address,
-      amount1,
-      0,
-      0,
-      user.address,
-      Math.ceil(new Date().getTime() / 1000) + 1000,
-      { value: amount0 },
-    );
+    await router.addLiquidityETH(token1.address, amount1, 0, 0, user.address, ethers.constants.MaxUint256, {
+      value: amount0,
+    });
 
     const amount = help.toFullNum(1000 * 1e18);
     const rate = help.toFullNum(0.8 * 1e18);

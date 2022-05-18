@@ -2,18 +2,19 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 
+
+
 interface IOpsFlow {
     struct Task {
         address owner; //拥有人
-        address[] contracts;
-        bytes[] inputs;
-        uint256 startTime; //开始时间
-        uint256 deadline; //过期时间
-        uint256 lastExecTime; //上次执行时间
-        uint128 interval; //至少15秒
+        bytes[] inputs; //abi.encode(target+callData+value)
+        uint64 startTime; //开始时间
+        uint64 deadline; //过期时间
+        uint64 lastExecTime; //上次执行时间
+        uint64 interval; //至少15秒
     }
 
-    event TaskExecute(address indexed user, uint256 taskId);
+    event TaskExecuted(uint256 indexed taskId);
 
     event TaskCancel(address indexed user, uint256 taskId);
 

@@ -52,9 +52,21 @@ describe('Ops Proxy Flow', function () {
     contracts_ = [t1.address, t2.address];
     const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
     const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
-    inputs_ = [data, data2];
+    // inputs_ = [data, data2];
     opsFlowProxy = (await help.deploy('OpsFlowProxy', [app.config.address, app.safesFactory.address])) as OpsFlowProxy;
     blockTime = await help.getBlockTime();
+
+    const myStructData1 = ethers.utils.AbiCoder.prototype.encode(
+      ['address', 'uint120', 'bytes'],
+      [contracts_[0], 0, data],
+    );
+
+    const myStructData2 = ethers.utils.AbiCoder.prototype.encode(
+      ['address', 'uint120', 'bytes'],
+      [contracts_[1], 0, data2],
+    );
+
+    inputs_ = [myStructData1, myStructData2];
   });
 
   describe('create order by walletSafes', function () {
@@ -86,7 +98,6 @@ describe('Ops Proxy Flow', function () {
         'ops',
         {
           owner: me.address,
-          contracts: contracts_,
           inputs: inputs_,
           startTime: blockTime + 2,
           deadline: blockTime + 2 + 16,
@@ -118,7 +129,6 @@ describe('Ops Proxy Flow', function () {
         'ops2',
         {
           owner: me.address,
-          contracts: contracts_,
           inputs: inputs_,
           startTime: _startTime,
           deadline: blockTime + 2 + 16,
@@ -131,7 +141,7 @@ describe('Ops Proxy Flow', function () {
         meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData, {
           value: help.toFullNum(gasFund),
         }),
-      ).revertedWith('invalid time');
+      );
     });
 
     it('less interval should evert', async function () {
@@ -146,7 +156,6 @@ describe('Ops Proxy Flow', function () {
         'ops',
         {
           owner: me.address,
-          contracts: contracts_,
           inputs: inputs_,
           startTime: blockTime + 1,
           deadline: blockTime + 2 + 16,
@@ -159,7 +168,7 @@ describe('Ops Proxy Flow', function () {
         meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData, {
           value: help.toFullNum(gasFund),
         }),
-      ).revertedWith('invalid interval');
+      );
     });
 
     it('deadline should over ', async function () {
@@ -174,7 +183,6 @@ describe('Ops Proxy Flow', function () {
         'ops1',
         {
           owner: me.address,
-          contracts: contracts_,
           inputs: inputs_,
           startTime: blockTime - 1,
           deadline: _deadline,
@@ -187,7 +195,7 @@ describe('Ops Proxy Flow', function () {
         meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData, {
           value: help.toFullNum(gasFund),
         }),
-      ).revertedWith('invalid time');
+      );
     });
 
     it('pause', async function () {
