@@ -15,9 +15,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
-          cache: "yarn"
+          cache: 'yarn'
       - run: npm install --global yarn
       - run: yarn install
       - name: Clean project
         run: yarn clean
-      - uses: crytic/slither-action@v0.1.1
+      - name: Run Slither
+        uses: crytic/slither-action@v0.1.1
+        continue-on-error: true
+        with:
+          node-version: 16
