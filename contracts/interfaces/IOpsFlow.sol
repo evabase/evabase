@@ -2,8 +2,6 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 
-
-
 interface IOpsFlow {
     struct Task {
         address owner; //拥有人

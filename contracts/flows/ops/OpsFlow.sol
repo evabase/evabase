@@ -105,7 +105,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         task = _tasks[taskId];
     }
 
-    function getSubCalls(bytes memory executeData) external view override returns (CallArgs[] memory subs){
+    function getSubCalls(bytes memory executeData) external view override returns (CallArgs[] memory subs) {
         uint256 taskId = abi.decode(executeData, (uint256));
         uint256 taskLength = _tasks[taskId].inputs.length;
         subs = new CallArgs[](taskLength);
@@ -117,8 +117,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
             subs[i] = CallArgs({target: _contractAdd, valueETH: _value, data: _data});
         }
     }
-
-     
 
     function isActiveTask(uint256 taskId) public view returns (bool) {
         uint64 deadline = _tasks[taskId].deadline;
