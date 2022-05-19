@@ -287,7 +287,7 @@ describe('LOB', function () {
       // approve
       await USDC.connect(user).mint(inputAmount);
       await USDC.connect(user).approve(exchange.address, inputAmount);
-      exchange.connect(user).createOrder(order);
+      await exchange.connect(user).createOrder(order);
       orderId = await exchange.keyOf(order);
       return { order, orderId, inputToken, outputToken };
     };
