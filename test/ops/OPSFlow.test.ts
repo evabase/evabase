@@ -154,6 +154,7 @@ describe('Ops Flow Task', function () {
       // 3 over time
       await help.increaseBlockTime(15);
       const checkResult2 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      console.log('checkResult2:', checkResult2);
       await expect(checkResult2[0]).to.be.eq(false);
       // console.log('blockTime:', await help.getBlockTime()); //     1652876150
       // console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119

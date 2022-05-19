@@ -51,9 +51,11 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         uint256 taskId = abi.decode(executeData, (uint256));
         Task memory task = _tasks[taskId];
         require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
+        require(isActiveTask(taskId), "not active");
         //Can be closed or not
         if (block.timestamp > task.deadline) {
             canDestoryFlow = true;
+            delete _tasks[taskId];
         } else {
             _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
         }
@@ -125,7 +127,8 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         return
             Utils.toUint64(block.timestamp) >= startTime &&
             deadline >= lastExecTime + interval &&
-            Utils.toUint64(block.timestamp) > lastExecTime + _MIN_INTERAL;
+            Utils.toUint64(block.timestamp) > lastExecTime + _MIN_INTERAL &&
+            _tasks[taskId].owner != address(0);
     }
 
     function needClose(bytes memory taskIdData) external view override returns (bool yes) {
