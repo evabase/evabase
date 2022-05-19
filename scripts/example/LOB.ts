@@ -29,7 +29,7 @@ async function main() {
 async function cancelOrder(user: SignerWithAddress, flowId: number) {
   const exchange = await ethers.getContractAt('LOBExchange', store.get('LOBExchange'));
 
-  const data = exchange.interface.encodeFunctionData('destroyFlow', [store.get('evaFlowController'), flowId]);
+  const data = exchange.interface.encodeFunctionData('closeFlow', [store.get('evaFlowController'), flowId]);
 
   const safes = await createSafes(user);
   const tx = await safes.connect(user).proxy(exchange.address, HowToCall.Delegate, data);

@@ -36,7 +36,7 @@ interface IEvaFlowController {
     event FlowUpdated(address indexed user, uint256 flowId, address flowAdd);
     event FlowPaused(address indexed user, uint256 flowId);
     event FlowStart(address indexed user, uint256 flowId);
-    event FlowDestroyed(address indexed user, uint256 flowId);
+    event FlowClosed(address indexed user, uint256 flowId);
     event FlowExecuteSuccess(
         address indexed user,
         uint256 indexed flowId,
@@ -80,7 +80,7 @@ interface IEvaFlowController {
 
     function pauseFlow(uint256 flowId) external;
 
-    function destroyFlow(uint256 flowId) external;
+    function closeFlow(uint256 flowId) external;
 
     function execFlow(
         address keeper,

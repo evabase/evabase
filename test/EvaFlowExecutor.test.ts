@@ -82,19 +82,19 @@ describe('EvaFlowExecutor', function () {
       const subTasks = [
         // 1. transfer USDT to Bob 100
         {
-          traget: USDT.address,
+          target: USDT.address,
           valueETH: 0,
           data: USDT.interface.encodeFunctionData('transferFrom', [me.address, bob.address, 100]),
         },
         // 2. transfer USDT to Alice 300
         {
-          traget: USDT.address,
+          target: USDT.address,
           valueETH: 0,
           data: USDT.interface.encodeFunctionData('transferFrom', [me.address, alice.address, 300]),
         },
         // 3. approve USDT to Alice 500
         {
-          traget: USDT.address,
+          target: USDT.address,
           valueETH: 0,
           data: USDT.interface.encodeFunctionData('approve', [alice.address, 500]),
         },
@@ -132,13 +132,13 @@ describe('EvaFlowExecutor', function () {
       const subTasks = [
         // 1. transfer USDT to Bob 100
         {
-          traget: USDT.address,
+          target: USDT.address,
           valueETH: 0,
           data: USDT.interface.encodeFunctionData('transferFrom', [me.address, bob.address, 100]),
         },
         // 2. transfer USDT to Alice 300
         {
-          traget: USDT.address,
+          target: USDT.address,
           valueETH: 0,
           data: USDT.interface.encodeFunctionData('transferFrom', [me.address, alice.address, 30000000000]),
         },

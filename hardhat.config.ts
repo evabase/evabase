@@ -100,7 +100,7 @@ for (var item of Object.keys(process.env)) {
  */
 module.exports = {
   solidity: {
-    version: '0.8.4',
+    version: '0.8.7',
     settings: {
       optimizer: {
         enabled: withOptimizations,
@@ -120,7 +120,7 @@ module.exports = {
   networks: {
     localhost: {
       url: 'http://127.0.0.1:8545',
-      accounts: process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
+      // accounts: process.env.LOCAL_KEY !== undefined ? [process.env.LOCAL_KEY] : [],
     },
     hardhat: {
       blockGasLimit: 10000000,
@@ -142,7 +142,9 @@ module.exports = {
       url: process.env.RINKEBY_URL || '',
       accounts: accounts,
       gas: 29999972,
-      // gasPrice: 8000000000,
+      gasPrice: 18000000000,
+      networkCheckTimeout: 999999,
+      timeoutBlocks: 2000,
     },
   },
   gasReporter: {

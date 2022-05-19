@@ -87,7 +87,7 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
             (address flow, bytes memory flowCheckData) = _controller.getFlowCheckInfo(flowId);
 
             try IEvaFlow(flow).close(flowCheckData) {
-                _controller.destroyFlow(flowId);
+                _controller.closeFlow(flowId);
                 succCount++;
             } catch Error(string memory err) {
                 emit PerformFailed(flowId, err);

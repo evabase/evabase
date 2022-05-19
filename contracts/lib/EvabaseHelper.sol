@@ -14,7 +14,7 @@ enum CompareOperator {
 enum FlowStatus {
     Active, //可执行
     Paused,
-    Destroyed,
+    Closed,
     Expired,
     Completed,
     Unknown

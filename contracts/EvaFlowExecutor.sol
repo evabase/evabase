@@ -7,7 +7,7 @@ import "./interfaces/IEvaSubFlow.sol";
 import "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvaFlowController.sol";
 import "./interfaces/IEvaFlowExecutor.sol";
-
+import "./interfaces/IEvaFlow.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 contract EvaFlowExecutor is IEvaFlowExecutor {
@@ -49,7 +49,7 @@ contract EvaFlowExecutor is IEvaFlowExecutor {
         CallArgs[] memory calls = flow.getSubCalls(executeData);
         for (uint256 i = 0; i < calls.length; i++) {
             require(calls[i].valueETH == 0, "unspport value"); // TODO: supprot call with value.
-            safes.proxy(calls[i].traget, HowToCall.Call, calls[i].data);
+            safes.proxy(calls[i].target, HowToCall.Call, calls[i].data);
         }
     }
 }

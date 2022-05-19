@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/IStrategy.sol";
-import "../../lib/TransferHelper.sol";
+import "../../../lib/TransferHelper.sol";
 import {Order} from "./interfaces/ILOBExchange.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";

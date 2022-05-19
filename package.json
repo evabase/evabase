@@ -4,9 +4,9 @@
   "author": "evabase.net core team",
   "scripts": {
     "compile": "npx hardhat compile",
-    "rinkeby": "npx hardhat run --network rinkeby scripts/deploy/rinkeby.ts",
-    "bsctest": "npx hardhat run --network bscTest scripts/deploy/bsctest.ts",
-    "local": "npx hardhat run --network localhost scripts/deploy/localhost.ts",
+    "rinkeby": "npx hardhat run --network rinkeby scripts/deploy/deploy.ts",
+    "bsctest": "npx hardhat run --network bscTest scripts/deploy/deploy.ts",
+    "local": "npx hardhat run --network localhost scripts/deploy/deploy.ts",
     "coverage": "env COVERAGE=true hardhat coverage",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",

@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
-import "../../interfaces/IEvaFlow.sol";
-import "../../interfaces/EIP712.sol";
-import "../../lib/Utils.sol";
-import "../../interfaces/INftLimitOrder.sol";
-import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
-import {IEvaSafes} from "../../interfaces/IEvaSafes.sol";
-import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
-import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
+import "../../../interfaces/IEvaFlow.sol";
+import "../../../interfaces/EIP712.sol";
+import "../../../lib/Utils.sol";
+import "../../../interfaces/INftLimitOrder.sol";
+import {IEvabaseConfig} from "../../../interfaces/IEvabaseConfig.sol";
+import {IEvaSafes} from "../../../interfaces/IEvaSafes.sol";
+import {IEvaFlowController} from "../../../interfaces/IEvaFlowController.sol";
+import {IEvaSafesFactory} from "../../../interfaces/IEvaSafesFactory.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
+contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
     using Address for address;
 
     bytes32 private constant _ORDER_TYPEHASH =
@@ -34,29 +35,22 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
-        _owner = msg.sender;
         init(name, version);
     }
 
-    function owner() public view returns (address) {
-        return _owner;
-    }
-
-    function check(bytes memory) external pure override returns (bool, bytes memory) {
+    function check(bytes memory) external view override returns (bool, bytes memory) {
         revert("No support check");
     }
 
-    function multicall(address target, bytes memory callData) external override {
-        require(_owner == msg.sender, "only for owner");
+    function multicall(address target, bytes memory callData) external override onlyOwner {
         require(target != address(this), "FORBIDDEN");
-        require(target != _owner, "FORBIDDEN");
-        target.functionCall(callData, "CallFailed");
+        require(target != owner(), "FORBIDDEN");
+        target.functionCall(callData, "Multicall CallFailed");
         return;
     }
 
-    function setFactory() external {
-        require(_owner == msg.sender, "only for owner");
-        evaSafesFactory = IEvaSafesFactory(msg.sender);
+    function setFactory(address factory) external onlyOwner {
+        evaSafesFactory = IEvaSafesFactory(factory);
     }
 
     function execute(bytes memory executeData) external override returns (bool canDestoryFlow) {
@@ -93,23 +87,19 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         emit OrderCreated(msg.sender, flowId, order);
     }
 
-    function changeStatus(
-        bytes32 orderId,
-        bool pause,
-        uint256 flowId
-    ) public override {
+    function changeStatus(bytes32 orderId, bool pause) public override {
         OrderExist memory orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
 
         if (pause) {
-            emit OrderPause(msg.sender, flowId, orderId);
+            emit OrderPause(msg.sender, orderId);
         } else {
-            emit OrderStart(msg.sender, flowId, orderId);
+            emit OrderStart(msg.sender, orderId);
         }
     }
 
-    function cancelOrder(bytes32 orderId, uint256 flowId) public override {
+    function cancelOrder(bytes32 orderId) public override {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
 
@@ -123,7 +113,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
             (bool succeed, ) = user.call{value: remain}(""); //solhint-disable
             require(succeed, "Failed to transfer Ether");
         }
-        emit OrderCancel(msg.sender, flowId, orderId);
+        emit OrderCancel(msg.sender, orderId);
     }
 
     function needClose(bytes memory orderIdData) external view override returns (bool yes) {
@@ -133,7 +123,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
 
     function close(bytes memory orderIdData) external override {
         bytes32 orderId = abi.decode(orderIdData, (bytes32));
-        cancelOrder(orderId, 0);
+        cancelOrder(orderId);
     }
 
     function _atomicMatch(
@@ -142,8 +132,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         bytes[] memory _data
     ) internal returns (bool orderDone) {
         require(verifyOrder(_order, _signature), "signature is not valid");
-        bytes32 ordeId = hashOrder(_order);
-        OrderExist storage orderExist = orderExists[ordeId];
+        bytes32 orderId = hashOrder(_order);
+        OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");
         require(_order.owner != address(0), "order owner addrss is 0x");
         uint256 _amount = _order.amount;
@@ -173,7 +163,15 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712 {
         orderExist.balance = orderExist.balance - totalUsed;
 
         orderDone = orderExist.amount == _order.amount;
-        emit OrderExecute(msg.sender, ordeId, _data.length, total);
+        if (orderDone) {
+            uint256 bal = orderExist.balance;
+            if (bal > 0) {
+                (bool succeed, ) = orderExist.owner.call{value: bal}(""); //solhint-disable
+                require(succeed, "Failed to transfer Ether");
+            }
+            delete orderExists[orderId];
+        }
+        emit OrderExecute(msg.sender, orderId, _data.length, total);
     }
 
     function hashOrder(Order memory order) public pure returns (bytes32) {

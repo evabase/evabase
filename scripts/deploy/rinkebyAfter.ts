@@ -74,7 +74,7 @@ async function main() {
   // pause
   await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
   // cancel
-  const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('destroyFlow', [
+  const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
     store.get('evaFlowController'),
     1,
   ]);
@@ -99,7 +99,7 @@ async function main() {
   // await evaFlowController.pauseFlow(1, myStructData);
   // await evaFlowController.startFlow(1, myStructData);
 
-  // await evaFlowController.destroyFlow(1, myStructData);
+  // await evaFlowController.closeFlow(1, myStructData);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

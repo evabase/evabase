@@ -1,17 +1,16 @@
 'use strict';
-
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
 import { store } from '../help';
 // const store = require('data-store')({
 //   // path: process.cwd() + "/deployInfo.json",
-//   path: process.cwd() + '/scripts/deploy/localhost.json',
+//   path: process.cwd() + '/scripts/deploy/rinkeby.json',
 // });
 
 async function main() {
@@ -40,20 +39,17 @@ async function main() {
   store.set('evaSafesFactory', evaSafesFactory.address);
   console.log(`evaSafesFactory: ${evaSafesFactory.address}`);
 
-  await evaSafesFactory.create(ownerO[0].address);
-  const evaSafes = await evaSafesFactory.get(ownerO[0].address);
-  console.log(`safes: ${evaSafes}`);
-
-  const EvaSafes = await ethers.getContractFactory('EvaSafes');
-  const evaSafesContract = EvaSafes.attach(evaSafes);
-  const safesOwner = await evaSafesContract.owner();
-  console.log(`safesOwner: ${safesOwner}`);
-
   // 3 EvaFlowController
   const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
-  const evaFlowController = await EvaFlowController.deploy(evabaseConfig.address, evaSafesFactory.address);
-  await evaFlowController.deployed();
-  await evabaseConfig.setControl(evaFlowController.address);
+  // const evaFlowController = await EvaFlowController.deploy(evabaseConfig.address, evaSafesFactory.address);
+  // await evaFlowController.deployed();
+  const evaFlowController = await upgrades.deployProxy(
+    EvaFlowController,
+    [store.get('evabaseConfig'), store.get('evaSafesFactory')],
+    { unsafeAllow: ['delegatecall'] },
+  );
+  let tx = await evabaseConfig.setControl(evaFlowController.address);
+  console.log('setControl hash=', tx.hash);
   store.set('evaFlowController', evaFlowController.address);
   console.log(`evaFlowController: ${evaFlowController.address}`);
   // 4 EvaFlowChecker
@@ -81,6 +77,8 @@ async function main() {
   console.log(`evaFlowChainLinkKeeperBot: ${evaFlowChainLinkKeeperBot.address}`);
   store.set('evaFlowChainLinkKeeperBot', evaFlowChainLinkKeeperBot.address);
 
+  tx = await evaFlowChainLinkKeeperBot.setEvaCheck(evaFlowChecker.address);
+  console.log('setEvaCheck hash=', tx.hash);
   // 6 NftLimitOrder
   // const NftLimitOrderFlow = await ethers.getContractFactory(
   //   "NftLimitOrderFlow"
@@ -135,15 +133,15 @@ async function main() {
   //   342905,
   //   1899909,
   // ];
-  const order = {
-    owner: ownerO[0].address,
-    assetToken: ownerO[0].address,
-    amount: '1000',
-    price: '1',
-    deadline: '1680355507',
-    tokenId: 342905,
-    salt: '1899909',
-  };
+  // const order = {
+  //   owner: ownerO[0].address,
+  //   assetToken: ownerO[0].address,
+  //   amount: "1000",
+  //   price: "1",
+  //   deadline: "1680355507",
+  //   tokenId: 342905,
+  //   salt: "1899909",
+  // };
 
   // const myStructData = ethers.utils.AbiCoder.prototype.encode(
   //   [
@@ -194,90 +192,78 @@ async function main() {
   // await nftLimitOrderFlowProxy.startFlow(evaFlowController.address, 1);
   // await nftLimitOrderFlowProxy.pauseFlow(evaFlowController.address, 1);
   // console.log(`tx2`);
-  // await nftLimitOrderFlowProxy.destroyFlow(evaFlowController.address, 1);
+  // await nftLimitOrderFlowProxy.closeFlow(evaFlowController.address, 1);
   // console.log(`tx3`);
 
   // bytes memory data
   /**
    * const input = contract.interface.encodeFunctionData(method, args)
     // {From:,to:,data:}
-    // eslint-disable-next-line max-len
-    return ethers.utils.defaultAbiCoder.encode(["address", "bytes", "uint256"], [contract.address, input,
-       typeof (value) === "undefined" ? 0 : value]);
+    return ethers.utils.defaultAbiCoder.
+    encode(["address", "bytes", "uint256"], [contract.address, input, typeof (value) === "undefined" ? 0 : value]);
    */
-  const data = nftLimitOrderFlowProxy.interface.encodeFunctionData('create', [
-    evaFlowController.address,
-    nftLimitOrderFlowProxy.address,
-    1,
-    200000,
-    order,
-  ]);
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, data, {
-    value: ethers.utils.parseEther('0.01'),
-  });
-  // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
-  const evaSafesContractBal = await ethers.provider.getBalance(evaSafesContract.address);
-  const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(nftLimitOrderFlowProxy.address);
-  const evaFlowControllerBal = await ethers.provider.getBalance(evaFlowController.address);
-  console.log('evaSafesContractBal before=', evaSafesContractBal);
-  console.log('nftLimitOrderFlowProxyBal before=', nftLimitOrderFlowProxyBal);
-  console.log('evaFlowControllerBal=', evaFlowControllerBal);
-  // pause
-  const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData('pauseFlow', [evaFlowController.address, 1]);
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
-  // start
-  const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData('startFlow', [evaFlowController.address, 1]);
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
-  // pause
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
-  // cancel
-  const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('destroyFlow', [evaFlowController.address, 1]);
+  await evaSafesFactory.create(ownerO[0].address);
+  const evaSafes = await evaSafesFactory.get(ownerO[0].address);
+  console.log(`safes: ${evaSafes}`);
 
-  await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, cancelData);
+  // const EvaSafes = await ethers.getContractFactory("EvaSafes");
+  // const evaSafesContract = EvaSafes.attach(evaSafes);
+  // const safesOwner = await evaSafesContract.owner();
+  // console.log(`safesOwner: ${safesOwner}`);
+  // const data = nftLimitOrderFlowProxy.interface.encodeFunctionData("create", [
+  //   evaFlowController.address,
+  //   nftLimitOrderFlowProxy.address,
+  //   1,
+  //   200000,
+  //   order,
+  // ]);
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, data, {
+  //   value: ethers.utils.parseEther("0.01"),
+  // });
+  // // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
+  // const evaSafesContractBal = await ethers.provider.getBalance(
+  //   evaSafesContract.address
+  // );
+  // const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(
+  //   nftLimitOrderFlowProxy.address
+  // );
+  // const evaFlowControllerBal = await ethers.provider.getBalance(
+  //   evaFlowController.address
+  // );
+  // console.log("evaSafesContractBal before=", evaSafesContractBal);
+  // console.log("nftLimitOrderFlowProxyBal before=", nftLimitOrderFlowProxyBal);
+  // console.log("evaFlowControllerBal=", evaFlowControllerBal);
+  // // pause
+  // const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "pauseFlow",
+  //   [evaFlowController.address, 1]
+  // );
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
+  // // start
+  // const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "startFlow",
+  //   [evaFlowController.address, 1]
+  // );
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, startData);
+  // // pause
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, pauseData);
+  // // cancel
+  // const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData(
+  //   "closeFlow",
+  //   [evaFlowController.address, 1]
+  // );
 
-  const evaSafesContractBal1 = await ethers.provider.getBalance(evaSafesContract.address);
-  const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(nftLimitOrderFlowProxy.address);
-  console.log('evaSafesContractBal after=', evaSafesContractBal1);
-  console.log('nftLimitOrderFlowProxyBal after=', nftLimitOrderFlowProxyBal1);
-  console.log(await evaFlowController.getFlowMetas(1));
+  // await evaSafesContract.proxy(nftLimitOrderFlowProxy.address, 1, cancelData);
 
-  const withDrawData = evaFlowController.interface.encodeFunctionData('withdrawFundByUser', [
-    '0x0000000000000000000000000000000000000000',
-    ethers.utils.parseEther('0.01'),
-  ]);
-
-  const addFundByUser = evaFlowController.interface.encodeFunctionData('addFundByUser', [
-    '0x0000000000000000000000000000000000000000',
-    ethers.utils.parseEther('0.01'),
-    evaSafes,
-  ]);
-
-  let evaFlowControllerBal1 = await ethers.provider.getBalance(evaFlowController.address);
-
-  let userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log('userBal1 before=', userBal1);
-  console.log('evaFlowControllerBal1 before=', evaFlowControllerBal1);
-  let evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log('evaSafes before=', evaSafesBal1);
-
-  await evaSafesContract.proxy(evaFlowController.address, 0, addFundByUser, {
-    value: ethers.utils.parseEther('0.01'),
-  });
-  evaFlowControllerBal1 = await ethers.provider.getBalance(evaFlowController.address);
-  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log('userBal1 mid=', userBal1);
-  console.log('evaFlowControllerBal1 mid=', evaFlowControllerBal1);
-  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log('evaSafes mid=', evaSafesBal1);
-
-  await evaSafesContract.proxy(evaFlowController.address, 0, withDrawData);
-  evaFlowControllerBal1 = await ethers.provider.getBalance(evaFlowController.address);
-  userBal1 = await ethers.provider.getBalance(ownerO[0].address);
-  console.log('userBal1 after=', userBal1);
-  console.log('evaFlowControllerBal1 after=', evaFlowControllerBal1);
-  evaSafesBal1 = await ethers.provider.getBalance(evaSafes);
-  console.log('evaSafes after=', evaSafesBal1);
+  // const evaSafesContractBal1 = await ethers.provider.getBalance(
+  //   evaSafesContract.address
+  // );
+  // const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(
+  //   nftLimitOrderFlowProxy.address
+  // );
+  // console.log("evaSafesContractBal after=", evaSafesContractBal1);
+  // console.log("nftLimitOrderFlowProxyBal after=", nftLimitOrderFlowProxyBal1);
+  // console.log(await evaFlowController.getFlowMetas(1));
   // await evaFlowController.createFlow(
   //   "ACE",
   //   1, // evabaseKeep
@@ -291,7 +277,7 @@ async function main() {
   // await evaFlowController.pauseFlow(1, myStructData);
   // await evaFlowController.startFlow(1, myStructData);
 
-  // await evaFlowController.destroyFlow(1, myStructData);
+  // await evaFlowController.closeFlow(1, myStructData);
   // 7 evabase bot
   const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
   const evaBaseServerBot = await EvaBaseServerBot.deploy(
@@ -302,6 +288,29 @@ async function main() {
   await evaBaseServerBot.deployed();
   console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
   store.set('evaBaseServerBot', evaBaseServerBot.address);
+
+  await evabaseConfig.addKeeper(evaBaseServerBot.address, 1);
+  console.log('addKeeper evaBaseServerBot hash=', tx.hash);
+  await evabaseConfig.addKeeper(evaFlowChainLinkKeeperBot.address, 0);
+  console.log('addKeeper evaFlowChainLinkKeeperBot hash=', tx.hash);
+  // 8 EvaFlowStatusUpkeep
+  const EvaFlowStatusUpkeep = await ethers.getContractFactory('EvaFlowStatusUpkeep');
+  const evaFlowStatusUpkeep = await EvaFlowStatusUpkeep.deploy(store.get('evaFlowController'), 0);
+  tx = await evaFlowController.setFlowOperators(evaFlowStatusUpkeep.address, true);
+  console.log('setFlowOperators hash=', tx.hash);
+  console.log(`evaFlowStatusUpkeep: ${evaFlowStatusUpkeep.address}`);
+  store.set('evaFlowStatusUpkeep', evaFlowStatusUpkeep.address);
+
+  // 9 EvaFlowExecutor
+  const EvaFlowExecutor = await ethers.getContractFactory('EvaFlowExecutor');
+  const evaFlowExecutor = await EvaFlowExecutor.deploy(evaFlowController.address);
+  tx = await evabaseConfig.setBytes32Item(
+    ethers.utils.keccak256(ethers.utils.toUtf8Bytes('FLOW_EXECUTOR')),
+    ethers.utils.hexZeroPad(evaFlowExecutor.address, 32),
+  );
+  console.log('setBytes32Item hash=', tx.hash);
+  console.log(`evaFlowExecutor: ${evaFlowExecutor.address}`);
+  store.set('evaFlowExecutor', evaFlowExecutor.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

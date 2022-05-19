@@ -9,5 +9,5 @@ interface IEvaFlowProxy {
 
     function startFlow(IEvaFlowController ctr, uint256 flowId) external;
 
-    function destroyFlow(IEvaFlowController ctr, uint256 flowId) external;
+    function closeFlow(IEvaFlowController ctr, uint256 flowId) external;
 }

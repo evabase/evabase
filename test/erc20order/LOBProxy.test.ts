@@ -202,13 +202,13 @@ describe('ERC20 Limit Order', function () {
       const tx3 = meSafes.proxy(
         exchange.address,
         HowToCall.Delegate,
-        exchange.interface.encodeFunctionData('destroyFlow', [app.controler.address, flowId]),
+        exchange.interface.encodeFunctionData('closeFlow', [app.controler.address, flowId]),
       );
       // expect get cancel event
       await expect(tx3)
         .to.emit(exchange, 'OrderCancelled')
         .withArgs(orderId, '9990')
-        .to.emit(app.controler, 'FlowDestroyed')
+        .to.emit(app.controler, 'FlowClosed') //
         .withArgs(meSafes.address, flowId);
     });
   });

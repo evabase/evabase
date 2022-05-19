@@ -7,7 +7,7 @@ import "./LOB.sol";
 import "./LOBFlowProxy.sol";
 import "./interfaces/ILOBExchange.sol";
 import "./interfaces/IStrategy.sol";
-import "../../interfaces/IEvaFlow.sol";
+import "../../../interfaces/IEvaFlow.sol";
 
 contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
     IStrategy public strategy;

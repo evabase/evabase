@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./IEvaFlow.sol";
 struct CallArgs {
-    address traget;
+    address target;
     uint120 valueETH;
     bytes data;
 }

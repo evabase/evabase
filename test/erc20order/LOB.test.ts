@@ -174,6 +174,7 @@ describe('LOB', function () {
 
       // 不超过90天
       order.deadline = (await help.getBlockTime()) + 60 * 60 * 24 * 90 + 60;
+
       await expect(exchange.connect(me).createOrder(order)).to.revertedWith('WRONG_EXPIRATION');
     });
     it('failed when exist', async function () {

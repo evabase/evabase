@@ -63,7 +63,7 @@ describe('EvaFlowRandomChecker', function () {
 
     for (let i = 0; i < all; i++) {
       const flowId = await app.controler.getIndexVaildFlow(0, network);
-      const callData = flow.interface.encodeFunctionData('destroyFlow', [app.controler.address, flowId]);
+      const callData = flow.interface.encodeFunctionData('closeFlow', [app.controler.address, flowId]);
       await meSafes.proxy(flow.address, HowToCall.Delegate, callData);
     }
   };
