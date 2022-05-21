@@ -18,9 +18,9 @@ interface INftLimitOrder {
         uint8 amount; //    slot 1    dealed nft amount
         uint64 deadline; // slot 1 order expired time
     }
-    event OrderExecute(address indexed user, bytes32 orderId, uint256 amount, uint256 value);
+    event OrderExecuted(address indexed user, bytes32 orderId, uint256 amount, uint256 value);
 
-    event OrderCancel(address indexed user, bytes32 orderId);
+    event OrderCancelled(address indexed user, bytes32 orderId);
 
     event OrderCreated(address indexed user, uint256 indexed flowId, Order order);
 

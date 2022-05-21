@@ -14,7 +14,7 @@ interface IOpsFlow {
 
     event TaskExecuted(uint256 indexed taskId);
 
-    event TaskCancel(address indexed user, uint256 taskId);
+    event TaskCancelled(address indexed user, uint256 taskId);
 
     event TaskCreated(address indexed user, uint256 indexed flowId, Task task);
 

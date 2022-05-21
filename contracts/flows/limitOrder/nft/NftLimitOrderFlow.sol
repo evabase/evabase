@@ -101,7 +101,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
             (bool succeed, ) = user.call{value: remain}(""); //solhint-disable
             require(succeed, "Failed to transfer Ether");
         }
-        emit OrderCancel(msg.sender, orderId);
+        emit OrderCancelled(msg.sender, orderId);
     }
 
     function needClose(bytes memory orderIdData) external view override returns (bool yes) {
@@ -159,7 +159,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
             }
             delete orderExists[orderId];
         }
-        emit OrderExecute(msg.sender, orderId, _data.length, total);
+        emit OrderExecuted(msg.sender, orderId, _data.length, total);
     }
 
     function hashOrder(Order memory order) public pure returns (bytes32) {
