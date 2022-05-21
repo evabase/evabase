@@ -19,6 +19,7 @@ interface IOpsFlow {
     event TaskCreated(address indexed user, uint256 indexed flowId, Task task);
 
     function createTask(Task memory task, uint256 flowId) external payable returns (bytes memory taskId);
+
     function cancelTask(uint256 taskId) external;
 
     function getTask(uint256 taskId) external view returns (Task memory task);

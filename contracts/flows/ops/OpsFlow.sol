@@ -53,10 +53,12 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
         require(isActiveTask(taskId), "not active");
         //Can be closed or not
+        // solhint-disable not-rely-on-time
         if (block.timestamp > task.deadline) {
             canDestoryFlow = true;
             delete _tasks[taskId];
         } else {
+            // solhint-disable not-rely-on-time
             _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
         }
         emit TaskExecuted(taskId);

@@ -39,7 +39,6 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         ser.closeFlow(flowId);
         (INftLimitOrder exchange, bytes32 orderId) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderId);
-
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)

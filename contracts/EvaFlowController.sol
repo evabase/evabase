@@ -138,10 +138,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     ) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(msg.sender == _flowMetas[_flowId].admin, "flow's owner is not y");
-        require(
-            FlowStatus.Active == _flowMetas[_flowId].flowStatus ,
-            "flow's status is error"
-        );
+        require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
 
         KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
 
