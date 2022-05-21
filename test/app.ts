@@ -35,7 +35,6 @@ export enum CompareOperator {
 
 export enum FlowStatus {
   Active, // 可执行
-  Paused,
   Closed,
   Expired,
   Completed,

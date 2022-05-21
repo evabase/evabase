@@ -55,9 +55,9 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
         return tasks.length;
     }
 
-    function setPause(uint256 id, bool paused) external {
-        tasks[id].paused = paused;
-    }
+    // function setPause(uint256 id, bool paused) external {
+    //     tasks[id].paused = paused;
+    // }
 
     function setExpire(uint256 id, bool expired) external {
         tasks[id].expired = expired;
@@ -123,22 +123,10 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
         );
     }
 
-    function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.pauseFlow(flowId);
-        (MockTimeFlow flow, uint256 orderKey) = _getInfo(ser, flowId);
-        flow.setPause(orderKey, true);
-    }
-
-    function startFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId);
-        (MockTimeFlow exchange, uint256 orderKey) = _getInfo(ser, flowId);
-        exchange.setPause(orderKey, false);
-    }
-
     function closeFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.closeFlow(flowId);
         (MockTimeFlow exchange, uint256 orderKey) = _getInfo(ser, flowId);
-        exchange.setPause(orderKey, false);
+        // exchange.setPause(orderKey, false);
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)

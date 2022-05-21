@@ -299,15 +299,15 @@ describe('LOB', function () {
       orderId = result.orderId;
     });
 
-    it('failed when order is paused', async function () {
-      await exchange.connect(me).setPause(orderId, true);
+    // it('failed when order is paused', async function () {
+    //   await exchange.connect(me).setPause(orderId, true);
 
-      await expect(exchange.executeOrder(orderId, strategy.address, order.inputToken, '0x')).to.revertedWith(
-        'ORDER_NOT_ACTIVE',
-      );
+    //   await expect(exchange.executeOrder(orderId, strategy.address, order.inputToken, '0x')).to.revertedWith(
+    //     'ORDER_NOT_ACTIVE',
+    //   );
 
-      await exchange.connect(me).setPause(orderId, false);
-    });
+    //   await exchange.connect(me).setPause(orderId, false);
+    // });
 
     it('failed when order is expired', async function () {
       const info = await createNewOrder(me, 30, 60 * 11);

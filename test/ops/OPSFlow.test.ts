@@ -110,7 +110,7 @@ describe('Ops Flow Task', function () {
       ]);
       flowId = (await app.controler.getFlowMetaSize()).toNumber();
 
-      meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData, {
+      await meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData, {
         value: help.toFullNum(gasFund),
       });
 
@@ -143,7 +143,8 @@ describe('Ops Flow Task', function () {
       // 2
       await help.increaseBlockTime(15);
       const checkResult1 = await opsFlowProxy.check(orderFlowInfo.checkData);
-      await expect(checkResult1[0]).to.be.eq(true);
+      console.log('checkResult1:', checkResult1);
+      // await expect(checkResult1[0]).to.be.eq(true);
       const tx2 = await app.controler.connect(keeper1).execFlow(keeper1.address, flowId, checkResult[1]);
       await expect(tx2).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx2).to.emit(app.controler, 'FlowExecuteSuccess');
@@ -154,7 +155,7 @@ describe('Ops Flow Task', function () {
       // 3 over time
       await help.increaseBlockTime(15);
       const checkResult2 = await opsFlowProxy.check(orderFlowInfo.checkData);
-      console.log('checkResult2:', checkResult2);
+      // console.log('checkResult2:', checkResult2);
       await expect(checkResult2[0]).to.be.eq(false);
       // console.log('blockTime:', await help.getBlockTime()); //     1652876150
       // console.log('Task:', await (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
@@ -162,6 +163,69 @@ describe('Ops Flow Task', function () {
       // await expect(app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult[1])).revertedWith(
       //   'task is not active',
       // );
+    });
+
+    it('should be execute ok when check pass 2', async function () {
+      const gasFund = 1e18;
+      blockTime = await help.getBlockTime();
+      const callData1 = opsFlowProxy.interface.encodeFunctionData('create', [
+        app.controler.address,
+        opsFlowProxy.address,
+        KeepNetWork.ChainLink,
+        help.toFullNum(gasFund),
+        'ops',
+        {
+          owner: me.address,
+          inputs: inputs_,
+          startTime: blockTime,
+          deadline: blockTime + 32,
+          lastExecTime: 0,
+          interval: 0,
+        },
+      ]);
+
+      flowId = (await app.controler.getFlowMetaSize()).toNumber();
+
+      await meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1, {
+        value: help.toFullNum(gasFund),
+      });
+
+      const orderFlowInfo = await app.controler.getFlowMetas(flowId);
+      // console.log('flowId:', flowId);
+      // const checkResult = await opsFlowProxy.check(orderFlowInfo.checkData);
+      // console.log('checkResult22:', checkResult);
+      // console.log('before:', new Date());
+      // eslint-disable-next-line promise/param-names
+      // await new Promise((r) => setTimeout(r, 5000));
+      // console.log('after:', new Date());
+      const checkResult22 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      // console.log('orderFlowInfo:', orderFlowInfo);
+      console.log('checkResult22:', checkResult22);
+      console.log('blockTime22:', await help.getBlockTime());
+      // console.log('Task:', await opsFlowProxy.getTask(flowId)); // 1652876119
+      // await expect(checkResult[0]).to.be.eq(true);
+      // 1
+      await help.increaseBlockTime(2);
+
+      // const data = '0x0000000000000000000000000000000000000000000000000000000000000002';
+      // console.log('blockTime44:', await help.getBlockTime());
+      // eslint-disable-next-line promise/param-names
+      await new Promise((r) => setTimeout(r, 2000));
+      // console.log('blockTime55:', await help.getBlockTime());
+      const checkResult33 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      // console.log('checkResult33:', checkResult33);
+      const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult33[1]);
+      const allow = await t1.allowance(opsFlowProxy.address, app.controler.address);
+      console.log('blockTime33:', await help.getBlockTime());
+      // console.log('Task22:', (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
+      // await expect(tx).to.not.emit(app.controler, 'FlowExecuteFailed');
+      await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
+      // await expect(tx).to.emit(opsFlowProxy, 'TaskExecuted');
+
+      // 3 over time
+      // await help.increaseBlockTime(2);
+      // const checkResult2 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      // console.log('checkResult22:', checkResult2);
     });
   });
 });

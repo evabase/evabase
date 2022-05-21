@@ -198,24 +198,24 @@ describe('Ops Proxy Flow', function () {
       );
     });
 
-    it('pause', async function () {
-      const gasFund = 1e18;
-      task.owner = me.address;
-      const callData1 = opsFlowProxy.interface.encodeFunctionData('pauseFlow', [app.controler.address, flowId]);
+    // it('pause', async function () {
+    //   const gasFund = 1e18;
+    //   task.owner = me.address;
+    //   const callData1 = opsFlowProxy.interface.encodeFunctionData('pauseFlow', [app.controler.address, flowId]);
 
-      const pauseFlow = meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1);
+    //   const pauseFlow = meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1);
 
-      await expect(pauseFlow).to.emit(app.controler, 'FlowPaused');
-    });
-    it('start', async function () {
-      const gasFund = 1e18;
-      task.owner = me.address;
-      const callData1 = opsFlowProxy.interface.encodeFunctionData('startFlow', [app.controler.address, flowId]);
+    //   await expect(pauseFlow).to.emit(app.controler, 'FlowPaused');
+    // });
+    // it('start', async function () {
+    //   const gasFund = 1e18;
+    //   task.owner = me.address;
+    //   const callData1 = opsFlowProxy.interface.encodeFunctionData('startFlow', [app.controler.address, flowId]);
 
-      const pauseFlow = meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1);
+    //   const pauseFlow = meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1);
 
-      await expect(pauseFlow).to.emit(app.controler, 'FlowStart');
-    });
+    //   await expect(pauseFlow).to.emit(app.controler, 'FlowStart');
+    // });
     it('close', async function () {
       const gasFund = 1e18;
       task.owner = me.address;

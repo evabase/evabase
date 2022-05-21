@@ -78,17 +78,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         emit TaskCreated(msg.sender, taskId, task);
     }
 
-    function changeStatus(uint256 taskId, bool pause) public override {
-        Task memory task = _tasks[taskId];
-        require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
-
-        if (pause) {
-            emit TaskPause(msg.sender, taskId);
-        } else {
-            emit TaskStart(msg.sender, taskId);
-        }
-    }
-
     function cancelTask(uint256 taskId) public override {
         Task storage task = _tasks[taskId];
         require(task.owner != address(0), "task not exist");

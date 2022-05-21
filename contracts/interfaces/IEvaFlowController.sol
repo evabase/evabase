@@ -34,8 +34,6 @@ struct MinConfig {
 interface IEvaFlowController {
     event FlowCreated(address indexed user, uint256 indexed flowId, address flowAdd, bytes checkData, uint256 fee);
     event FlowUpdated(address indexed user, uint256 flowId, address flowAdd);
-    event FlowPaused(address indexed user, uint256 flowId);
-    event FlowStart(address indexed user, uint256 flowId);
     event FlowClosed(address indexed user, uint256 flowId);
     event FlowExecuteSuccess(
         address indexed user,
@@ -75,10 +73,6 @@ interface IEvaFlowController {
         string memory flowName,
         bytes memory flowCode
     ) external;
-
-    function startFlow(uint256 flowId) external;
-
-    function pauseFlow(uint256 flowId) external;
 
     function closeFlow(uint256 flowId) external;
 

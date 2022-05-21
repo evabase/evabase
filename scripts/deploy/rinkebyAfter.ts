@@ -60,19 +60,19 @@ async function main() {
   console.log('nftLimitOrderFlowProxyBal before=', nftLimitOrderFlowProxyBal);
   console.log('evaFlowControllerBal=', evaFlowControllerBal);
   // pause
-  const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData('pauseFlow', [
-    store.get('evaFlowController'),
-    1,
-  ]);
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
+  // const pauseData = nftLimitOrderFlowProxy.interface.encodeFunctionData('pauseFlow', [
+  //   store.get('evaFlowController'),
+  //   1,
+  // ]);
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
   // start
-  const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData('startFlow', [
-    store.get('evaFlowController'),
-    1,
-  ]);
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, startData);
+  // const startData = nftLimitOrderFlowProxy.interface.encodeFunctionData('startFlow', [
+  //   store.get('evaFlowController'),
+  //   1,
+  // ]);
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, startData);
   // pause
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
   // cancel
   const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
     store.get('evaFlowController'),

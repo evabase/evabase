@@ -3,7 +3,7 @@ import chai, { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
 // eslint-disable-next-line node/no-missing-import
-import { help } from '../../scripts/help';
+import { help, FlowStatus } from '../../scripts/help';
 
 // eslint-disable-next-line node/no-missing-import
 import {
@@ -289,7 +289,7 @@ describe('NFTLimitOrder', function () {
       ]);
 
       await evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, cancelData);
-      expect(await (await evaFlowController.getFlowMetas(1)).flowStatus).to.eq(2);
+      expect(await (await evaFlowController.getFlowMetas(1)).flowStatus).to.eq(FlowStatus.Closed);
     });
   });
 });

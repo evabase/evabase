@@ -40,7 +40,6 @@ contract LOB is Ownable {
     event OrderCreated(bytes32 indexed orderId, address indexed owner, uint256 fee);
     event OrderExecuted(bytes32 indexed orderId, uint256 input, uint256 output);
     event OrderCancelled(bytes32 indexed orderId, uint256 returnAmount);
-    event OrderPaused(bytes32 indexed orderId, bool paused);
     event ConfigChanged(Config newConfig);
 
     constructor(Config memory cfg) {
@@ -108,12 +107,6 @@ contract LOB is Ownable {
             balance
         );
         emit OrderCancelled(orderId, balance);
-    }
-
-    function setPause(bytes32 orderId, bool pause) external onlySeller(orderId) {
-        require(_orderStatus[orderId].paused != pause, "INVALID_STATUS");
-        _orderStatus[orderId].paused = pause;
-        emit OrderPaused(orderId, pause);
     }
 
     /**

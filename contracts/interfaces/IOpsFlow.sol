@@ -16,14 +16,9 @@ interface IOpsFlow {
 
     event TaskCancel(address indexed user, uint256 taskId);
 
-    event TaskPause(address indexed user, uint256 taskId);
-    event TaskStart(address indexed user, uint256 taskId);
     event TaskCreated(address indexed user, uint256 indexed flowId, Task task);
 
     function createTask(Task memory task, uint256 flowId) external payable returns (bytes memory taskId);
-
-    function changeStatus(uint256 taskId, bool pause) external;
-
     function cancelTask(uint256 taskId) external;
 
     function getTask(uint256 taskId) external view returns (Task memory task);

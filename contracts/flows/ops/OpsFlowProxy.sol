@@ -23,18 +23,6 @@ contract OpsFlowProxy is IEvaFlowProxy, OpsFlow {
         require(flowSize == afterFlowId, "flowId must be equal");
     }
 
-    function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.pauseFlow(flowId);
-        IOpsFlow opsFlow = _getOpsFlow(ser, flowId);
-        opsFlow.changeStatus(flowId, true);
-    }
-
-    function startFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId);
-        IOpsFlow opsFlow = _getOpsFlow(ser, flowId);
-        opsFlow.changeStatus(flowId, false);
-    }
-
     function closeFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.closeFlow(flowId);
         IOpsFlow exchange = _getOpsFlow(ser, flowId);

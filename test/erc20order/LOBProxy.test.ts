@@ -150,66 +150,66 @@ describe('ERC20 Limit Order', function () {
       await expect(orderInfo[0].owner).to.eq(order.owner);
     });
 
-    it('restart order', async function () {
-      order.inputToken = USDC.address;
-      order.outputToken = WBTC.address;
-      order.deadline += 1;
+    // it('restart order', async function () {
+    //   order.inputToken = USDC.address;
+    //   order.outputToken = WBTC.address;
+    //   order.deadline += 1;
 
-      const gasFund = 1e18;
-      const callData = exchange.interface.encodeFunctionData('create', [
-        app.controler.address,
-        exchange.address,
-        KeepNetWork.ChainLink,
-        help.toFullNum(gasFund),
-        order,
-      ]);
-      const orderId = await exchange.keyOf(order);
+    //   const gasFund = 1e18;
+    //   const callData = exchange.interface.encodeFunctionData('create', [
+    //     app.controler.address,
+    //     exchange.address,
+    //     KeepNetWork.ChainLink,
+    //     help.toFullNum(gasFund),
+    //     order,
+    //   ]);
+    //   const orderId = await exchange.keyOf(order);
 
-      // approve first
-      await USDC.connect(me).approve(meSafes.address, order.inputAmount);
-      // and mint USDT
-      await USDC.connect(me).mint(order.inputAmount);
+    //   // approve first
+    //   await USDC.connect(me).approve(meSafes.address, order.inputAmount);
+    //   // and mint USDT
+    //   await USDC.connect(me).mint(order.inputAmount);
 
-      // send order
-      const flowId = await app.controler.getFlowMetaSize();
-      await meSafes.proxy(exchange.address, HowToCall.Delegate, callData, { value: help.toFullNum(gasFund) });
+    //   // send order
+    //   const flowId = await app.controler.getFlowMetaSize();
+    //   await meSafes.proxy(exchange.address, HowToCall.Delegate, callData, { value: help.toFullNum(gasFund) });
 
-      // pause order
-      const callData2 = exchange.interface.encodeFunctionData('pauseFlow', [app.controler.address, flowId]);
+    //   // pause order
+    //   const callData2 = exchange.interface.encodeFunctionData('pauseFlow', [app.controler.address, flowId]);
 
-      const tx = meSafes.proxy(exchange.address, HowToCall.Delegate, callData2);
-      // expect get paused event
-      await expect(tx)
-        .to.emit(exchange, 'OrderPaused')
-        .withArgs(orderId, true)
-        .to.emit(app.controler, 'FlowPaused')
-        .withArgs(meSafes.address, flowId);
+    //   const tx = meSafes.proxy(exchange.address, HowToCall.Delegate, callData2);
+    //   // expect get paused event
+    //   await expect(tx)
+    //     .to.emit(exchange, 'OrderPaused')
+    //     .withArgs(orderId, true)
+    //     .to.emit(app.controler, 'FlowPaused')
+    //     .withArgs(meSafes.address, flowId);
 
-      // restart
-      const tx2 = meSafes.proxy(
-        exchange.address,
-        HowToCall.Delegate,
-        exchange.interface.encodeFunctionData('startFlow', [app.controler.address, flowId]),
-      );
+    //   // restart
+    //   const tx2 = meSafes.proxy(
+    //     exchange.address,
+    //     HowToCall.Delegate,
+    //     exchange.interface.encodeFunctionData('startFlow', [app.controler.address, flowId]),
+    //   );
 
-      // expect get restart event
-      await expect(tx2)
-        .to.emit(exchange, 'OrderPaused')
-        .withArgs(orderId, false)
-        .to.emit(app.controler, 'FlowStart')
-        .withArgs(meSafes.address, flowId);
+    //   // expect get restart event
+    //   await expect(tx2)
+    //     .to.emit(exchange, 'OrderPaused')
+    //     .withArgs(orderId, false)
+    //     .to.emit(app.controler, 'FlowStart')
+    //     .withArgs(meSafes.address, flowId);
 
-      const tx3 = meSafes.proxy(
-        exchange.address,
-        HowToCall.Delegate,
-        exchange.interface.encodeFunctionData('closeFlow', [app.controler.address, flowId]),
-      );
-      // expect get cancel event
-      await expect(tx3)
-        .to.emit(exchange, 'OrderCancelled')
-        .withArgs(orderId, '9990')
-        .to.emit(app.controler, 'FlowClosed') //
-        .withArgs(meSafes.address, flowId);
-    });
+    //   const tx3 = meSafes.proxy(
+    //     exchange.address,
+    //     HowToCall.Delegate,
+    //     exchange.interface.encodeFunctionData('closeFlow', [app.controler.address, flowId]),
+    //   );
+    //   // expect get cancel event
+    //   await expect(tx3)
+    //     .to.emit(exchange, 'OrderCancelled')
+    //     .withArgs(orderId, '9990')
+    //     .to.emit(app.controler, 'FlowClosed') //
+    //     .withArgs(meSafes.address, flowId);
+    // });
   });
 });
