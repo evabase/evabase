@@ -87,18 +87,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         emit OrderCreated(msg.sender, flowId, order);
     }
 
-    function changeStatus(bytes32 orderId, bool pause) public override {
-        OrderExist memory orderExist = orderExists[orderId];
-        require(orderExist.owner != address(0), "order not exist");
-        require(msg.sender == evaSafesFactory.get(orderExist.owner), "shold be owner");
-
-        if (pause) {
-            emit OrderPause(msg.sender, orderId);
-        } else {
-            emit OrderStart(msg.sender, orderId);
-        }
-    }
-
     function cancelOrder(bytes32 orderId) public override {
         OrderExist storage orderExist = orderExists[orderId];
         require(orderExist.owner != address(0), "order not exist");

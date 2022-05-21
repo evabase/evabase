@@ -61,13 +61,13 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         );
     }
 
-    function setFlowOperators(address op, bool remove) external onlyOwner {
-        if (remove) {
+    function setFlowOperators(address op, bool isAdd) external onlyOwner {
+        if (isAdd) {
             flowOperators[op] = true;
         } else {
             delete flowOperators[op];
         }
-        emit FlowOperatorChanged(op, remove);
+        emit FlowOperatorChanged(op, isAdd);
     }
 
     function _checkEnoughGas() internal view {
@@ -138,10 +138,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     ) external override {
         require(_flowId < _flowMetas.length, "over bound");
         require(msg.sender == _flowMetas[_flowId].admin, "flow's owner is not y");
-        require(
-            FlowStatus.Active == _flowMetas[_flowId].flowStatus || FlowStatus.Paused == _flowMetas[_flowId].flowStatus,
-            "flow's status is error"
-        );
+        require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
 
         KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
 
@@ -167,43 +164,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         _vaildFlows[keepNetWork].add(_flowId);
 
         emit FlowUpdated(msg.sender, _flowId, addr);
-    }
-
-    function pauseFlow(uint256 _flowId) external override {
-        require(_flowId < _flowMetas.length, "over bound");
-        require(userMetaMap[msg.sender].vaildFlowsNum > 0, "vaildFlowsNum should gt 0");
-        require(FlowStatus.Active == _flowMetas[_flowId].flowStatus, "flow's status is error");
-        _requireFlowOperator(_flowMetas[_flowId].admin);
-        _flowMetas[_flowId].lastExecNumber = block.number;
-        _flowMetas[_flowId].flowStatus = FlowStatus.Paused;
-
-        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum - 1;
-
-        if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // _vaildFlows.remove(_flowId);
-            KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            _vaildFlows[keepNetWork].remove(_flowId);
-        }
-        emit FlowPaused(msg.sender, _flowId);
-    }
-
-    function startFlow(uint256 _flowId) external override {
-        require(_flowId < _flowMetas.length, "over bound");
-
-        _requireFlowOperator(_flowMetas[_flowId].admin);
-        require(FlowStatus.Paused == _flowMetas[_flowId].flowStatus, "flow's status is error");
-        _flowMetas[_flowId].lastExecNumber = block.number;
-        _flowMetas[_flowId].flowStatus = FlowStatus.Active;
-
-        userMetaMap[msg.sender].vaildFlowsNum = userMetaMap[msg.sender].vaildFlowsNum + 1;
-
-        if (_flowMetas[_flowId].lastVersionflow != address(0)) {
-            // _vaildFlows.add(_flowId);
-            KeepNetWork keepNetWork = _flowMetas[_flowId].keepNetWork;
-            _vaildFlows[keepNetWork].add(_flowId);
-        }
-
-        emit FlowStart(msg.sender, _flowId);
     }
 
     function closeFlow(uint256 flowId) external override {

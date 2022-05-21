@@ -53,10 +53,12 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
         require(isActiveTask(taskId), "not active");
         //Can be closed or not
+        // solhint-disable not-rely-on-time
         if (block.timestamp > task.deadline) {
             canDestoryFlow = true;
             delete _tasks[taskId];
         } else {
+            // solhint-disable not-rely-on-time
             _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
         }
         emit TaskExecuted(taskId);
@@ -76,17 +78,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
 
         _taskId = abi.encode(taskId);
         emit TaskCreated(msg.sender, taskId, task);
-    }
-
-    function changeStatus(uint256 taskId, bool pause) public override {
-        Task memory task = _tasks[taskId];
-        require(msg.sender == evaSafesFactory.get(task.owner), "shold be owner");
-
-        if (pause) {
-            emit TaskPause(msg.sender, taskId);
-        } else {
-            emit TaskStart(msg.sender, taskId);
-        }
     }
 
     function cancelTask(uint256 taskId) public override {

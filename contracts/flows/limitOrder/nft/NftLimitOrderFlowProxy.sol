@@ -33,28 +33,12 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
             abi.encode(orderId)
         );
         require(flowSize == afterFlowId, "flowId must be equal");
-
-        // emit OrderCreated(msg.sender, flowId, orderId, order);
-    }
-
-    function pauseFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.pauseFlow(flowId);
-        (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
-        nftLimitOrder.changeStatus(orderId, true);
-    }
-
-    function startFlow(IEvaFlowController ser, uint256 flowId) external override {
-        ser.startFlow(flowId);
-        (INftLimitOrder nftLimitOrder, bytes32 orderId) = _getInfo(ser, flowId);
-        nftLimitOrder.changeStatus(orderId, false);
     }
 
     function closeFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.closeFlow(flowId);
         (INftLimitOrder exchange, bytes32 orderId) = _getInfo(ser, flowId);
         exchange.cancelOrder(orderId);
-
-        // emit OrderCancel(msg.sender, flowId, orderId);
     }
 
     function _getInfo(IEvaFlowController ser, uint256 flowId)

@@ -18,17 +18,13 @@ interface INftLimitOrder {
         uint8 amount; //    slot 1    dealed nft amount
         uint64 deadline; // slot 1 order expired time
     }
-    event OrderExecute(address indexed user, bytes32 orderId, uint256 amount, uint256 value); //TODO: remove flowId
+    event OrderExecute(address indexed user, bytes32 orderId, uint256 amount, uint256 value);
 
-    event OrderCancel(address indexed user, bytes32 orderId); //TODO: remove flowId
+    event OrderCancel(address indexed user, bytes32 orderId);
 
-    event OrderPause(address indexed user, bytes32 orderId); //TODO: remove flowId
-    event OrderStart(address indexed user, bytes32 orderId); //TODO: remove flowId
     event OrderCreated(address indexed user, uint256 indexed flowId, Order order);
 
     function createOrder(Order memory order, uint256 flowId) external payable returns (bytes32 orderId);
-
-    function changeStatus(bytes32 orderId, bool pause) external;
 
     function cancelOrder(bytes32 orderId) external;
 }
