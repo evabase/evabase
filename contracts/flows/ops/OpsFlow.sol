@@ -90,7 +90,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
 
         delete _tasks[taskId];
 
-        emit TaskCancel(msg.sender, taskId);
+        emit TaskCancelled(msg.sender, taskId);
     }
 
     function getTask(uint256 taskId) external view override returns (Task memory task) {
