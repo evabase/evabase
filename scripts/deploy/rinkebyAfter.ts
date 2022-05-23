@@ -7,7 +7,7 @@
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store } from '../help';
+import { store, help, HowToCall, KeepNetWork } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -29,9 +29,9 @@ async function main() {
     assetToken: ownerO[0].address,
     amount: '1000',
     price: '1',
-    deadline: '1680355507',
+    deadline: '16532066242',
     tokenId: 342905,
-    salt: '1899909',
+    salt: '18992909',
   };
 
   const evaSafes = await evaSafesFactoryContract.get(ownerO[0].address);
@@ -49,9 +49,9 @@ async function main() {
     200000,
     order,
   ]);
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
-    value: ethers.utils.parseEther('0.01'),
-  });
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
+  //   value: ethers.utils.parseEther('0.01'),
+  // });
   // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
   const evaSafesContractBal = await ethers.provider.getBalance(evaSafesContract.address);
   const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(store.get('NftLimitOrderFlow'));
@@ -74,12 +74,12 @@ async function main() {
   // pause
   // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
   // cancel
-  const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
-    store.get('evaFlowController'),
-    1,
-  ]);
+  // const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
+  //   store.get('evaFlowController'),
+  //   1,
+  // ]);
 
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, cancelData);
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, cancelData);
 
   const evaSafesContractBal1 = await ethers.provider.getBalance(evaSafesContract.address);
   const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(store.get('NftLimitOrderFlow'));
@@ -100,6 +100,37 @@ async function main() {
   // await evaFlowController.startFlow(1, myStructData);
 
   // await evaFlowController.closeFlow(1, myStructData);
+  // task
+  const usdtAdd = '0xd65DA2a6eCa33DC336B23fa77770a3345e9057AF';
+  const MockERC20 = await ethers.getContractFactory('MockERC20');
+  const data1 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
+  const data2 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
+  const myStructData1 = ethers.utils.AbiCoder.prototype.encode(['address', 'uint120', 'bytes'], [usdtAdd, 0, data1]);
+  const myStructData2 = ethers.utils.AbiCoder.prototype.encode(['address', 'uint120', 'bytes'], [usdtAdd, 0, data2]);
+  const inputs_ = [myStructData1, myStructData2];
+
+  const opsFlowProxy = await ethers.getContractFactory('OpsFlowProxy');
+  const gasFund = 1e17;
+  const callData = opsFlowProxy.interface.encodeFunctionData('create', [
+    // app.controler.address,
+    store.get('evaFlowController'),
+    // opsFlowProxy.address,
+    store.get('opsFlowProxy'),
+    KeepNetWork.ChainLink,
+    help.toFullNum(gasFund),
+    'Erc20Approve',
+    {
+      owner: ownerO[0].address,
+      inputs: inputs_,
+      startTime: 1653289790,
+      deadline: 1653299790,
+      lastExecTime: 0,
+      interval: 95,
+    },
+  ]);
+  await evaSafesContract.proxy(store.get('opsFlowProxy'), HowToCall.Delegate, callData, {
+    value: help.toFullNum(gasFund),
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
