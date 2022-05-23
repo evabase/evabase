@@ -66,7 +66,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
 
     function createTask(Task memory task, uint256 taskId) external payable override returns (bytes memory _taskId) {
         require(task.inputs.length > 0, "invalid length");
-        require(task.interval > 0, "invalid interval");
+        require(task.interval >= _MIN_INTERAL, "invalid interval");
         //check
         require(task.deadline > Utils.toUint64(block.timestamp), "invalid time");
         for (uint256 i = 0; i < task.inputs.length; i++) {
