@@ -125,7 +125,7 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
 
     function closeFlow(IEvaFlowController ser, uint256 flowId) external override {
         ser.closeFlow(flowId);
-        (MockTimeFlow exchange, uint256 orderKey) = _getInfo(ser, flowId);
+        // (MockTimeFlow exchange, uint256 orderKey) = _getInfo(ser, flowId);
         // exchange.setPause(orderKey, false);
     }
 
