@@ -74,6 +74,7 @@ describe('NFT Limit Order', function () {
         app.nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT',
         order,
       ]);
       flowId = (await app.controler.getFlowMetaSize()).toNumber();

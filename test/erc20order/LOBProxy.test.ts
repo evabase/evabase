@@ -87,6 +87,7 @@ describe('ERC20 Limit Order', function () {
         exchange.address,
         KeepNetWork.ChainLink,
         help.toFullNum(gasFund),
+        'LOB',
         order,
       ]);
 
@@ -112,6 +113,7 @@ describe('ERC20 Limit Order', function () {
         exchange.address,
         KeepNetWork.ChainLink,
         help.toFullNum(gasFund),
+        'LOB',
         order,
       ]);
 
@@ -132,6 +134,7 @@ describe('ERC20 Limit Order', function () {
         exchange.address,
         KeepNetWork.ChainLink,
         help.toFullNum(gasFund),
+        'LOB',
         order,
       ]);
       const orderId = await exchange.keyOf(order);
@@ -161,6 +164,7 @@ describe('ERC20 Limit Order', function () {
     //     exchange.address,
     //     KeepNetWork.ChainLink,
     //     help.toFullNum(gasFund),
+    //     'LOB',
     //     order,
     //   ]);
     //   const orderId = await exchange.keyOf(order);

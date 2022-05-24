@@ -177,6 +177,7 @@ describe('NFTLimitOrder', function () {
         nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT',
         order,
       ]);
 
@@ -190,6 +191,7 @@ describe('NFTLimitOrder', function () {
         nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT1',
         order,
       ]);
 
@@ -215,6 +217,7 @@ describe('NFTLimitOrder', function () {
         nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT1',
         order,
       ]);
       evaSafes.proxy(nftLimitOrderFlowProxy.address, 1, data, {
@@ -244,6 +247,7 @@ describe('NFTLimitOrder', function () {
         nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT1',
         order,
       ]);
 
@@ -268,6 +272,7 @@ describe('NFTLimitOrder', function () {
         nftLimitOrderFlowProxy.address,
         1,
         200000,
+        'NFT@',
         order,
       ]);
 

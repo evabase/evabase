@@ -22,8 +22,10 @@ contract LOBFlowProxy is IEvaFlowProxy {
         ILOBExchange exchange,
         KeepNetWork network,
         uint256 gasFee,
+        string memory name,
         Order memory order
     ) external payable {
+        require(bytes(name).length > 0, "invalid name");
         // disable call self
         require(address(this) != address(exchange), "FORBIDDEN");
 
@@ -46,7 +48,7 @@ contract LOBFlowProxy is IEvaFlowProxy {
         // orderId+safes
         // 3. register listen order task on Evabase
         ser.registerFlow{value: gasFee}(
-            "EvabaseLO",
+            name,
             network,
             address(exchange),
             abi.encode(orderId) //checkdata

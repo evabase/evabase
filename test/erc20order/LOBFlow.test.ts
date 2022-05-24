@@ -91,6 +91,7 @@ describe('ERC20 Limit Order', function () {
         exchange.address,
         KeepNetWork.ChainLink,
         help.toFullNum(gasFund),
+        'LOB',
         order,
       ]);
       flowId = (await app.controler.getFlowMetaSize()).toNumber();
