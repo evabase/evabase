@@ -17,8 +17,10 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         INftLimitOrder nftLimitOrder,
         KeepNetWork network,
         uint256 gasFee,
+        string memory name,
         Order memory order
     ) external payable {
+        require(bytes(name).length > 0, "invalid name");
         uint256 _value = 0;
 
         _value = msg.value - gasFee;
@@ -27,7 +29,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         uint256 flowSize = ser.getFlowMetaSize();
         bytes32 orderId = nftLimitOrder.createOrder{value: _value}(order, flowSize);
         uint256 afterFlowId = ser.registerFlow{value: gasFee}(
-            "NftLimitOrder",
+            name,
             network,
             address(nftLimitOrder),
             abi.encode(orderId)

@@ -47,11 +47,12 @@ async function main() {
     store.get('NftLimitOrderFlow'),
     1,
     200000,
+    'buy 1 NFT',
     order,
   ]);
-  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
-  //   value: ethers.utils.parseEther('0.01'),
-  // });
+  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
+    value: ethers.utils.parseEther('0.01'),
+  });
   // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
   const evaSafesContractBal = await ethers.provider.getBalance(evaSafesContract.address);
   const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(store.get('NftLimitOrderFlow'));
@@ -122,15 +123,27 @@ async function main() {
     {
       owner: ownerO[0].address,
       inputs: inputs_,
-      startTime: 1653289790,
-      deadline: 1653299790,
+      startTime: 1653403979,
+      deadline: 1653453979,
       lastExecTime: 0,
-      interval: 95,
+      interval: 1,
     },
   ]);
-  await evaSafesContract.proxy(store.get('opsFlowProxy'), HowToCall.Delegate, callData, {
-    value: help.toFullNum(gasFund),
-  });
+
+  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
+  const evaFlowController = EvaFlowController.attach(store.get('evaFlowController'));
+  const flowId = (await evaFlowController.getFlowMetaSize()).toNumber();
+
+  // await evaSafesContract.proxy(store.get('opsFlowProxy'), HowToCall.Delegate, callData, {
+  //   value: help.toFullNum(gasFund),
+  // });
+
+  // eslint-disable-next-line max-len
+  const cancelData = opsFlowProxy.interface.encodeFunctionData('closeFlow', [store.get('evaFlowController'), 12]);
+
+  const tx = await evaSafesContract.proxy(store.get('opsFlowProxy'), 1, cancelData);
+
+  console.log('tx=', tx);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

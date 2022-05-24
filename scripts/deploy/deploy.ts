@@ -81,7 +81,7 @@ async function main() {
   console.log('setControl hash=', tx.hash);
 
   // 4 EvaFlowChecker
-  let evaFlowCheckerAddr = store.get('evaFlowChecker');
+  let evaFlowCheckerAddr = store.get('EvaFlowRandomChecker');
   if (typeof evaFlowCheckerAddr === 'undefined') {
     const EvaFlowChecker = await ethers.getContractFactory('EvaFlowRandomChecker');
     const evaFlowChecker = await EvaFlowChecker.deploy(evabaseConfigAddr);
@@ -113,7 +113,7 @@ async function main() {
   console.log('setEvaCheck hash=', tx.hash);
 
   // 6 NftLimitOrder
-  let nftLimitOrderFlowProxyAddr = store.get('nftLimitOrderFlowProxy');
+  let nftLimitOrderFlowProxyAddr = store.get('NftLimitOrderFlow');
   if (typeof nftLimitOrderFlowProxyAddr === 'undefined') {
     const NftLimitOrderFlowProxy = await ethers.getContractFactory('NftLimitOrderFlowProxy');
     const nftLimitOrderFlowProxy = await NftLimitOrderFlowProxy.deploy(
