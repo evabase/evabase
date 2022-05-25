@@ -13,11 +13,12 @@ type TokenInfo = {
 };
 
 async function main() {
-  // await newOrder();
+  console.log('main');
+  await newOrder();
   // 0x3045d749c917522c3870f08d23053d19e3d5858edca1c1bbfe6e36deb3f75d09
   // 0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f
   // await exchangeCheck('0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f');
-  await chainLinkCheck('0x0000000000000000000000000000000000000000000000000000000000000001');
+  // await chainLinkCheck('0x0000000000000000000000000000000000000000000000000000000000000001');
   // await tryExec('0x0000000000000000000000000000000000000000000000000000000000000001');
   // await checkAmount();
   // await cancelOrder(me, 4);
@@ -39,15 +40,15 @@ async function cancelOrder(user: SignerWithAddress, flowId: number) {
   console.log('cancel order done');
 }
 
-async function checkAmount() {
-  const strategy = await ethers.getContractAt('UniswapV2Strategy', store.get('UniswapV2Strategy'));
-  const result = await strategy.calcMaxInput(
-    store.get('others.WETH'),
-    store.get('others.DAI'),
-    help.toFullNum(7728000 * 1e18),
-  );
-  console.log(result);
-}
+// async function checkAmount() {
+//   const strategy = await ethers.getContractAt('UniswapV2Strategy', store.get('UniswapV2Strategy'));
+//   const result = await strategy.calcMaxInput(
+//     store.get('others.WETH'),
+//     store.get('others.DAI'),
+//     help.toFullNum(7728000 * 1e18),
+//   );
+//   console.log(result);
+// }
 
 async function exchangeCheck(orderId: string) {
   const exchange = await ethers.getContractAt('LOBExchange', store.get('LOBExchange'));
@@ -55,16 +56,17 @@ async function exchangeCheck(orderId: string) {
   console.log(result);
 }
 
-async function tryExec(checkdata: string) {
-  const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
-  const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
-  const result = await bot.checkUpkeep(checkdata);
+// async function tryExec(checkdata: string) {
+// eslint-disable-next-line max-len
+//   const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
+//   const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
+//   const result = await bot.checkUpkeep(checkdata);
 
-  const keeper = new ethers.VoidSigner('0x426a9b94ae341751cb248d81ddbe3cccd16dc493', ethers.provider);
-  console.log(await chainlink.connect(keeper).callStatic.performUpkeep(314, result.performData));
-  const info = await bot.connect(keeper).callStatic.performUpkeep(result.performData);
-  console.log(info);
-}
+//   const keeper = new ethers.VoidSigner('0x426a9b94ae341751cb248d81ddbe3cccd16dc493', ethers.provider);
+//   console.log(await chainlink.connect(keeper).callStatic.performUpkeep(314, result.performData));
+//   const info = await bot.connect(keeper).callStatic.performUpkeep(result.performData);
+//   console.log(info);
+// }
 
 async function chainLinkCheck(checkdata: string) {
   const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
@@ -87,7 +89,11 @@ async function chainLinkCheck(checkdata: string) {
 }
 
 async function newOrder() {
-  const user = await help.me();
+  // const user = await help.me();
+  const ownerO = await ethers.getSigners();
+  const user = ownerO[0];
+  // const user = (await ethers.getSigners()[0]) as SignerWithAddress;
+  // const user = await help.me();
   const inputToken = { address: help.ETH_ADDRESS, decimals: 18, symbol: 'ETH' } as TokenInfo;
   const outputToken = { address: store.get('others.DAI'), decimals: 18, symbol: 'DAI' } as TokenInfo;
 
@@ -168,6 +174,7 @@ async function crateOrder(
     exchange.address,
     KeepNetWork.ChainLink,
     help.toFullNum(gasFundETH * 1e18),
+    'erc20',
     order,
   ]);
 

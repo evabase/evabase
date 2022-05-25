@@ -6,7 +6,7 @@ struct Order {
     address owner;
     uint96 inputAmount;
     address inputToken;
-    uint96 minRate;
+    uint160 minRate;
     address outputToken;
     uint64 deadline;
     address receiptor;

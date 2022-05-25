@@ -29,7 +29,7 @@ async function main() {
     assetToken: ownerO[0].address,
     amount: '1000',
     price: '1',
-    deadline: '16532066242',
+    deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 1,
     tokenId: 342905,
     salt: '18992909',
   };
@@ -75,12 +75,12 @@ async function main() {
   // pause
   // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, pauseData);
   // cancel
-  // const cancelData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
-  //   store.get('evaFlowController'),
-  //   1,
-  // ]);
+  const cancelNftData = nftLimitOrderFlowProxy.interface.encodeFunctionData('closeFlow', [
+    store.get('evaFlowController'),
+    '1',
+  ]);
 
-  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, cancelData);
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, cancelNftData);
 
   const evaSafesContractBal1 = await ethers.provider.getBalance(evaSafesContract.address);
   const nftLimitOrderFlowProxyBal1 = await ethers.provider.getBalance(store.get('NftLimitOrderFlow'));
@@ -124,9 +124,9 @@ async function main() {
       owner: ownerO[0].address,
       inputs: inputs_,
       startTime: 1653403979,
-      deadline: 1653453979,
+      deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 1,
       lastExecTime: 0,
-      interval: 1,
+      interval: 360,
     },
   ]);
 
@@ -141,9 +141,9 @@ async function main() {
   // eslint-disable-next-line max-len
   const cancelData = opsFlowProxy.interface.encodeFunctionData('closeFlow', [store.get('evaFlowController'), 12]);
 
-  const tx = await evaSafesContract.proxy(store.get('opsFlowProxy'), 1, cancelData);
+  // const tx = await evaSafesContract.proxy(store.get('opsFlowProxy'), 1, cancelData);
 
-  console.log('tx=', tx);
+  // console.log('tx=', tx);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
