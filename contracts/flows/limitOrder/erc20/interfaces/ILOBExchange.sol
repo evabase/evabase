@@ -6,11 +6,11 @@ struct Order {
     address owner;
     uint96 inputAmount;
     address inputToken;
-    uint160 minRate;
     address outputToken;
     uint64 deadline;
     address receiptor;
     uint96 minInputPer;
+    uint160 minRate;
 }
 
 interface ILOBExchange {
