@@ -50,8 +50,10 @@ describe('Ops Proxy Flow', function () {
     // 初始化钱包
     meSafes = (await app.createOrLoadWalletSeafes(me.address)).connect(me);
     contracts_ = [t1.address, t2.address];
-    const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
-    const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
+    // const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
+    // const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
+    const data = t1.interface.encodeFunctionData('mint', [1000]);
+    const data2 = t2.interface.encodeFunctionData('mint', [1000]);
     // inputs_ = [data, data2];
     opsFlowProxy = (await help.deploy('OpsFlowProxy', [app.config.address, app.safesFactory.address])) as OpsFlowProxy;
     blockTime = await help.getBlockTime();

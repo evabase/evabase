@@ -40,7 +40,7 @@ async function main() {
   const tx = await upgrades.upgradeProxy(store.get('evaFlowController'), EvaFlowController, {
     unsafeAllow: ['delegatecall'],
   });
-  console.log('evaFlowController upgraded:', tx.hash());
+  console.log('evaFlowController upgraded:', tx);
 
   // await evaFlowControler.addEvabaseFlowByOwner(
   //   upgrade.address,

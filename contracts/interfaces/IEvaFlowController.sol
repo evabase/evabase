@@ -88,7 +88,11 @@ interface IEvaFlowController {
         address user
     ) external payable;
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount) external;
+    function withdrawFundByUser(
+        address recipient,
+        address tokenAdress,
+        uint256 amount
+    ) external;
 
     function withdrawPayment(address tokenAdress, uint256 amount) external;
 

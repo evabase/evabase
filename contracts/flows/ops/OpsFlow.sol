@@ -10,9 +10,11 @@ import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "../../interfaces/IEvaSafesFactory.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
     using Address for address;
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
 
     mapping(uint256 => Task) private _tasks;
     IEvaSafesFactory public evaSafesFactory;
@@ -24,6 +26,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(_config != address(0), "addess is 0x");
         config = IEvabaseConfig(_config);
         evaSafesFactory = IEvaSafesFactory(_evaSafesFactory);
+        enableERC1820();
     }
 
     function check(bytes memory taskIdData) external view override returns (bool, bytes memory) {
@@ -137,5 +140,21 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         // solhint-disable
         uint256 deadline = _tasks[taskId].deadline;
         return deadline > 0 && deadline < block.timestamp;
+    }
+
+    function enableERC1820() public onlyOwner {
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24).setInterfaceImplementer(
+            address(this),
+            _SUB_FLOW_INTERFACE,
+            address(this)
+        );
+    }
+
+    function removeERC1820() external onlyOwner {
+        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24).setInterfaceImplementer(
+            address(this),
+            _SUB_FLOW_INTERFACE,
+            address(0)
+        );
     }
 }

@@ -201,7 +201,12 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         }
     }
 
-    function withdrawFundByUser(address tokenAdress, uint256 amount) external override {
+    function withdrawFundByUser(
+        address recipient,
+        address tokenAdress,
+        uint256 amount
+    ) external override {
+        require(recipient != address(0), "Invalid address");
         address safeWallet = msg.sender;
 
         uint256 minTotalFlow = userMetaMap[safeWallet].vaildFlowsNum * minConfig.minGasFundOneFlow;
@@ -210,14 +215,14 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (tokenAdress == address(0)) {
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
             userMetaMap[safeWallet].ethBal -= Utils.toUint120(amount);
-            TransferHelper.safeTransferETH(safeWallet, amount);
+            TransferHelper.safeTransferETH(recipient, amount);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
 
             userMetaMap[safeWallet].gasTokenBal -= Utils.toUint120(amount);
 
-            TransferHelper.safeTransfer(tokenAdress, safeWallet, amount);
+            TransferHelper.safeTransfer(tokenAdress, recipient, amount);
         }
     }
 
@@ -321,7 +326,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             payAmountByETH = _calculatePaymentAmount(usedGas);
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
-            require(bal >= payAmountByETH, "insufficient fund");
+            if (tx.origin == address(0)) {
+                require(bal >= payAmountByETH, "insufficient fund");
+            }
+
             userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
         } else {
             revert("TODO");
@@ -330,6 +338,9 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
+            if (tx.origin == address(0)) {
+                revert(failedReason);
+            }
             emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
         }
     }
