@@ -49,10 +49,13 @@ describe('Ops Flow Task', function () {
     // 初始化钱包
     meSafes = (await app.createOrLoadWalletSeafes(me.address)).connect(me);
 
-    const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
-    const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
+    // const data = t1.interface.encodeFunctionData('approve', [app.controler.address, 1e10]);
+    // const data2 = t2.interface.encodeFunctionData('approve', [app.controler.address, 1e9]);
+
+    const data = t1.interface.encodeFunctionData('mint', [2000]);
+    const data2 = t1.interface.encodeFunctionData('mint', [1300]);
     // inputs_ = [data, data2];
-    contracts_ = [t1.address, t2.address];
+    contracts_ = [t1.address, t1.address];
     opsFlowProxy = (await help.deploy('OpsFlowProxy', [app.config.address, app.safesFactory.address])) as OpsFlowProxy;
     blockTime = await help.getBlockTime();
 
@@ -122,6 +125,9 @@ describe('Ops Flow Task', function () {
     });
 
     it('should be execute ok when check pass', async function () {
+      await opsFlowProxy.enableERC1820();
+      const total1 = await t1.totalSupply();
+      console.log('------total before:', total1);
       const orderFlowInfo = await app.controler.getFlowMetas(flowId);
       await help.increaseBlockTime(15);
       const checkResult = await opsFlowProxy.check(orderFlowInfo.checkData);
@@ -139,7 +145,9 @@ describe('Ops Flow Task', function () {
       await expect(tx).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
       await expect(tx).to.emit(opsFlowProxy, 'TaskExecuted');
-
+      await expect(tx).to.emit(t1, 'Transfer');
+      const total = await t1.totalSupply();
+      console.log('-----total after:', total);
       // 2
       // await help.increaseBlockTime(15);
       // console.log('blockTime2:', await help.getBlockTime());
