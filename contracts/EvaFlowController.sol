@@ -283,9 +283,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
+        bool isOffChain = tx.origin == address(0);
         // Let pre-execution pass
         // solhint-disable avoid-tx-origin
-        if (tx.origin != address(0)) {
+        if (!isOffChain) {
             // Check if the flow's network matches the keeper
             require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
             require(ks.isActive, "exect keeper is not whitelist");
@@ -306,7 +307,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         {
             address executor = config.getAddressItem(_FLOW_EXECUTOR);
             try IEvaFlowExecutor(executor).execute(flow, execData) returns (bool needCloseFlow) {
-                if (needCloseFlow) {
+                if (needCloseFlow && !isOffChain) {
+                    // don't close flow when try execute on off-chain
                     _closeFlow(flowId, flow);
                 }
                 success = true;
@@ -326,7 +328,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             payAmountByETH = _calculatePaymentAmount(usedGas);
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
-            if (tx.origin == address(0)) {
+            if (isOffChain) {
                 require(bal >= payAmountByETH, "insufficient fund");
             }
 
@@ -338,7 +340,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
-            if (tx.origin == address(0)) {
+            if (isOffChain) {
                 revert(failedReason);
             }
             emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
