@@ -338,6 +338,9 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
         } else {
+            if (tx.origin == address(0)) {
+                revert("ExecuteFailed");
+            }
             emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
         }
     }
