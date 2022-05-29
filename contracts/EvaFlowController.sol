@@ -283,9 +283,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         EvaFlowMeta memory flow = _flowMetas[flowId];
         KeepStruct memory ks = config.getKeepBot(msg.sender);
 
+        // solhint-disable avoid-tx-origin
         bool isOffChain = tx.origin == address(0);
         // Let pre-execution pass
-        // solhint-disable avoid-tx-origin
+
         if (!isOffChain) {
             // Check if the flow's network matches the keeper
             require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");

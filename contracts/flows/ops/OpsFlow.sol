@@ -71,10 +71,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(task.inputs.length > 0, "invalid length");
         require(task.interval >= _MIN_INTERAL, "invalid interval");
         //check
-        require(
-            task.deadline > Utils.toUint64(block.timestamp) || (task.deadline == 0 && task.startTime == 0),
-            "invalid time"
-        );
+        require(task.deadline > Utils.toUint64(block.timestamp) || task.deadline == 0, "invalid time");
         for (uint256 i = 0; i < task.inputs.length; i++) {
             (address contractAdd, , ) = abi.decode(task.inputs[i], (address, uint120, bytes));
             require(contractAdd != address(this) && contractAdd != msg.sender, "FORBIDDEN");
@@ -123,9 +120,9 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         uint64 startTime = _tasks[taskId].startTime;
         uint64 lastExecTime = _tasks[taskId].lastExecTime;
         return
-            ((Utils.toUint64(block.timestamp) >= startTime &&
-                deadline >= lastExecTime + interval &&
-                Utils.toUint64(block.timestamp) >= lastExecTime + interval) || (deadline == 0 && startTime == 0)) &&
+            Utils.toUint64(block.timestamp) >= startTime &&
+            ((deadline >= lastExecTime + interval && Utils.toUint64(block.timestamp) >= lastExecTime + interval) ||
+                (deadline == 0)) &&
             _tasks[taskId].owner != address(0);
     }
 
