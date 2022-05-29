@@ -303,14 +303,12 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         _flowMetas[flowId].lastKeeper = keeper;
 
         bool success;
+        bool needClose;
         string memory failedReason;
         {
             address executor = config.getAddressItem(_FLOW_EXECUTOR);
             try IEvaFlowExecutor(executor).execute(flow, execData) returns (bool needCloseFlow) {
-                if (needCloseFlow && !isOffChain) {
-                    // don't close flow when try execute on off-chain
-                    _closeFlow(flowId, flow);
-                }
+                needClose = needCloseFlow;
                 success = true;
             } catch Error(string memory reason) {
                 failedReason = reason; // revert or require
@@ -347,6 +345,11 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
                 revert(failedReason);
             }
             emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
+        }
+
+        if (needClose && !isOffChain) {
+            // don't close flow when try execute on off-chain
+            _closeFlow(flowId, flow);
         }
     }
 
