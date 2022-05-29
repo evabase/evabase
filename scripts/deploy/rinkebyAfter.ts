@@ -50,9 +50,9 @@ async function main() {
     'buy 1 NFT',
     order,
   ]);
-  await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
-    value: ethers.utils.parseEther('0.01'),
-  });
+  // await evaSafesContract.proxy(store.get('NftLimitOrderFlow'), 1, data, {
+  //   value: ethers.utils.parseEther('0.01'),
+  // });
   // const an_other_bal = await ethers.provider.getBalance(acceptEther.address);
   const evaSafesContractBal = await ethers.provider.getBalance(evaSafesContract.address);
   const nftLimitOrderFlowProxyBal = await ethers.provider.getBalance(store.get('NftLimitOrderFlow'));
@@ -102,15 +102,21 @@ async function main() {
 
   // await evaFlowController.closeFlow(1, myStructData);
   // task
-  const usdtAdd = '0xd65DA2a6eCa33DC336B23fa77770a3345e9057AF';
+  const usdtAdd = '0xC272e20C2d0F8fb7B9B05B9F2Ba4407E95928CbF';
   const MockERC20 = await ethers.getContractFactory('MockERC20');
-  const data1 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
-  const data2 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
+  const data1 = MockERC20.interface.encodeFunctionData('mint', [1000]);
+  const data2 = MockERC20.interface.encodeFunctionData('mint', [1000]);
+  // const data1 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
+  // const data2 = MockERC20.interface.encodeFunctionData('approve', [store.get('evaFlowController'), 1e10]);
+
   const myStructData1 = ethers.utils.AbiCoder.prototype.encode(['address', 'uint120', 'bytes'], [usdtAdd, 0, data1]);
   const myStructData2 = ethers.utils.AbiCoder.prototype.encode(['address', 'uint120', 'bytes'], [usdtAdd, 0, data2]);
   const inputs_ = [myStructData1, myStructData2];
 
   const opsFlowProxy = await ethers.getContractFactory('OpsFlowProxy');
+  // const opsFlowProxyContract = opsFlowProxy.attach(store.get('opsFlowProxy'));
+  // const tx1 = await opsFlowProxyContract.enableERC1820();
+  // console.log('tx1', tx1.hash);
   const gasFund = 1e17;
   const callData = opsFlowProxy.interface.encodeFunctionData('create', [
     // app.controler.address,
@@ -119,14 +125,14 @@ async function main() {
     store.get('opsFlowProxy'),
     KeepNetWork.ChainLink,
     help.toFullNum(gasFund),
-    'Erc20Approve',
+    'Erc20Mint1',
     {
       owner: ownerO[0].address,
       inputs: inputs_,
       startTime: 1653403979,
       deadline: Math.ceil(new Date().getTime() / 1000) + 60 * 60 * 1,
       lastExecTime: 0,
-      interval: 360,
+      interval: 60,
     },
   ]);
 
@@ -134,9 +140,11 @@ async function main() {
   const evaFlowController = EvaFlowController.attach(store.get('evaFlowController'));
   const flowId = (await evaFlowController.getFlowMetaSize()).toNumber();
 
-  // await evaSafesContract.proxy(store.get('opsFlowProxy'), HowToCall.Delegate, callData, {
-  //   value: help.toFullNum(gasFund),
-  // });
+  await evaSafesContract.proxy(store.get('opsFlowProxy'), HowToCall.Delegate, callData, {
+    value: help.toFullNum(gasFund),
+  });
+
+  // await evaSafesContract.withdraw('0x0000000000000000000000000000000000000000', '1000000000000000000');
 
   // eslint-disable-next-line max-len
   const cancelData = opsFlowProxy.interface.encodeFunctionData('closeFlow', [store.get('evaFlowController'), 12]);

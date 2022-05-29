@@ -36,11 +36,13 @@ async function main() {
   // console.log("NftLimitOrderFlow deployed to:", upgrade.address);
   // store.set("NftLimitOrderFlow", upgrade.address);
 
-  // const BoxV2 = await ethers.getContractFactory("BoxV2");
   const tx = await upgrades.upgradeProxy(store.get('evaFlowController'), EvaFlowController, {
     unsafeAllow: ['delegatecall'],
   });
-  console.log('evaFlowController upgraded:', tx);
+  // const tx = await upgrades.forceImport(store.get('evaFlowController'), EvaFlowController, {
+  //   unsafeAllow: ['delegatecall'],
+  // });
+  console.log('evaFlowController upgraded:', tx.hash);
 
   // await evaFlowControler.addEvabaseFlowByOwner(
   //   upgrade.address,

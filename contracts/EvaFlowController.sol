@@ -329,7 +329,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             uint120 bal = userMetaMap[flow.admin].ethBal;
 
             if (isOffChain) {
-                require(bal >= payAmountByETH, "insufficient fund");
+                uint256 minPay = payAmountByETH > minConfig.minGasFundOneFlow
+                    ? payAmountByETH
+                    : minConfig.minGasFundOneFlow;
+                require(bal >= minPay, "insufficient fund");
             }
 
             userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
@@ -348,7 +351,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint120 payment) {
-        uint256 weiForGas = tx.gasprice * (gasLimit + _REGISTRY_GAS_OVERHEAD);
+        uint256 price = tx.gasprice == 0 ? 1 gwei : tx.gasprice;
+        uint256 weiForGas = price * (gasLimit + _REGISTRY_GAS_OVERHEAD);
         uint256 total = (weiForGas * minConfig.ppb) / 10000;
         return uint120(total);
     }
