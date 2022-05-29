@@ -256,7 +256,7 @@ describe('Ops Flow Task', function () {
         {
           owner: me.address,
           inputs: inputs_,
-          startTime: 0,
+          startTime: blockTime + 11,
           deadline: 0,
           lastExecTime: 0,
           interval: 1,
@@ -274,7 +274,7 @@ describe('Ops Flow Task', function () {
       // console.log('orderFlowInfo:', orderFlowInfo);
       const checkResult22 = await opsFlowProxy.check(orderFlowInfo.checkData);
       console.log('checkResult22:', checkResult22);
-      expect(checkResult22[0]).to.be.eq(true);
+      expect(checkResult22[0]).to.be.eq(false);
       // 1
       await help.increaseBlockTime(11);
 
