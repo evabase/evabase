@@ -119,4 +119,8 @@ interface IEvaFlowController {
     function getSafes(address user) external view returns (address);
 
     function getFlowCheckInfo(uint256 flowId) external view returns (address flow, bytes memory checkData);
+
+    function updateUserFund(uint256 flowId, uint256 usedGas)
+        external
+        returns (uint120 payAmountByETH, uint120 payAmountByFeeToken);
 }

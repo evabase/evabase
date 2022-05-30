@@ -83,6 +83,7 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
         IEvaFlowController _controller = controller;
         uint256 succCount;
         for (uint256 i = 0; i < flowIds.length; i++) {
+            uint256 before = gasleft();
             uint256 flowId = flowIds[i];
             (address flow, bytes memory flowCheckData) = _controller.getFlowCheckInfo(flowId);
 
@@ -92,6 +93,8 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
             } catch Error(string memory err) {
                 emit PerformFailed(flowId, err);
             }
+            uint256 usedGas = before - gasleft();
+            _controller.updateUserFund(flowId, usedGas);
         }
         // Eusure that invalid tx are not always minted.
         require(succCount > 0, "all failed");
