@@ -167,10 +167,18 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function closeFlow(uint256 flowId) external override {
+        closeFlowWithGas(flowId, 0);
+    }
+
+    function closeFlowWithGas(uint256 flowId, uint256 before) public override {
         EvaFlowMeta memory meta = _flowMetas[flowId];
         _requireFlowOperator(meta.admin);
         require(meta.flowStatus != FlowStatus.Closed, "have closeed");
         _closeFlow(flowId, meta);
+        if (before != 0) {
+            uint256 usedGas = before - gasleft();
+            _updateUserFund(meta.admin, usedGas);
+        }
     }
 
     function _closeFlow(uint256 flowId, EvaFlowMeta memory meta) internal {
@@ -335,16 +343,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             // don't close flow when try execute on off-chain
             _closeFlow(flowId, flow);
         }
-    }
-
-    function updateUserFund(uint256 flowId, uint256 usedGas)
-        external
-        override
-        returns (uint120 payAmountByETH, uint120 payAmountByFeeToken)
-    {
-        address admin = _flowMetas[flowId].admin;
-        _requireFlowOperator(admin);
-        (payAmountByETH, payAmountByFeeToken) = _updateUserFund(admin, usedGas);
     }
 
     function _updateUserFund(address admin, uint256 usedGas)
