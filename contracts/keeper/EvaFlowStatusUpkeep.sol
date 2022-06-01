@@ -83,11 +83,12 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
         IEvaFlowController _controller = controller;
         uint256 succCount;
         for (uint256 i = 0; i < flowIds.length; i++) {
+            uint256 before = gasleft();
             uint256 flowId = flowIds[i];
             (address flow, bytes memory flowCheckData) = _controller.getFlowCheckInfo(flowId);
 
             try IEvaFlow(flow).close(flowCheckData) {
-                _controller.closeFlow(flowId);
+                _controller.closeFlowWithGas(flowId, before);
                 succCount++;
             } catch Error(string memory err) {
                 emit PerformFailed(flowId, err);

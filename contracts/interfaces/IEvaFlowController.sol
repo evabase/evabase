@@ -76,6 +76,8 @@ interface IEvaFlowController {
 
     function closeFlow(uint256 flowId) external;
 
+    function closeFlowWithGas(uint256 flowId, uint256 before) external;
+
     function execFlow(
         address keeper,
         uint256 flowId,

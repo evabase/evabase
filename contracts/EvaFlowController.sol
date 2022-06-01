@@ -167,10 +167,18 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function closeFlow(uint256 flowId) external override {
+        closeFlowWithGas(flowId, 0);
+    }
+
+    function closeFlowWithGas(uint256 flowId, uint256 before) public override {
         EvaFlowMeta memory meta = _flowMetas[flowId];
         _requireFlowOperator(meta.admin);
         require(meta.flowStatus != FlowStatus.Closed, "have closeed");
         _closeFlow(flowId, meta);
+        if (before != 0) {
+            uint256 usedGas = before - gasleft();
+            _updateUserFund(meta.admin, usedGas);
+        }
     }
 
     function _closeFlow(uint256 flowId, EvaFlowMeta memory meta) internal {
@@ -320,24 +328,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
         uint256 usedGas = before - gasleft();
 
-        uint120 payAmountByETH = 0;
-        uint120 payAmountByFeeToken = 0;
-
-        if (minConfig.feeToken == address(0)) {
-            payAmountByETH = _calculatePaymentAmount(usedGas);
-            uint120 bal = userMetaMap[flow.admin].ethBal;
-
-            if (isOffChain) {
-                uint256 minPay = payAmountByETH > minConfig.minGasFundOneFlow
-                    ? payAmountByETH
-                    : minConfig.minGasFundOneFlow;
-                require(bal >= minPay, "insufficient fund");
-            }
-
-            userMetaMap[flow.admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
-        } else {
-            revert("TODO");
-        }
+        (uint120 payAmountByETH, uint120 payAmountByFeeToken) = _updateUserFund(flow.admin, usedGas);
 
         if (success) {
             emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
@@ -351,6 +342,29 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (needClose && !isOffChain) {
             // don't close flow when try execute on off-chain
             _closeFlow(flowId, flow);
+        }
+    }
+
+    function _updateUserFund(address admin, uint256 usedGas)
+        internal
+        returns (uint120 payAmountByETH, uint120 payAmountByFeeToken)
+    {
+        // solhint-disable avoid-tx-origin
+        bool isOffChain = tx.origin == address(0);
+        if (minConfig.feeToken == address(0)) {
+            payAmountByETH = _calculatePaymentAmount(usedGas);
+            uint120 bal = userMetaMap[admin].ethBal;
+
+            if (isOffChain) {
+                uint256 minPay = payAmountByETH > minConfig.minGasFundOneFlow
+                    ? payAmountByETH
+                    : minConfig.minGasFundOneFlow;
+                require(bal >= minPay, "insufficient fund");
+            }
+
+            userMetaMap[admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
+        } else {
+            revert("TODO");
         }
     }
 
