@@ -24,10 +24,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     uint256 private constant _MAX_INT = type(uint256).max;
     bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
-    //Withdrawable fees
-    uint256 public paymentEthAmount;
-    uint256 public paymentGasAmount;
-
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
     mapping(address => bool) public flowOperators;
@@ -198,13 +194,10 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     ) public payable override {
         if (tokenAdress == address(0)) {
             require(msg.value == amount, "value is not equal");
-
             userMetaMap[flowAdmin].ethBal = userMetaMap[flowAdmin].ethBal + Utils.toUint120(msg.value);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
-
             userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
-
             TransferHelper.safeTransferFrom(tokenAdress, msg.sender, address(this), amount);
         }
     }
@@ -236,11 +229,9 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     function withdrawPayment(address tokenAdress, uint256 amount) external override onlyOwner {
         if (tokenAdress == address(0)) {
-            require(paymentEthAmount >= amount, "");
             TransferHelper.safeTransferETH(msg.sender, amount);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
-            require(paymentGasAmount >= amount, "");
             TransferHelper.safeTransfer(tokenAdress, msg.sender, amount);
         }
     }
