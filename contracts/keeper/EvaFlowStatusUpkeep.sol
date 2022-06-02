@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
+import "../venders/chainlink/KeeperCompatibleInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {IEvaFlowController, KeepNetWork} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";

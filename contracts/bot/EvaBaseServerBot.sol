@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: MIT
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
-import {KeeperRegistryInterface} from "../keeper/chainlink/KeeperRegistryInterface.sol";
-import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
+import "../venders/chainlink/KeeperCompatibleInterface.sol";
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
