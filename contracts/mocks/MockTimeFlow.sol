@@ -63,10 +63,6 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
         tasks[id].expired = expired;
     }
 
-    function multicall(address, bytes memory) external pure override {
-        revert("F");
-    }
-
     function createTask() external returns (uint256 id) {
         tasks.push(Task({paused: false, expired: false, canceled: false, lastTime: 0, times: 0})); //solhint-disable
         return tasks.length - 1;

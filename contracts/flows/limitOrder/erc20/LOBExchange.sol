@@ -18,10 +18,6 @@ contract LOBExchange is IEvaFlow, LOBFlowProxy, LOB {
         strategy = strategy_;
     }
 
-    function multicall(address, bytes memory) external pure override {
-        revert("F");
-    }
-
     function check(bytes memory orderIdData)
         external
         view

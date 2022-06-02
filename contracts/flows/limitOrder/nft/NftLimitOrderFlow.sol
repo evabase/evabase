@@ -42,13 +42,6 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         revert("No support check");
     }
 
-    function multicall(address target, bytes memory callData) external override onlyOwner {
-        require(target != address(this), "FORBIDDEN");
-        require(target != owner(), "FORBIDDEN");
-        target.functionCall(callData, "Multicall CallFailed");
-        return;
-    }
-
     function setFactory(address factory) external onlyOwner {
         evaSafesFactory = IEvaSafesFactory(factory);
     }
