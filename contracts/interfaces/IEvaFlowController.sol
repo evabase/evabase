@@ -18,7 +18,7 @@ struct EvaFlowMeta {
 
 struct EvaUserMeta {
     uint120 ethBal;
-    uint120 gasTokenBal;
+    uint120 gasTokenBal; //keep
     uint8 vaildFlowsNum;
 }
 
@@ -32,6 +32,7 @@ struct MinConfig {
 }
 
 interface IEvaFlowController {
+    event FlowOperatorChanged(address op, bool removed);
     event FlowCreated(address indexed user, uint256 indexed flowId, address flowAdd, bytes checkData, uint256 fee);
     event FlowUpdated(address indexed user, uint256 flowId, address flowAdd);
     event FlowClosed(address indexed user, uint256 flowId);
@@ -84,12 +85,6 @@ interface IEvaFlowController {
 
     function withdrawPayment(uint256 amount) external;
 
-    function getVaildFlowRange(
-        uint256 fromIndex,
-        uint256 endIndex,
-        KeepNetWork keepNetWork
-    ) external view returns (uint256[] memory arr);
-
     function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view returns (uint256 value);
 
     function getAllVaildFlowSize(KeepNetWork keepNetWork) external view returns (uint256 size);
@@ -99,8 +94,6 @@ interface IEvaFlowController {
     function getFlowMetaSize() external view returns (uint256);
 
     function batchExecFlow(address keeper, bytes memory data) external;
-
-    function getSafes(address user) external view returns (address);
 
     function getFlowCheckInfo(uint256 flowId) external view returns (address flow, bytes memory checkData);
 }

@@ -21,14 +21,11 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
 
     uint256 private constant _REGISTRY_GAS_OVERHEAD = 80_000;
-    uint256 private constant _MAX_INT = type(uint256).max;
     bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
     mapping(address => bool) public flowOperators;
-
-    event FlowOperatorChanged(address op, bool removed);
 
     function initialize(address _config, address _evaSafesFactory) external initializer {
         require(_evaSafesFactory != address(0), "addess is 0x");
@@ -67,7 +64,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function _beforeCreateFlow(KeepNetWork _keepNetWork) internal view {
-        require(uint256(_keepNetWork) <= uint256(KeepNetWork.Others), "invalid netWork");
+        require(_keepNetWork <= KeepNetWork.Others, "invalid network");
         require(IEvaSafes(msg.sender).isEvaSafes(), "should be safes");
     }
 
@@ -107,7 +104,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
             EvaFlowMeta({
                 flowStatus: FlowStatus.Active,
                 keepNetWork: network,
-                maxVaildBlockNumber: _MAX_INT,
+                maxVaildBlockNumber: type(uint256).max,
                 admin: msg.sender,
                 lastKeeper: address(0),
                 lastExecNumber: 0,
@@ -127,12 +124,11 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     function closeFlowWithGas(uint256 flowId, uint256 before) public override {
         EvaFlowMeta memory meta = _flowMetas[flowId];
+        require(meta.flowStatus != FlowStatus.Closed, "has closed");
         _requireFlowOperator(meta.admin);
-        require(meta.flowStatus != FlowStatus.Closed, "have closeed");
         _closeFlow(flowId, meta);
-        if (before != 0) {
-            uint256 usedGas = before - gasleft();
-            _updateUserFund(meta.admin, usedGas);
+        if (before > 0) {
+            _updateUserFund(meta.admin, before - gasleft());
         }
     }
 
@@ -162,14 +158,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
     function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view override returns (uint256 value) {
         return _vaildFlows[keepNetWork].get(index);
-    }
-
-    function getVaildFlowRange(
-        uint256 fromIndex,
-        uint256 endIndex,
-        KeepNetWork keepNetWork
-    ) external view override returns (uint256[] memory arr) {
-        return _vaildFlows[keepNetWork].getRange(fromIndex, endIndex);
     }
 
     function getAllVaildFlowSize(KeepNetWork keepNetWork) external view override returns (uint256 size) {
@@ -250,15 +238,15 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
         uint256 usedGas = before - gasleft();
 
-        (uint120 payAmountByETH, uint120 payAmountByFeeToken) = _updateUserFund(flow.admin, usedGas);
+        uint120 payAmountByETH = _updateUserFund(flow.admin, usedGas);
 
         if (success) {
-            emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas);
+            emit FlowExecuteSuccess(flow.admin, flowId, payAmountByETH, 0, usedGas);
         } else {
             if (isOffChain) {
                 revert(failedReason);
             }
-            emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, payAmountByFeeToken, usedGas, failedReason);
+            emit FlowExecuteFailed(flow.admin, flowId, payAmountByETH, 0, usedGas, failedReason);
         }
 
         if (needClose && !isOffChain) {
@@ -267,22 +255,22 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         }
     }
 
-    function _updateUserFund(address admin, uint256 usedGas)
-        internal
-        returns (uint120 payAmountByETH, uint120 payAmountByFeeToken)
-    {
-        // solhint-disable avoid-tx-origin
-        bool isOffChain = tx.origin == address(0);
+    function _updateUserFund(address admin, uint256 usedGas) internal returns (uint120 payAmountByETH) {
         payAmountByETH = _calculatePaymentAmount(usedGas);
         uint120 bal = userMetaMap[admin].ethBal;
 
-        if (isOffChain) {
+        //offchain
+        // solhint-disable avoid-tx-origin
+        if (tx.origin == address(0)) {
             uint256 minPay = payAmountByETH > minConfig.minGasFundOneFlow
                 ? payAmountByETH
                 : minConfig.minGasFundOneFlow;
             require(bal >= minPay, "insufficient fund");
         }
-        userMetaMap[admin].ethBal = bal < payAmountByETH ? 0 : bal - payAmountByETH;
+        if (bal < payAmountByETH) {
+            payAmountByETH = bal;
+        }
+        userMetaMap[admin].ethBal -= payAmountByETH;
     }
 
     function _calculatePaymentAmount(uint256 gasLimit) private view returns (uint120 payment) {
@@ -290,10 +278,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         uint256 weiForGas = price * (gasLimit + _REGISTRY_GAS_OVERHEAD);
         uint256 total = (weiForGas * minConfig.ppb) / 10000;
         return uint120(total);
-    }
-
-    function getSafes(address user) external view override returns (address) {
-        return evaSafesFactory.get(user);
     }
 
     function getFlowCheckInfo(uint256 flowId) external view override returns (address flow, bytes memory checkData) {
