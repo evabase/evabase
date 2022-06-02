@@ -14,7 +14,7 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
     event Executed(uint256 indexed id, uint256 times);
     event Closed(uint256 indexed id);
 
-    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls(bytes)");
 
     struct Task {
         bool paused;

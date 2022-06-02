@@ -11,7 +11,7 @@ import "./interfaces/IEvaFlow.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 contract EvaFlowExecutor is IEvaFlowExecutor {
-    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls(bytes)");
     IERC1820Registry private constant _ERC1820_REGISTRY =
         IERC1820Registry(address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24));
 

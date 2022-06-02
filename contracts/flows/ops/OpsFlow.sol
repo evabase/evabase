@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
     using Address for address;
-    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls(bytes)");
 
     mapping(uint256 => Task) private _tasks;
     IEvaSafesFactory public evaSafesFactory;
