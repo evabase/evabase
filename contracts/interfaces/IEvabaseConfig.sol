@@ -23,19 +23,7 @@ interface IEvabaseConfig {
 
     function control() external view returns (address);
 
-    function setControl(address control_) external;
-
     function isKeeper(address query) external view returns (bool);
-
-    function addKeeper(address keeper, KeepNetWork keepNetWork) external;
-
-    function removeKeeper(address keeper) external;
-
-    function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWork) external;
-
-    function removeBatchKeeper(address[] memory arr) external;
-
-    function setBatchFlowNum(uint32 num) external;
 
     function batchFlowNum() external view returns (uint32);
 
