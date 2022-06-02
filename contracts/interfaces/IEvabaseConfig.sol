@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
-struct KeepStruct {
+struct KeepInfo {
     bool isActive;
     KeepNetWork keepNetWork;
 }
@@ -41,7 +41,7 @@ interface IEvabaseConfig {
 
     function keepBotSizes(KeepNetWork keepNetWork) external view returns (uint32);
 
-    function getKeepBot(address add) external view returns (KeepStruct memory);
+    function getKeepBot(address add) external view returns (KeepInfo memory);
 
     function isActiveControler(address add) external view returns (bool);
 }

@@ -11,7 +11,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract EvabaseConfig is IEvabaseConfig, Ownable {
     event ItemChanged(bytes32 indexed key, bytes32 newValue);
 
-    mapping(address => KeepStruct) private _keepBotExists;
+    mapping(address => KeepInfo) private _keepBotExists;
     mapping(KeepNetWork => uint32) public override keepBotSizes;
 
     address public override control;
@@ -28,7 +28,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         require(msg.sender == owner(), "only owner can add keeper");
         require(!_keepBotExists[_keeper].isActive, "keeper exist");
 
-        _keepBotExists[_keeper] = KeepStruct(true, keepNetWork);
+        _keepBotExists[_keeper] = KeepInfo(true, keepNetWork);
 
         // require(keepBots.contains(_keeper), "keeper exist");
         // keepBots.add(_keeper);
@@ -71,7 +71,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
 
                 // require(keepBots.contains(_keeper), "keeper exist");
                 // keepBots.add(_keeper);
-                _keepBotExists[arr[i]] = KeepStruct(true, keepNetWorks[i]);
+                _keepBotExists[arr[i]] = KeepInfo(true, keepNetWorks[i]);
 
                 // stuct.isActive == true;
                 // _keepBotExists[arr[i]].keepNetWork == keepNetWorks[i];
@@ -99,7 +99,7 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         // return keepBots.contains(_query);
     }
 
-    function getKeepBot(address _query) external view override returns (KeepStruct memory) {
+    function getKeepBot(address _query) external view override returns (KeepInfo memory) {
         return _keepBotExists[_query];
         // return keepBots.contains(_query);
     }

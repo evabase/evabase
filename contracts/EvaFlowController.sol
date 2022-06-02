@@ -273,7 +273,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         (uint256[] memory arr, bytes[] memory executeDataArray) = abi.decode(data, (uint256[], bytes[]));
         require(arr.length == executeDataArray.length, "invalid array len");
 
-        KeepStruct memory ks = config.getKeepBot(msg.sender);
+        KeepInfo memory ks = config.getKeepBot(msg.sender);
         require(ks.isActive, "exect keeper is not whitelist");
 
         for (uint256 i = 0; i < arr.length; i++) {
@@ -292,7 +292,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function _execFlow(
-        KeepStruct memory ks,
+        KeepInfo memory ks,
         address keeper,
         uint256 flowId,
         bytes memory execData
