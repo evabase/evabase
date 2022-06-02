@@ -2,11 +2,11 @@
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 import "../interfaces/IStrategy.sol";
-import "./uniswapv2/IUniswapV2Router02.sol";
 
 import "../../../../lib/TransferHelper.sol";
-import "./uniswapv2/IUniswapV2Factory.sol";
-import "./uniswapv2/IUniswapV2Pair.sol";
+import "../../../../venders/uniswapv2/IUniswapV2Router02.sol";
+import "../../../../venders/uniswapv2/IUniswapV2Factory.sol";
+import "../../../../venders/uniswapv2/IUniswapV2Pair.sol";
 
 contract UniswapV2Strategy is IStrategy {
     uint256 public constant DEADLINE = 30 minutes;
