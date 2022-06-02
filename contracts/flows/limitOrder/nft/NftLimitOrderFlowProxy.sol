@@ -21,9 +21,7 @@ contract NftLimitOrderFlowProxy is IEvaFlowProxy, NftLimitOrderFlow {
         Order memory order
     ) external payable {
         require(bytes(name).length > 0, "invalid name");
-        uint256 _value = 0;
-
-        _value = msg.value - gasFee;
+        uint256 _value = msg.value - gasFee;
         require(order.amount * order.price <= _value, "order value + gasFee must be greater than msg.value");
 
         uint256 flowSize = ser.getFlowMetaSize();

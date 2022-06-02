@@ -38,7 +38,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         init(name, version);
     }
 
-    function check(bytes memory) external view override returns (bool, bytes memory) {
+    function check(bytes memory) external pure override returns (bool, bytes memory) {
         revert("No support check");
     }
 
@@ -184,9 +184,4 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         uint256 deadline = orderExists[orderId].deadline;
         return deadline > 0 && deadline < block.timestamp;
     }
-
-    /**
-    @dev can receive ETH, owner can refund.
-   */
-    receive() external payable {} //solhint-disable
 }
