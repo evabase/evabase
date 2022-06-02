@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "./interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
-import {Utils} from "./lib/Utils.sol";
+import "./lib/MathConv.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
@@ -98,7 +98,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function _appendFee(address acct, uint256 amount) private {
-        userMetaMap[acct].ethBal += Utils.toUint120(amount);
+        userMetaMap[acct].ethBal += MathConv.toU120(amount);
     }
 
     function registerFlow(
@@ -199,11 +199,11 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (tokenAdress == address(0)) {
             require(msg.value == amount, "value is not equal");
 
-            userMetaMap[flowAdmin].ethBal = userMetaMap[flowAdmin].ethBal + Utils.toUint120(msg.value);
+            userMetaMap[flowAdmin].ethBal = userMetaMap[flowAdmin].ethBal + MathConv.toU120(msg.value);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
 
-            userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + Utils.toUint120(amount);
+            userMetaMap[flowAdmin].gasTokenBal = userMetaMap[flowAdmin].gasTokenBal + MathConv.toU120(amount);
 
             TransferHelper.safeTransferFrom(tokenAdress, msg.sender, address(this), amount);
         }
@@ -222,13 +222,13 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
 
         if (tokenAdress == address(0)) {
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
-            userMetaMap[safeWallet].ethBal -= Utils.toUint120(amount);
+            userMetaMap[safeWallet].ethBal -= MathConv.toU120(amount);
             TransferHelper.safeTransferETH(recipient, amount);
         } else {
             require(tokenAdress == minConfig.feeToken, "error FeeToken");
             require(userMetaMap[safeWallet].ethBal >= amount + minTotalGas, "withdraw too big");
 
-            userMetaMap[safeWallet].gasTokenBal -= Utils.toUint120(amount);
+            userMetaMap[safeWallet].gasTokenBal -= MathConv.toU120(amount);
 
             TransferHelper.safeTransfer(tokenAdress, recipient, amount);
         }
@@ -270,7 +270,7 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function batchExecFlow(address keeper, bytes memory data) external override {
-        (uint256[] memory arr, bytes[] memory executeDataArray) = Utils._decodeTwoArr(data);
+        (uint256[] memory arr, bytes[] memory executeDataArray) = abi.decode(data, (uint256[], bytes[]));
         require(arr.length == executeDataArray.length, "invalid array len");
 
         KeepStruct memory ks = config.getKeepBot(msg.sender);

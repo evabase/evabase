@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import "../../../interfaces/IEvaFlow.sol";
 import "../../../venders/EIP712.sol";
-import "../../../lib/Utils.sol";
+import "../../../lib/MathConv.sol";
 import "../../../interfaces/INftLimitOrder.sol";
 import {IEvabaseConfig} from "../../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../../interfaces/IEvaSafes.sol";
@@ -73,8 +73,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         orderExists[orderId] = OrderExist({
             amount: 0,
             owner: order.owner,
-            balance: Utils.toUint96(total),
-            deadline: Utils.toUint64(order.deadline)
+            balance: MathConv.toU96(total),
+            deadline: MathConv.toU64(order.deadline)
         });
 
         emit OrderCreated(msg.sender, flowId, order);
@@ -137,9 +137,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         }
 
         //Increase in the number of completed purchases
-        orderExist.amount = Utils.toUint8(_data.length) + orderExist.amount;
+        orderExist.amount = MathConv.toU8(_data.length) + orderExist.amount;
         //Decrease in funds deposited for purchases
-        uint96 totalUsed = Utils.toUint96(total);
+        uint96 totalUsed = MathConv.toU96(total);
         require(orderExist.balance >= totalUsed, "invalid balance");
         orderExist.balance = orderExist.balance - totalUsed;
 

@@ -2,7 +2,7 @@
 // Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 import "../../interfaces/IEvaSubFlow.sol";
-import "../../lib/Utils.sol";
+import "../../lib/MathConv.sol";
 import "../../interfaces/IOpsFlow.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
@@ -54,7 +54,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
             delete _tasks[taskId];
         } else {
             // solhint-disable not-rely-on-time
-            _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
+            _tasks[taskId].lastExecTime = MathConv.toU64(block.timestamp);
         }
         emit TaskExecuted(taskId);
     }
@@ -63,13 +63,13 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(task.inputs.length > 0, "invalid length");
         require(task.interval >= _MIN_INTERAL, "invalid interval");
         //check
-        require(task.deadline > Utils.toUint64(block.timestamp) || task.deadline == 0, "invalid time");
+        require(task.deadline > MathConv.toU64(block.timestamp) || task.deadline == 0, "invalid time");
         for (uint256 i = 0; i < task.inputs.length; i++) {
             (address contractAdd, , ) = abi.decode(task.inputs[i], (address, uint120, bytes));
             require(contractAdd != address(this) && contractAdd != msg.sender, "FORBIDDEN");
         }
 
-        task.lastExecTime = Utils.toUint64(block.timestamp);
+        task.lastExecTime = MathConv.toU64(block.timestamp);
         _tasks[taskId] = task;
 
         _taskId = abi.encode(taskId);
@@ -112,8 +112,8 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         uint64 startTime = _tasks[taskId].startTime;
         uint64 lastExecTime = _tasks[taskId].lastExecTime;
         return
-            Utils.toUint64(block.timestamp) >= startTime &&
-            ((deadline >= lastExecTime + interval && Utils.toUint64(block.timestamp) >= lastExecTime + interval) ||
+            MathConv.toU64(block.timestamp) >= startTime &&
+            ((deadline >= lastExecTime + interval && MathConv.toU64(block.timestamp) >= lastExecTime + interval) ||
                 (deadline == 0)) &&
             _tasks[taskId].owner != address(0);
     }

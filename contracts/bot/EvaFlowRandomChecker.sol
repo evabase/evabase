@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
 import {IEvaFlowController, EvaFlowMeta} from "../interfaces/IEvaFlowController.sol";
-import {Utils} from "../lib/Utils.sol";
+import "../lib/MathConv.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
 
