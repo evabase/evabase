@@ -2,7 +2,6 @@
 // Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 import "../../interfaces/IEvaSubFlow.sol";
-import "../../interfaces/EIP712.sol";
 import "../../lib/Utils.sol";
 import "../../interfaces/IOpsFlow.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";

@@ -2,7 +2,7 @@
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
 import "../../../interfaces/IEvaFlow.sol";
-import "../../../interfaces/EIP712.sol";
+import "../../../venders/EIP712.sol";
 import "../../../lib/Utils.sol";
 import "../../../interfaces/INftLimitOrder.sol";
 import {IEvabaseConfig} from "../../../interfaces/IEvabaseConfig.sol";
