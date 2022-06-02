@@ -114,8 +114,7 @@ interface IEvaFlowController {
 
     function batchExecFlow(
         address keeper,
-        bytes memory data,
-        uint256 gasLimit
+        bytes memory data
     ) external;
 
     function getSafes(address user) external view returns (address);

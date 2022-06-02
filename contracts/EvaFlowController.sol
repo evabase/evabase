@@ -269,16 +269,16 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         return _flowMetas.length;
     }
 
-    function batchExecFlow(
-        address keeper,
-        bytes memory data,
-        uint256
-    ) external override {
+    function batchExecFlow(address keeper, bytes memory data) external override {
         (uint256[] memory arr, bytes[] memory executeDataArray) = Utils._decodeTwoArr(data);
         require(arr.length == executeDataArray.length, "invalid array len");
+
+        KeepStruct memory ks = config.getKeepBot(msg.sender);
+        require(ks.isActive, "exect keeper is not whitelist");
+
         for (uint256 i = 0; i < arr.length; i++) {
             if (arr[i] > 0) {
-                execFlow(keeper, arr[i], executeDataArray[i]);
+                _execFlow(ks, keeper, arr[i], executeDataArray[i]);
             }
         }
     }
@@ -288,8 +288,16 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         uint256 flowId,
         bytes memory execData
     ) public override {
+        _execFlow(config.getKeepBot(msg.sender), keeper, flowId, execData);
+    }
+
+    function _execFlow(
+        KeepStruct memory ks,
+        address keeper,
+        uint256 flowId,
+        bytes memory execData
+    ) private {
         EvaFlowMeta memory flow = _flowMetas[flowId];
-        KeepStruct memory ks = config.getKeepBot(msg.sender);
 
         // solhint-disable avoid-tx-origin
         bool isOffChain = tx.origin == address(0);
@@ -298,7 +306,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
         if (!isOffChain) {
             // Check if the flow's network matches the keeper
             require(flow.keepNetWork == ks.keepNetWork, "invalid keepNetWork");
-            require(ks.isActive, "exect keeper is not whitelist");
         }
 
         uint256 before = gasleft();

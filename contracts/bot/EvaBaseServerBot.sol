@@ -15,7 +15,6 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
     event SetEBSKeepStatus(address indexed user, bool status);
     uint32 public keepBotId;
     mapping(address => bool) public keeps;
-    uint32 private constant _EXEC_GAS_LIMIT = 8_000_000;
 
     constructor(IEvabaseConfig _config, IEvaFlowChecker _evaFlowChecker) {
         require(address(_config) != address(0), "addess is 0x");
@@ -48,23 +47,11 @@ contract EvaBaseServerBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable 
 
         require(keeps[msg.sender], "not active EvaBase bot");
 
-        IEvaFlowController(config.control()).batchExecFlow(msg.sender, _execdata, _EXEC_GAS_LIMIT);
+        IEvaFlowController(config.control()).batchExecFlow(msg.sender, _execdata);
     }
 
     function setEBSKeepStatus(address keep, bool status) external onlyOwner {
         keeps[keep] = status;
         emit SetEBSKeepStatus(keep, status);
-    }
-
-    function encodeTwoArr(uint256[] memory _uint, bytes[] memory _bytes) external pure returns (bytes memory) {
-        return (abi.encode(_uint, _bytes));
-    }
-
-    function encodeUintAndBytes(bytes memory _bytes, uint256 _value) external pure returns (bytes memory) {
-        return (abi.encode(_bytes, _value));
-    }
-
-    function encodeUints(uint256[] memory _uint) external pure returns (bytes memory) {
-        return (abi.encode(_uint));
     }
 }
