@@ -68,12 +68,6 @@ interface IEvaFlowController {
         bytes memory checkdata
     ) external payable returns (uint256 flowId);
 
-    function updateFlow(
-        uint256 flowId,
-        string memory flowName,
-        bytes memory flowCode
-    ) external;
-
     function closeFlow(uint256 flowId) external;
 
     function closeFlowWithGas(uint256 flowId, uint256 before) external;
@@ -84,19 +78,11 @@ interface IEvaFlowController {
         bytes memory inputData
     ) external;
 
-    function addFundByUser(
-        address tokenAdress,
-        uint256 amount,
-        address user
-    ) external payable;
+    function depositFund(address flowAdmin) external payable;
 
-    function withdrawFundByUser(
-        address recipient,
-        address tokenAdress,
-        uint256 amount
-    ) external;
+    function withdrawFund(address recipient, uint256 amount) external;
 
-    function withdrawPayment(address tokenAdress, uint256 amount) external;
+    function withdrawPayment(uint256 amount) external;
 
     function getVaildFlowRange(
         uint256 fromIndex,
@@ -112,10 +98,7 @@ interface IEvaFlowController {
 
     function getFlowMetaSize() external view returns (uint256);
 
-    function batchExecFlow(
-        address keeper,
-        bytes memory data
-    ) external;
+    function batchExecFlow(address keeper, bytes memory data) external;
 
     function getSafes(address user) external view returns (address);
 
