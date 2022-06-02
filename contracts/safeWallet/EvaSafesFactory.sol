@@ -69,6 +69,5 @@ contract EvaSafesFactory is IEvaSafesFactory, Ownable, ReentrancyGuard {
                 )
             )
         );
-        // return address(uint160(uint256(_data)));
     }
 }

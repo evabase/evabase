@@ -65,8 +65,6 @@ contract EvabaseConfig is IEvabaseConfig, Ownable {
         KeepNetWork _keepNetWork = _keepBotExists[_keeper].keepNetWork;
         keepBotSizes[_keepNetWork] = keepBotSizes[_keepNetWork] - 1;
         delete _keepBotExists[_keeper];
-        // require(!keepBots.contains(_keeper), "keeper not exist");
-        // keepBots.remove(_keeper);
         emit RemoveKeeper(msg.sender, _keeper);
     }
 

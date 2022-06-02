@@ -63,6 +63,4 @@ library EvabaseHelper {
     function get(UintSet storage self, uint256 index) internal view returns (uint256) {
         return self.values[index];
     }
-
-
 }
