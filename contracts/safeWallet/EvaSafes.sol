@@ -13,7 +13,7 @@ contract EvaSafes is IEvaSafes {
 
     bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
-    address public owner;
+    address public override owner;
     address public config;
     /* Whether access has been revoked. */
     bool public revoked;
@@ -54,11 +54,7 @@ contract EvaSafes is IEvaSafes {
     }
 
     function withdraw(address token, uint256 amount) external onlyOwner {
-        if (token == address(0)) {
-            TransferHelper.safeTransferETH(msg.sender, amount);
-        } else {
-            TransferHelper.safeTransfer(token, msg.sender, amount);
-        }
+        TransferHelper.safeTransferTokenOrETH(token, msg.sender, amount);
     }
 
     function isEvaSafes() external pure override returns (bool) {

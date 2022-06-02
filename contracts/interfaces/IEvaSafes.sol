@@ -8,6 +8,8 @@ enum HowToCall {
 }
 
 interface IEvaSafes {
+    function owner() external view returns (address);
+
     function initialize(address admin, address agent) external;
 
     function proxy(
