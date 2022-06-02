@@ -5,7 +5,6 @@ import "../lib/TransferHelper.sol";
 import "./MockERC20.sol";
 
 import "../flows/limitOrder/erc20/interfaces/IStrategy.sol";
-import "../flows/limitOrder/erc20/strategyies/StrategyBase.sol";
 
 contract MockSwapStrategy is IStrategy {
     uint256 private _amountOut;
