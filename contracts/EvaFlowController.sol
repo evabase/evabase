@@ -24,10 +24,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     uint256 private constant _MAX_INT = type(uint256).max;
     bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
 
-    //Withdrawable fees
-    uint256 public paymentEthAmount;
-    uint256 public paymentGasAmount;
-
     IEvaSafesFactory public evaSafesFactory;
     IEvabaseConfig public config;
     mapping(address => bool) public flowOperators;
@@ -161,7 +157,6 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function withdrawPayment(uint256 amount) external override onlyOwner {
-        paymentEthAmount -= amount;
         TransferHelper.safeTransferETH(msg.sender, amount);
     }
 
