@@ -1,25 +1,21 @@
 //SPDX-License-Identifier: MIT
 //Create by Openflow.network core team.
 pragma solidity ^0.8.0;
-import {KeeperRegistryInterface} from "../keeper/chainlink/KeeperRegistryInterface.sol";
-import {KeeperCompatibleInterface} from "../keeper/chainlink/KeeperCompatibleInterface.sol";
+
+import "../venders/chainlink/KeeperRegistryInterface.sol";
+import "../venders/chainlink/KeeperCompatibleInterface.sol";
 import {EvaKeepBotBase} from "../keeper/EvaKeepBotBase.sol";
 import {IEvabaseConfig} from "../interfaces/IEvabaseConfig.sol";
 import {IEvaFlowChecker} from "../interfaces/IEvaFlowChecker.sol";
 import {IEvaFlowController} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
-import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import {UpkeepRegistrationRequestsInterface} from "../keeper/chainlink/UpkeepRegistrationRequestsInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
 contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface, Ownable {
-    uint32 private constant _CHECK_GAS_LIMIT = 2_000_000;
-    uint32 private constant _EXEC_GAS_LIMIT = 2_000_000;
-    uint256 private constant _TIME_SOLT = 12 seconds;
     uint256 public lastMoveTime;
 
-    KeeperRegistryInterface private immutable _keeperRegistry;
+    address private immutable _keeperRegistry;
 
     event SetEvaCheck(address indexed evaCheck);
 
@@ -34,7 +30,7 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
 
         config = IEvabaseConfig(config_);
         evaFlowChecker = IEvaFlowChecker(evaFlowChecker_);
-        _keeperRegistry = KeeperRegistryInterface(keeperRegistry_);
+        _keeperRegistry = keeperRegistry_;
         lastMoveTime = block.timestamp; // solhint-disable
     }
 
@@ -47,6 +43,11 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
     }
 
     function performUpkeep(bytes calldata performData) external override {
+        //Removal of pre-execution by chainlink keeper
+        // solhint-disable avoid-tx-origin
+        if (tx.origin == address(0)) {
+            return; // return if call from chainlink keeper
+        }
         _exec(performData);
     }
 
@@ -56,21 +57,9 @@ contract EvaFlowChainLinkKeeperBot is EvaKeepBotBase, KeeperCompatibleInterface,
     }
 
     function _exec(bytes memory execdata) internal override {
-        //Removal of pre-execution by chainlink keeper
-        // solhint-disable avoid-tx-origin
-        if (tx.origin == address(0)) {
-            return;
-        }
-
-        require(msg.sender == address(_keeperRegistry), "only for keeperRegistry");
+        require(msg.sender == _keeperRegistry, "only for keeperRegistry");
         lastMoveTime = block.timestamp; // solhint-disable
-
-        address keeper = tx.origin; // solhint-disable
-        //off-chain try execute
-        if (keeper == address(0)) {
-            keeper = msg.sender;
-        }
-        IEvaFlowController(config.control()).batchExecFlow(keeper, execdata, _EXEC_GAS_LIMIT);
+        IEvaFlowController(config.control()).batchExecFlow(tx.origin, execdata);
     }
 
     function setEvaCheck(IEvaFlowChecker evaFlowChecker_) external onlyOwner {

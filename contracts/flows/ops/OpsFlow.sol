@@ -2,8 +2,7 @@
 // Create by Openflow.network core team.
 pragma solidity ^0.8.0;
 import "../../interfaces/IEvaSubFlow.sol";
-import "../../interfaces/EIP712.sol";
-import "../../lib/Utils.sol";
+import "../../lib/MathConv.sol";
 import "../../interfaces/IOpsFlow.sol";
 import {IEvabaseConfig} from "../../interfaces/IEvabaseConfig.sol";
 import {IEvaFlowController} from "../../interfaces/IEvaFlowController.sol";
@@ -14,7 +13,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 
 contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
     using Address for address;
-    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls");
+    bytes32 private constant _SUB_FLOW_INTERFACE = keccak256("getSubCalls(bytes)");
 
     mapping(uint256 => Task) private _tasks;
     IEvaSafesFactory public evaSafesFactory;
@@ -39,13 +38,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         return (true, taskIdData);
     }
 
-    function multicall(address target, bytes memory callData) external override onlyOwner {
-        require(target != address(this), "FORBIDDEN");
-        require(target != owner(), "FORBIDDEN");
-        target.functionCall(callData, "ops multicall CallFailed");
-        return;
-    }
-
     function setFactory(address factory) external onlyOwner {
         evaSafesFactory = IEvaSafesFactory(factory);
     }
@@ -62,7 +54,7 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
             delete _tasks[taskId];
         } else {
             // solhint-disable not-rely-on-time
-            _tasks[taskId].lastExecTime = Utils.toUint64(block.timestamp);
+            _tasks[taskId].lastExecTime = MathConv.toU64(block.timestamp);
         }
         emit TaskExecuted(taskId);
     }
@@ -71,13 +63,13 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         require(task.inputs.length > 0, "invalid length");
         require(task.interval >= _MIN_INTERAL, "invalid interval");
         //check
-        require(task.deadline > Utils.toUint64(block.timestamp) || task.deadline == 0, "invalid time");
+        require(task.deadline > MathConv.toU64(block.timestamp) || task.deadline == 0, "invalid time");
         for (uint256 i = 0; i < task.inputs.length; i++) {
             (address contractAdd, , ) = abi.decode(task.inputs[i], (address, uint120, bytes));
             require(contractAdd != address(this) && contractAdd != msg.sender, "FORBIDDEN");
         }
 
-        task.lastExecTime = Utils.toUint64(block.timestamp);
+        task.lastExecTime = MathConv.toU64(block.timestamp);
         _tasks[taskId] = task;
 
         _taskId = abi.encode(taskId);
@@ -120,8 +112,8 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
         uint64 startTime = _tasks[taskId].startTime;
         uint64 lastExecTime = _tasks[taskId].lastExecTime;
         return
-            Utils.toUint64(block.timestamp) >= startTime &&
-            ((deadline >= lastExecTime + interval && Utils.toUint64(block.timestamp) >= lastExecTime + interval) ||
+            MathConv.toU64(block.timestamp) >= startTime &&
+            ((deadline >= lastExecTime + interval && MathConv.toU64(block.timestamp) >= lastExecTime + interval) ||
                 (deadline == 0)) &&
             _tasks[taskId].owner != address(0);
     }

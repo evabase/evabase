@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 import {KeepNetWork} from "../lib/EvabaseHelper.sol";
 
-struct KeepStruct {
+struct KeepInfo {
     bool isActive;
     KeepNetWork keepNetWork;
 }
@@ -23,25 +23,13 @@ interface IEvabaseConfig {
 
     function control() external view returns (address);
 
-    function setControl(address control_) external;
-
     function isKeeper(address query) external view returns (bool);
-
-    function addKeeper(address keeper, KeepNetWork keepNetWork) external;
-
-    function removeKeeper(address keeper) external;
-
-    function addBatchKeeper(address[] memory arr, KeepNetWork[] memory keepNetWork) external;
-
-    function removeBatchKeeper(address[] memory arr) external;
-
-    function setBatchFlowNum(uint32 num) external;
 
     function batchFlowNum() external view returns (uint32);
 
     function keepBotSizes(KeepNetWork keepNetWork) external view returns (uint32);
 
-    function getKeepBot(address add) external view returns (KeepStruct memory);
+    function getKeepBot(address add) external view returns (KeepInfo memory);
 
     function isActiveControler(address add) external view returns (bool);
 }

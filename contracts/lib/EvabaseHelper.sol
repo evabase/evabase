@@ -63,35 +63,4 @@ library EvabaseHelper {
     function get(UintSet storage self, uint256 index) internal view returns (uint256) {
         return self.values[index];
     }
-
-    function getAll(UintSet storage self) internal view returns (uint256[] memory) {
-        // uint256[] memory output = new uint256[](self.values.length);
-        // for (uint256 i; i < self.values.length; i++) {
-        //     output[i] = self.values[i];
-        // }
-        return self.values;
-    }
-
-    function toBytes(uint256 x) internal pure returns (bytes memory b) {
-        b = new bytes(32);
-        // solhint-disable no-inline-assembly
-        assembly {
-            mstore(add(b, 32), x)
-        }
-    }
-
-    function getRange(
-        UintSet storage self,
-        uint256 fromIndex,
-        uint256 endIndex
-    ) internal view returns (uint256[] memory) {
-        require(fromIndex <= endIndex, "fromIndex gt endIndex");
-        require(endIndex <= self.values.length, "endIndex exceed bound");
-        uint256[] memory output = new uint256[](endIndex - fromIndex);
-        uint256 j = 0;
-        for (uint256 i = fromIndex; i < endIndex; i++) {
-            output[j++] = self.values[i];
-        }
-        return output;
-    }
 }

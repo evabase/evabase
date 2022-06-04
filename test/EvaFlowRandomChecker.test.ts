@@ -102,9 +102,7 @@ describe('EvaFlowRandomChecker', function () {
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
-      await app.controler
-        .connect(keepers[0])
-        .batchExecFlow(keepers[0].address, result.execData, ethers.constants.MaxUint256);
+      await app.controler.connect(keepers[0]).batchExecFlow(keepers[0].address, result.execData);
     }
     // 再次检查时 应该都为 False
     for (let i = 0; i < 3; i++) {
@@ -125,9 +123,7 @@ describe('EvaFlowRandomChecker', function () {
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
-      await app.controler
-        .connect(keepers[1])
-        .batchExecFlow(keepers[1].address, result.execData, ethers.constants.MaxUint256);
+      await app.controler.connect(keepers[1]).batchExecFlow(keepers[1].address, result.execData);
     }
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);

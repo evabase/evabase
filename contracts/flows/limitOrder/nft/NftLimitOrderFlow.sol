@@ -2,8 +2,8 @@
 // Copy from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/TransferHelper.sol
 pragma solidity ^0.8.0;
 import "../../../interfaces/IEvaFlow.sol";
-import "../../../interfaces/EIP712.sol";
-import "../../../lib/Utils.sol";
+import "../../../venders/EIP712.sol";
+import "../../../lib/MathConv.sol";
 import "../../../interfaces/INftLimitOrder.sol";
 import {IEvabaseConfig} from "../../../interfaces/IEvabaseConfig.sol";
 import {IEvaSafes} from "../../../interfaces/IEvaSafes.sol";
@@ -38,15 +38,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         init(name, version);
     }
 
-    function check(bytes memory) external view override returns (bool, bytes memory) {
+    function check(bytes memory) external pure override returns (bool, bytes memory) {
         revert("No support check");
-    }
-
-    function multicall(address target, bytes memory callData) external override onlyOwner {
-        require(target != address(this), "FORBIDDEN");
-        require(target != owner(), "FORBIDDEN");
-        target.functionCall(callData, "Multicall CallFailed");
-        return;
     }
 
     function setFactory(address factory) external onlyOwner {
@@ -80,8 +73,8 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         orderExists[orderId] = OrderExist({
             amount: 0,
             owner: order.owner,
-            balance: Utils.toUint96(total),
-            deadline: Utils.toUint64(order.deadline)
+            balance: MathConv.toU96(total),
+            deadline: MathConv.toU64(order.deadline)
         });
 
         emit OrderCreated(msg.sender, flowId, order);
@@ -144,9 +137,9 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         }
 
         //Increase in the number of completed purchases
-        orderExist.amount = Utils.toUint8(_data.length) + orderExist.amount;
+        orderExist.amount = MathConv.toU8(_data.length) + orderExist.amount;
         //Decrease in funds deposited for purchases
-        uint96 totalUsed = Utils.toUint96(total);
+        uint96 totalUsed = MathConv.toU96(total);
         require(orderExist.balance >= totalUsed, "invalid balance");
         orderExist.balance = orderExist.balance - totalUsed;
 
@@ -191,9 +184,4 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
         uint256 deadline = orderExists[orderId].deadline;
         return deadline > 0 && deadline < block.timestamp;
     }
-
-    /**
-    @dev can receive ETH, owner can refund.
-   */
-    receive() external payable {} //solhint-disable
 }
