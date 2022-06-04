@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 import "./interfaces/IEvaFlowController.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
-import {FlowStatus, KeepNetWork, EvabaseHelper} from "./lib/EvabaseHelper.sol";
+import {FlowStatus, KeepNetWork} from "./lib/EvabaseHelper.sol";
 import "./lib/MathConv.sol";
 import {TransferHelper} from "./lib/TransferHelper.sol";
 import {IEvaSafes} from "./interfaces/IEvaSafes.sol";
 import "./interfaces/IEvabaseConfig.sol";
 import "./interfaces/IEvaFlowExecutor.sol";
-
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
@@ -17,8 +17,8 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     mapping(address => EvaUserMeta) public userMetaMap;
 
     //need exec flows
-    using EvabaseHelper for EvabaseHelper.UintSet;
-    mapping(KeepNetWork => EvabaseHelper.UintSet) private _vaildFlows;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    mapping(KeepNetWork => EnumerableSetUpgradeable.UintSet) private _vaildFlows;
 
     uint256 private constant _REGISTRY_GAS_OVERHEAD = 80_000;
     bytes32 private constant _FLOW_EXECUTOR = keccak256("FLOW_EXECUTOR");
@@ -157,11 +157,11 @@ contract EvaFlowController is IEvaFlowController, OwnableUpgradeable {
     }
 
     function getIndexVaildFlow(uint256 index, KeepNetWork keepNetWork) external view override returns (uint256 value) {
-        return _vaildFlows[keepNetWork].get(index);
+        return _vaildFlows[keepNetWork].at(index);
     }
 
     function getAllVaildFlowSize(KeepNetWork keepNetWork) external view override returns (uint256 size) {
-        return _vaildFlows[keepNetWork].getSize();
+        return _vaildFlows[keepNetWork].length();
     }
 
     function getFlowMetas(uint256 index) external view override returns (EvaFlowMeta memory) {
