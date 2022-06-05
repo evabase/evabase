@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IEvabaseConfig.sol";
 
-import {EvabaseHelper, KeepNetWork} from "./lib/EvabaseHelper.sol";
+import {KeepNetWork} from "./lib/EvabaseHelper.sol";
 import {IEvaSafesFactory} from "./interfaces/IEvaSafesFactory.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
