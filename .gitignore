@@ -1,0 +1,22 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+.openzeppelin
+
+#Hardhat files
+cache
+artifacts
+.DS_Store
+
+# temporary artifact from solidity-coverage
+allFiredEvents
+.coverage_artifacts
+.coverage_cache
+.coverage_contracts
+
+# Certora
+.certora*
+.last_confs
+certora_*
