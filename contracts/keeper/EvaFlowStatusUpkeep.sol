@@ -7,6 +7,7 @@ import "../venders/chainlink/KeeperCompatibleInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {IEvaFlowController, KeepNetWork} from "../interfaces/IEvaFlowController.sol";
 import {IEvaFlow} from "../interfaces/IEvaFlow.sol";
+import "../lib/MathConv.sol";
 
 contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
     event PerformFailed(uint256 flowId, string err);
@@ -96,5 +97,6 @@ contract EvaFlowStatusUpkeep is KeeperCompatibleInterface, Ownable {
         }
         // Eusure that invalid tx are not always minted.
         require(succCount > 0, "all failed");
+        lastPerformTime = MathConv.toU64(block.timestamp);
     }
 }
