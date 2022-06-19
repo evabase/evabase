@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "rinkeby": "npx hardhat run --network rinkeby scripts/deploy/deploy.ts",
+    "mainnet": "npx hardhat run --network mainnet scripts/deploy/deploy.ts",
     "bsctest": "npx hardhat run --network bscTest scripts/deploy/deploy.ts",
     "local": "npx hardhat run --network localhost scripts/deploy/deploy.ts",
     "coverage": "env COVERAGE=true hardhat coverage",
@@ -15,7 +16,7 @@
     "lint:sol": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier --write \"contracts/**/*.sol\"",
     "clean": "hardhat clean && rimraf build contracts/build",
-    "buildPrepare": "npm run clean && env COMPILE_MODE=production npm run compile",
+    "buildPrepare": "npm run clean && env COMPILE_MODE=production && npm run compile",
     "prepack": "scripts/prepack.sh",
     "test": "hardhat test",
     "test:inheritance": "node scripts/inheritanceOrdering artifacts/build-info/*",

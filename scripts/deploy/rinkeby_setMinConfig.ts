@@ -30,8 +30,8 @@ async function main() {
   const _MinConfig = {
     feeRecived: ownerO[0].address,
     feeToken: '0x0000000000000000000000000000000000000000',
-    minGasFundForUser: '0',
-    minGasFundOneFlow: '0',
+    minGasFundForUser: '1000000000000000',
+    minGasFundOneFlow: '1000000000000000',
     ppb: '12000',
     blockCountPerTurn: 0,
   };
