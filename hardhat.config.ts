@@ -146,6 +146,14 @@ module.exports = {
       networkCheckTimeout: 999999,
       timeoutBlocks: 2000,
     },
+    mainnet: {
+      url: process.env.MAINNET_URL || '',
+      accounts: accounts,
+      gas: 2999997,
+      // gasPrice: 18000000000,
+      networkCheckTimeout: 999999,
+      timeoutBlocks: 2000,
+    },
   },
   gasReporter: {
     currency: 'USD',
