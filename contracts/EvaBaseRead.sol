@@ -7,13 +7,13 @@ import "./venders/uniswapv2/IUniswapV2Pair.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract EvaBaseRead {
-    IUniswapV2Factory public factory;
+    IUniswapV2Factory private immutable _FACTORY; //solhint-disable
 
-    ERC20 public usdt;
+    ERC20 private immutable _USDT;
 
-    ERC20 public usdc;
+    ERC20 private immutable _USDC;
 
-    ERC20 public weth;
+    ERC20 private immutable _WETH;
 
     constructor(
         address _factory,
@@ -21,10 +21,10 @@ contract EvaBaseRead {
         address _usdc,
         address _weth
     ) {
-        factory = IUniswapV2Factory(_factory);
-        usdt = ERC20(_usdt);
-        usdc = ERC20(_usdc);
-        weth = ERC20(_weth);
+        _FACTORY = IUniswapV2Factory(_factory);
+        _USDT = ERC20(_usdt);
+        _USDC = ERC20(_usdc);
+        _WETH = ERC20(_weth);
     }
 
     function getBatchUPrice(address[] memory tokens) public view returns (uint256[] memory prices) {
@@ -51,33 +51,33 @@ contract EvaBaseRead {
             return 0;
         }
 
-        if (_tokenAddress == address(usdt) || _tokenAddress == address(usdc)) {
+        if (_tokenAddress == address(_USDT) || _tokenAddress == address(_USDC)) {
             return 1e18;
         }
 
-        address lpU0 = factory.getPair(_tokenAddress, address(usdt));
-        address lpU1 = factory.getPair(_tokenAddress, address(usdc));
-        // usdt(usdc)/token pair not exist
+        address lpU0 = _FACTORY.getPair(_tokenAddress, address(_USDT));
+        address lpU1 = _FACTORY.getPair(_tokenAddress, address(_USDC));
+        // _USDT(_USDC)/token pair not exist
         if (lpU0 == lpU1) {
-            address lpw0 = factory.getPair(_tokenAddress, address(weth));
+            address lpw0 = _FACTORY.getPair(_tokenAddress, address(_WETH));
             if (lpw0 != address(0)) {
-                address lpUW = factory.getPair(address(weth), address(usdt));
+                address lpUW = _FACTORY.getPair(address(_WETH), address(_USDT));
 
                 //1 token = xx eth
-                uint256 price0 = getPrice(lpw0, address(weth));
-                //1 eth = xx usdt
-                uint256 price1 = getPrice(lpUW, address(usdt));
+                uint256 price0 = getPrice(lpw0, address(_WETH));
+                //1 eth = xx _USDT
+                uint256 price1 = getPrice(lpUW, address(_USDT));
 
                 price = (price0 * price1) / 1e18;
             }
         } else {
-            // usdt(USDC)/token pair exist
+            // _USDT(USDC)/token pair exist
             if (lpU0 != address(0)) {
-                price = getPrice(lpU0, address(usdt));
+                price = getPrice(lpU0, address(_USDT));
             }
 
             if (lpU0 == address(0) && lpU1 != address(0)) {
-                price = getPrice(lpU1, address(usdc));
+                price = getPrice(lpU1, address(_USDC));
             }
         }
     }
@@ -88,7 +88,7 @@ contract EvaBaseRead {
         address underlyingAddress
     ) public view returns (uint256 price) {
         // (reserve1/10 ** token1'decimals) /(reserve0/10** token0'decimals)
-        address _lpAddress = factory.getPair(token0, token1);
+        address _lpAddress = _FACTORY.getPair(token0, token1);
         price = getPrice(_lpAddress, underlyingAddress);
     }
 
