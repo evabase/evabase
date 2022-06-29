@@ -6,7 +6,7 @@ import "./venders/uniswapv2/IUniswapV2Factory.sol";
 import "./venders/uniswapv2/IUniswapV2Pair.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract EvaBaseRead {
+contract AMMOracle {
     IUniswapV2Factory private immutable _FACTORY; //solhint-disable
 
     ERC20 private immutable _USDT;

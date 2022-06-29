@@ -14,16 +14,16 @@ async function main() {
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
 
-  const EvaBaseRead = await ethers.getContractFactory('EvaBaseRead');
-  const evaBaseRead = await EvaBaseRead.deploy(
+  const AMMOracle = await ethers.getContractFactory('AMMOracle');
+  const ammOracle = await AMMOracle.deploy(
     store.get('others.UniswapV2Factory'),
     store.get('others.USDT'),
     store.get('others.USDC'),
     store.get('others.WETH'),
   );
 
-  console.log('EvaBaseRead deployed to:', evaBaseRead.address);
-  store.set('EvaBaseRead', evaBaseRead.address);
+  console.log('AMMOracle deployed to:', ammOracle.address);
+  store.set('AMMOracle', ammOracle.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
