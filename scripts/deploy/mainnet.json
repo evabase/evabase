@@ -1,6 +1,7 @@
 {
   "others": {
     "UniswapV2Router02": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "SwapRouter02": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
     "UniswapV2Factory": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     "UniswapFee": 0.003,
     "WETH": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
