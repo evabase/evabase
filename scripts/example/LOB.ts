@@ -19,7 +19,7 @@ async function main() {
   // 0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f
   // await exchangeCheck('0xb4444c235831e4fbc5b64a47daed72edd60b91d3565b14233476a18e438c1b7f');
   // await chainLinkCheck('0x0000000000000000000000000000000000000000000000000000000000000001');
-  // await tryExec('0x0000000000000000000000000000000000000000000000000000000000000001');
+  await tryExec('0x0000000000000000000000000000000000000000000000000000000000000001');
   // await checkAmount();
   // await cancelOrder(me, 4);
   // const admin = await help.admin();
@@ -56,17 +56,16 @@ async function exchangeCheck(orderId: string) {
   console.log(result);
 }
 
-// async function tryExec(checkdata: string) {
-// eslint-disable-next-line max-len
-//   const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
-//   const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
-//   const result = await bot.checkUpkeep(checkdata);
+async function tryExec(checkdata: string) {
+  const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
+  const bot = await ethers.getContractAt('EvaFlowChainLinkKeeperBot', store.get('evaFlowChainLinkKeeperBot'));
+  const result = await bot.checkUpkeep(checkdata);
 
-//   const keeper = new ethers.VoidSigner('0x426a9b94ae341751cb248d81ddbe3cccd16dc493', ethers.provider);
-//   console.log(await chainlink.connect(keeper).callStatic.performUpkeep(314, result.performData));
-//   const info = await bot.connect(keeper).callStatic.performUpkeep(result.performData);
-//   console.log(info);
-// }
+  const keeper = new ethers.VoidSigner('0x426a9b94ae341751cb248d81ddbe3cccd16dc493', ethers.provider);
+  console.log(await chainlink.connect(keeper).callStatic.performUpkeep(314, result.performData));
+  const info = await bot.connect(keeper).callStatic.performUpkeep(result.performData);
+  console.log(info);
+}
 
 async function chainLinkCheck(checkdata: string) {
   const chainlink = await ethers.getContractAt('KeeperRegistryInterface', store.get('others.ChainlinkKeeperRegistry'));
