@@ -23,7 +23,6 @@
     "gas-report": "env ENABLE_GAS_REPORT=true npm run test"
   },
   "devDependencies": {
-    "@chainlink/contracts": "^0.4.0",
     "@nomiclabs/buidler": "^1.4.8",
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
