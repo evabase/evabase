@@ -11,18 +11,21 @@ contract BatchCall {
     }
 
     function batchCall(Call[] memory calls) external payable returns (bytes[] memory ret) {
-        require(calls.length > 0, "invalid length");
         ret = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; i++) {
             require(calls[i].target != address(0), "invalid address");
+            // solhint-disable avoid-low-level-calls
             (bool success, bytes memory returndata) = calls[i].target.call{value: calls[i].value}(calls[i].input);
             if (!success) {
                 if (returndata.length > 0) {
-                    // The easiest way to bubble the revert reason is using memory via assembly
+                    // Next 5 lines from https://ethereum.stackexchange.com/a/83577
+                    // solhint-disable reason-string
+                    if (returndata.length < 68) revert();
+                    // solhint-disable no-inline-assembly
                     assembly {
-                        let returndata_size := mload(returndata)
-                        revert(add(32, returndata), returndata_size)
+                        returndata := add(returndata, 0x04)
                     }
+                    revert(abi.decode(returndata, (string)));
                 } else {
                     revert("F");
                 }

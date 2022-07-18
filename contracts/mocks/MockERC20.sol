@@ -24,7 +24,7 @@ contract MockERC20 is ERC20 {
     }
 
     function mintEth(uint256 amount) external payable {
-        require(msg.value > 0, "invalid value");
+        require(msg.value > amount, "eth amount should gt msg.value");
         emit Transfer(msg.sender, address(0), amount);
     }
 }
