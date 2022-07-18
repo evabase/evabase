@@ -17,18 +17,14 @@ contract BatchCall {
             // solhint-disable avoid-low-level-calls
             (bool success, bytes memory returndata) = calls[i].target.call{value: calls[i].value}(calls[i].input);
             if (!success) {
-                if (returndata.length > 0) {
-                    // Next 5 lines from https://ethereum.stackexchange.com/a/83577
-                    // solhint-disable reason-string
-                    if (returndata.length < 68) revert();
-                    // solhint-disable no-inline-assembly
-                    assembly {
-                        returndata := add(returndata, 0x04)
-                    }
-                    revert(abi.decode(returndata, (string)));
-                } else {
-                    revert("F");
+                // Next 5 lines from https://ethereum.stackexchange.com/a/83577
+                // solhint-disable reason-string
+                if (returndata.length < 68) revert();
+                // solhint-disable no-inline-assembly
+                assembly {
+                    returndata := add(returndata, 0x04)
                 }
+                revert(abi.decode(returndata, (string)));
             }
             ret[i] = returndata;
         }
