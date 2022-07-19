@@ -24,7 +24,7 @@ interface IStrategy {
     ) external;
 
     /// @notice Query the price and generate execution data
-    /// @param inputToken The address of input token
+    /// @param intputToken The address of input token
     /// @param outputToken The address of output token
     /// @param maxInput The maximum amount of input token
     /// @param minRate The lower exchange rate
