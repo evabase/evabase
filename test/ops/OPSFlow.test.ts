@@ -127,7 +127,7 @@ describe('Ops Flow Task', function () {
     it('should be execute ok when check pass', async function () {
       await opsFlowProxy.enableERC1820();
       const total1 = await t1.totalSupply();
-      console.log('------total before:', total1);
+      // console.log('------total before:', total1);
       const orderFlowInfo = await app.controler.getFlowMetas(flowId);
       await help.increaseBlockTime(15);
       const checkResult = await opsFlowProxy.check(orderFlowInfo.checkData);
@@ -147,7 +147,7 @@ describe('Ops Flow Task', function () {
       await expect(tx).to.emit(opsFlowProxy, 'TaskExecuted');
       await expect(tx).to.emit(t1, 'Transfer');
       const total = await t1.totalSupply();
-      console.log('-----total after:', total);
+      // console.log('-----total after:', total);
       expect(total).to.eq(3300);
       // 2
       // await help.increaseBlockTime(15);
@@ -217,8 +217,8 @@ describe('Ops Flow Task', function () {
       // console.log('after:', new Date());
       const checkResult22 = await opsFlowProxy.check(orderFlowInfo.checkData);
       // console.log('orderFlowInfo:', orderFlowInfo);
-      console.log('checkResult22:', checkResult22);
-      console.log('blockTime22:', await help.getBlockTime());
+      // console.log('checkResult22:', checkResult22);
+      // console.log('blockTime22:', await help.getBlockTime());
       // console.log('Task:', await opsFlowProxy.getTask(flowId)); // 1652876119
       // await expect(checkResult[0]).to.be.eq(true);
       // 1
@@ -233,7 +233,7 @@ describe('Ops Flow Task', function () {
       // console.log('checkResult33:', checkResult33);
       const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult33[1]);
       const allow = await t1.allowance(opsFlowProxy.address, app.controler.address);
-      console.log('blockTime33:', await help.getBlockTime());
+      // console.log('blockTime33:', await help.getBlockTime());
       // console.log('Task22:', (await opsFlowProxy.getTask(flowId)).lastExecTime); // 1652876119
       // await expect(tx).to.not.emit(app.controler, 'FlowExecuteFailed');
       await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
@@ -273,19 +273,95 @@ describe('Ops Flow Task', function () {
 
       // console.log('orderFlowInfo:', orderFlowInfo);
       const checkResult22 = await opsFlowProxy.check(orderFlowInfo.checkData);
-      console.log('checkResult22:', checkResult22);
+      // console.log('checkResult22:', checkResult22);
       expect(checkResult22[0]).to.be.eq(false);
       // 1
       await help.increaseBlockTime(11);
 
       const checkResult33 = await opsFlowProxy.check(orderFlowInfo.checkData);
-      console.log('checkResult33:', checkResult33);
+      // console.log('checkResult33:', checkResult33);
       expect(checkResult33[0]).to.be.eq(true);
       const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult33[1]);
       await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
 
       orderFlowInfo = await app.controler.getFlowMetas(flowId);
       // console.log('after orderFlowInfo:', orderFlowInfo);
+      const checkResult44 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      expect(checkResult44[0]).to.be.eq(false);
+    });
+    it('should be execute now when startTime = 0', async function () {
+      const gasFund = 1e18;
+      blockTime = await help.getBlockTime();
+      const callData1 = opsFlowProxy.interface.encodeFunctionData('create', [
+        app.controler.address,
+        opsFlowProxy.address,
+        KeepNetWork.ChainLink,
+        help.toFullNum(gasFund),
+        'ops',
+        {
+          owner: me.address,
+          inputs: inputs_,
+          startTime: 0,
+          deadline: blockTime + 32,
+          lastExecTime: 0,
+          interval: 10,
+        },
+      ]);
+
+      flowId = (await app.controler.getFlowMetaSize()).toNumber();
+
+      await meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1, {
+        value: help.toFullNum(gasFund),
+      });
+
+      let orderFlowInfo = await app.controler.getFlowMetas(flowId);
+
+      const checkResult33 = await opsFlowProxy.check(orderFlowInfo.checkData);
+
+      expect(checkResult33[0]).to.be.eq(true);
+      const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult33[1]);
+      await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
+      orderFlowInfo = await app.controler.getFlowMetas(flowId);
+      const checkResult44 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      expect(checkResult44[0]).to.be.eq(false);
+
+      await help.increaseBlockTime(10);
+      const checkResult55 = await opsFlowProxy.check(orderFlowInfo.checkData);
+      expect(checkResult55[0]).to.be.eq(true);
+    });
+    it('should be execute now once when startTime <= now && interval oversise', async function () {
+      const gasFund = 1e18;
+      blockTime = await help.getBlockTime();
+      const callData1 = opsFlowProxy.interface.encodeFunctionData('create', [
+        app.controler.address,
+        opsFlowProxy.address,
+        KeepNetWork.ChainLink,
+        help.toFullNum(gasFund),
+        'ops',
+        {
+          owner: me.address,
+          inputs: inputs_,
+          startTime: blockTime,
+          deadline: blockTime + 32,
+          lastExecTime: 0,
+          interval: 42,
+        },
+      ]);
+
+      flowId = (await app.controler.getFlowMetaSize()).toNumber();
+
+      await meSafes.proxy(opsFlowProxy.address, HowToCall.Delegate, callData1, {
+        value: help.toFullNum(gasFund),
+      });
+
+      let orderFlowInfo = await app.controler.getFlowMetas(flowId);
+
+      const checkResult33 = await opsFlowProxy.check(orderFlowInfo.checkData);
+
+      expect(checkResult33[0]).to.be.eq(true);
+      const tx = await app.controler.connect(keeper).execFlow(keeper.address, flowId, checkResult33[1]);
+      await expect(tx).to.emit(app.controler, 'FlowExecuteSuccess');
+      orderFlowInfo = await app.controler.getFlowMetas(flowId);
       const checkResult44 = await opsFlowProxy.check(orderFlowInfo.checkData);
       expect(checkResult44[0]).to.be.eq(false);
     });

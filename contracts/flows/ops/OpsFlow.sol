@@ -69,7 +69,6 @@ contract OpsFlow is IEvaSubFlow, IOpsFlow, Ownable {
             require(contractAdd != address(this) && contractAdd != msg.sender, "FORBIDDEN");
         }
 
-        task.lastExecTime = MathConv.toU64(block.timestamp);
         _tasks[taskId] = task;
 
         _taskId = abi.encode(taskId);
