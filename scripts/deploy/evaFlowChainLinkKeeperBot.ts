@@ -11,7 +11,7 @@ import { help, KeepNetWork, store } from '../help';
 
 async function main() {
   await removeKeepers(store.get('evaFlowChainLinkKeeperBot'));
-  return;
+  // return;
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
   //
