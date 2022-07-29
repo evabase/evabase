@@ -7,7 +7,7 @@
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store } from '../help';
+import { store, help, zeroAddress } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -18,14 +18,20 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
-  const BatchCall = await ethers.getContractFactory('BatchCall');
-  const batchCall = await BatchCall.deploy();
+  // const ownerO = await ethers.getSigners();
+  // console.log(`deployer owner : ${ownerO[0].address}`);
+  // const BatchCall = await ethers.getContractFactory('BatchCall');
+  // const batchCall = await BatchCall.deploy();
 
-  await batchCall.deployed();
-  console.log(`BatchCall: ${batchCall.address}`);
-  store.set('BatchCall', batchCall.address);
+  // await batchCall.deployed();
+  const expectAddress = await help.deployByFactory('BatchCall');
+
+  if (expectAddress !== zeroAddress) {
+    store.set('BatchCall', expectAddress);
+    console.log(`BatchCall: ${expectAddress}`);
+  } else {
+    console.log('BatchCall existed !');
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -10,6 +10,8 @@ while (zeros.length < 256) {
 }
 
 const { Store } = require('data-store');
+const lastCreate2FactoryAddress = '0x49088917be000e083963312b50866fdf52798a8b';
+export const zeroAddress = '0x0000000000000000000000000000000000000000';
 export const store = new Store({
   path: path.join(process.cwd(), '/scripts/deploy/', network.name + '.json'),
 });
@@ -53,6 +55,7 @@ class Help {
     this.adminMap = new Map<string, string>();
     this.adminMap.set('rinkeby', '0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF');
     this.adminMap.set('localhost', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+    this.adminMap.set('mainnet', '0x0ec384A45064146AC4B3559FD67e8c7E9d9E2846');
   }
 
   toUnits(decimals: number) {
@@ -112,6 +115,37 @@ class Help {
     return contract;
   }
 
+  async deployByFactory(contractName: string, args?: any[], calldata?: any, signer?: ethersV5.Signer) {
+    if (signer === undefined) {
+      signer = await this.admin();
+    }
+    const lastCreate2FactoryContract = await ethers.getContractAt(
+      lastCreate2FactoryAbi,
+      lastCreate2FactoryAddress,
+      signer,
+    );
+
+    console.log(signer?.getAddress());
+
+    const salt = ethers.utils.hexZeroPad('0x5', 32);
+    const factory = await ethers.getContractFactory(contractName, signer);
+    const initCode = args
+      ? (await factory.getDeployTransaction(...args)).data
+      : (await factory.getDeployTransaction()).data;
+
+    if (calldata === undefined) {
+      calldata = '0x';
+    }
+
+    const expectAddress = await lastCreate2FactoryContract.callStatic.findCreate2Address(salt, initCode);
+
+    if (expectAddress !== zeroAddress) {
+      const contract = await lastCreate2FactoryContract.safeCreate2(salt, initCode, calldata);
+      console.log(`deploy Hash = ${await contract.hash}`);
+    }
+    return expectAddress;
+  }
+
   async deployERC20(symbol: string, decimal?: number) {
     return this.deploy('MockERC20', [symbol + ' token', symbol, decimal || 18]);
   }
@@ -143,3 +177,49 @@ class Help {
 }
 
 export const help = new Help();
+
+const lastCreate2FactoryAbi = [
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, internalType: 'address', name: 'addr', type: 'address' },
+      { indexed: false, internalType: 'bytes32', name: 'salt', type: 'bytes32' },
+    ],
+    name: 'Deployed',
+    type: 'event',
+  },
+  {
+    constant: true,
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'deployed',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    payable: false,
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    constant: true,
+    inputs: [
+      { internalType: 'bytes32', name: 'salt', type: 'bytes32' },
+      { internalType: 'bytes', name: 'initCode', type: 'bytes' },
+    ],
+    name: 'findCreate2Address',
+    outputs: [{ internalType: 'address', name: 'deploymentAddress', type: 'address' }],
+    payable: false,
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    constant: false,
+    inputs: [
+      { internalType: 'bytes32', name: 'salt', type: 'bytes32' },
+      { internalType: 'bytes', name: 'initializationCode', type: 'bytes' },
+      { internalType: 'bytes', name: 'callData', type: 'bytes' },
+    ],
+    name: 'safeCreate2',
+    outputs: [{ internalType: 'address', name: 'deploymentAddress', type: 'address' }],
+    payable: false,
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+];
