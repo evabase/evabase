@@ -6,6 +6,7 @@ contract MockRequire {
     uint8 private _mockUint8 = 8;
     uint256 private _mockUint256 = 188;
     uint8 private _mockCall = 8;
+    bool private _mockBool = true;
     bytes32 private _mockBytes32 = "";
     address private _mockAddress;
     bytes private _mockBytes;
@@ -16,6 +17,10 @@ contract MockRequire {
 
     function mockView(uint8 a) external view returns (uint8) {
         return _mockUint8 + a;
+    }
+
+    function mockView(bool a) external view returns (bool) {
+        return a || _mockBool;
     }
 
     function mockTwoView() external view returns (uint8, uint256) {
@@ -83,6 +88,10 @@ contract MockRequire {
         return a;
     }
 
+    function mockPure(bool a) external pure returns (bool) {
+        return a;
+    }
+
     function mockTwoPure(bytes32 a, uint256 b) external pure returns (bytes32, uint256) {
         return (a, b);
     }
@@ -93,6 +102,10 @@ contract MockRequire {
 
     function mockCall(uint8 amount) external {
         _mockCall = amount;
+    }
+
+    function mockCall(bool a) external {
+        _mockBool = a;
     }
 
     function mockCall(uint8 amount1, uint256 amount2) external {
@@ -110,23 +123,28 @@ contract MockRequire {
         return _mockUint256;
     }
 
-    function revertInt8(uint8 amount) external {
+    function revertInt8(uint8 amount) external returns (uint8) {
         _mockCall = amount;
         revert("Int8");
     }
 
-    function revertInt256(uint256 amount2) external {
+    function revertInt256(uint256 amount2) external returns (uint256) {
         _mockUint256 = amount2;
         revert("Int256");
     }
 
-    function revertBytes32(bytes32 mockBytes32) external {
+    function revertBytes32(bytes32 mockBytes32) external returns (bytes32) {
         _mockBytes32 = mockBytes32;
         revert("bytes32");
     }
 
-    function revertAccount(address account) external {
+    function revertAccount(address account) external returns (address) {
         _mockAddress = account;
-        revert("bytes32");
+        revert("account");
+    }
+
+    function revertBool(bool isSucess) external returns (bool) {
+        _mockBool = isSucess;
+        revert("Bool");
     }
 }
