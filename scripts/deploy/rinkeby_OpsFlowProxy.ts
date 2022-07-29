@@ -7,19 +7,32 @@
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store } from '../help';
+import { store, help, zeroAddress } from '../help';
 
 async function main() {
   // 10 ops
   const evabaseConfigAddr = store.get('evabaseConfig');
   const evaSafesFactoryAddr = store.get('evaSafesFactory');
-  let opsFlowProxyAddr = store.get('opsFlowProxy');
-  if (typeof opsFlowProxyAddr === 'undefined') {
-    const OpsFlowProxy = await ethers.getContractFactory('OpsFlowProxy');
-    const opsFlowProxy = await OpsFlowProxy.deploy(evabaseConfigAddr, evaSafesFactoryAddr);
-    console.log(`opsFlowProxy: ${opsFlowProxy.address}`);
-    store.set('opsFlowProxy', opsFlowProxy.address);
-    opsFlowProxyAddr = opsFlowProxy.address;
+  // let opsFlowProxyAddr = store.get('opsFlowProxy');
+  // if (typeof opsFlowProxyAddr === 'undefined') {
+  const OpsFlowProxy = await ethers.getContractFactory('OpsFlowProxy');
+  //   const opsFlowProxy = await OpsFlowProxy.deploy(evabaseConfigAddr, evaSafesFactoryAddr);
+  //   console.log(`opsFlowProxy: ${opsFlowProxy.address}`);
+  //   store.set('opsFlowProxy', opsFlowProxy.address);
+  //   opsFlowProxyAddr = opsFlowProxy.address;
+  // }
+  const signer = await help.admin();
+  const admin = await signer?.getAddress();
+  console.log(`deployer owner : ${admin}`);
+  const calldata = OpsFlowProxy.interface.encodeFunctionData('transferOwnership', [admin]);
+  console.log(`deployer calldata : ${calldata}`);
+  const expectAddress = await help.deployByFactory('OpsFlowProxy', [evabaseConfigAddr, evaSafesFactoryAddr], calldata);
+  console.log(`deployer expectAddress : ${expectAddress}`);
+  if (expectAddress !== zeroAddress) {
+    console.log(`opsFlowProxy: ${expectAddress}`);
+    store.set('opsFlowProxy', expectAddress);
+  } else {
+    console.log('opsFlowProxy existed !');
   }
 }
 
