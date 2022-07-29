@@ -158,7 +158,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
     function hashOrder(Order memory order) public pure returns (bytes32) {
         return
             keccak256(
-                abi.encode( // order
+                abi.encode(
                     _ORDER_TYPEHASH,
                     order.owner,
                     order.assetToken,
@@ -167,7 +167,7 @@ contract NftLimitOrderFlow is IEvaFlow, INftLimitOrder, EIP712, Ownable {
                     order.deadline,
                     order.tokenId,
                     order.salt
-                )
+                ) // order
             );
     }
 

@@ -20,17 +20,12 @@ async function main() {
   // We get the contract to deploy
   const ownerO = await ethers.getSigners();
   console.log(`deployer owner : ${ownerO[0].address}`);
+  const MockRequire = await ethers.getContractFactory('MockRequire');
+  const mockRequire = await MockRequire.deploy();
 
-  // const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
-  // const evaBaseServerBot = await EvaBaseServerBot.deploy(store.get('evabaseConfig'), store.get('evaFlowChecker'));
-  // await evaBaseServerBot.deployed();
-  // console.log(`evaBaseServerBot: ${evaBaseServerBot.address}`);
-  // store.set('evaBaseServerBot', evaBaseServerBot.address);
-
-  const EvaBaseServerBot = await ethers.getContractFactory('EvaBaseServerBot');
-  const evaBaseServerBot = EvaBaseServerBot.attach(store.get('evaBaseServerBot'));
-  const safesOwner = await evaBaseServerBot.setEBSKeepStatus('0xE860aE9379B1902DC08F67F50de7b9CC066AF0FF', true);
-  console.log(`safesOwner: ${safesOwner}`);
+  await mockRequire.deployed();
+  console.log(`MockRequire: ${mockRequire.address}`);
+  store.set('MockRequire', mockRequire.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

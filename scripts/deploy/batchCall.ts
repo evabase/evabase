@@ -1,5 +1,4 @@
 'use strict';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -8,7 +7,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import '@openzeppelin/hardhat-upgrades';
 import { ethers } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store, help } from '../help';
+import { store, help, zeroAddress } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -19,26 +18,20 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
+  // const ownerO = await ethers.getSigners();
+  // console.log(`deployer owner : ${ownerO[0].address}`);
+  // const BatchCall = await ethers.getContractFactory('BatchCall');
+  // const batchCall = await BatchCall.deploy();
 
-  // const ownerO = (await help.admin()) as SignerWithAddress;
-  // const evaFlowController = await ethers.getContractAt('EvaFlowController', store.get('evaFlowController'), ownerO);
+  // await batchCall.deployed();
+  const expectAddress = await help.deployByFactory('BatchCall');
 
-  const ownerO = await ethers.getSigners();
-  console.log(`deployer owner : ${ownerO[0].address}`);
-  const EvaFlowController = await ethers.getContractFactory('EvaFlowController');
-  const evaFlowController = EvaFlowController.attach(store.get('evaFlowController'));
-
-  const _minConfig = {
-    feeRecived: ownerO[0].address,
-    feeToken: '0x0000000000000000000000000000000000000000',
-    minGasFundForUser: 0,
-    minGasFundOneFlow: 0,
-    ppb: 1,
-    blockCountPerTurn: 0,
-  };
-  const tx = await evaFlowController.setMinConfig(_minConfig);
-  // tx.wait();
-  console.log(tx.hash);
+  if (expectAddress !== zeroAddress) {
+    store.set('BatchCall', expectAddress);
+    console.log(`BatchCall: ${expectAddress}`);
+  } else {
+    console.log('BatchCall existed !');
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
