@@ -6,6 +6,7 @@ import "../interfaces/IEvaFlow.sol";
 import "../interfaces/IEvaSubFlow.sol";
 import "../interfaces/IEvaFlowProxy.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "hardhat/console.sol";
 
 contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
     Task[] public tasks;
@@ -76,7 +77,7 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
     {
         uint256 id = abi.decode(checkData, (uint256));
 
-        needExecute = tasks[id].lastTime <= block.timestamp - 1 minutes; //solhint-disable
+        needExecute = !tasks[id].expired && !tasks[id].canceled && tasks[id].lastTime <= block.timestamp - 1 minutes; //solhint-disable
         executeData = checkData;
     }
 
@@ -88,6 +89,11 @@ contract MockTimeFlow is IEvaFlowProxy, IEvaSubFlow {
         emit Executed(id, tasks[id].times);
 
         canDestoryFlow = tasks[id].times >= 3;
+
+        // 真实执行时输出日志
+        if (tx.origin != address(0)) {
+            console.log("exec", id);
+        }
     }
 
     function needClose(bytes memory checkData) public view override returns (bool yes) {
