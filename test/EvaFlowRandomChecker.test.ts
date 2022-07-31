@@ -99,11 +99,16 @@ describe('EvaFlowRandomChecker', function () {
     // 8个任务分配，应该是两个人三个，1个人两个
     const now = Math.ceil(new Date().getTime() / 1000);
 
+    const datas = [];
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
-      await app.controler.connect(keepers[0]).batchExecFlow(keepers[0].address, result.execData);
+      datas.push(result.execData);
     }
+    for (let i = 0; i < datas.length; i++) {
+      await app.controler.connect(keepers[i]).batchExecFlow(keepers[i].address, datas[i]);
+    }
+
     // 再次检查时 应该都为 False
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
@@ -120,10 +125,15 @@ describe('EvaFlowRandomChecker', function () {
     await flow.execute(ethers.utils.defaultAbiCoder.encode(['uint256'], [1]));
     await flow.execute(ethers.utils.defaultAbiCoder.encode(['uint256'], [5]));
 
+    const datas2 = [];
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
       expect(result.needExec).to.equal(true);
-      await app.controler.connect(keepers[1]).batchExecFlow(keepers[1].address, result.execData);
+      datas2.push(result.execData);
+    }
+    for (let i = 0; i < datas2.length; i++) {
+      //  更换 keep, 不连续执行
+      await app.controler.connect(keepers[i]).batchExecFlow(keepers[(i + 1) % 3].address, datas2[i]);
     }
     for (let i = 0; i < 3; i++) {
       const result = await zeroChecker.callStatic.check(i + 1, now, network);
