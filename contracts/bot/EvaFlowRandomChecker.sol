@@ -40,10 +40,10 @@ contract EvaFlowRandomChecker is IEvaFlowChecker {
         args.flowCount = args.controller.getAllVaildFlowSize(keepNetWork);
 
         if (args.flowCount > 0) {
-            args.keepbotId = keepbotId; //1
-            args.network = keepNetWork; //0
-            args.maxCheck = config.batchFlowNum(); //30
-            args.keeperCount = config.keepBotSizes(keepNetWork); //1
+            args.keepbotId = keepbotId;
+            args.network = keepNetWork;
+            args.maxCheck = config.batchFlowNum();
+            args.keeperCount = config.keepBotSizes(keepNetWork);
             require(args.keeperCount > 0, "keeper is zero");
             require(args.maxCheck > 0, "max check is zero");
             args.startIndex = _selectBeginIndex(args.flowCount, lastMoveTime);
