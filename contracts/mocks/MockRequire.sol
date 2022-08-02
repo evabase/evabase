@@ -123,6 +123,11 @@ contract MockRequire {
         return _mockUint256;
     }
 
+    function mockCallWithReturnUint(uint256 amount) external returns (uint256 a) {
+        _mockUint256 = amount;
+        return _mockUint256;
+    }
+
     function revertInt8(uint8 amount) external returns (uint8) {
         _mockCall = amount;
         revert("Int8");

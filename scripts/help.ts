@@ -45,6 +45,53 @@ export enum KeepNetWork {
   Others,
 }
 
+export enum Operator {
+  Gt,
+  Lt,
+  EqOrGt,
+  EqOrLt,
+  Eq,
+  NEq,
+}
+
+export enum CallWay {
+  Call,
+  StaticCall,
+  Const,
+}
+
+// 拼接头部
+export async function head(op: number, wayA: number, wayB: number) {
+  // const op = Operator.NEq;
+  // const wayA = CallWay.Const;
+  // const wayB = CallWay.Call;
+  const head = ethers.utils.solidityPack(['uint8', 'uint8', 'uint8'], [op, wayA, wayB]);
+  // console.log(head);
+  return head;
+}
+
+// 拼接常数
+export async function constData(constValue: any, size: number) {
+  // 这里显示长度不能超过 32 字节，如果超出会抛出异常
+  // console.log(constValue);
+  // const b = ethers.utils.hexValue(constValue);
+  // console.log(b);
+  const data = ethers.utils.hexZeroPad(ethers.utils.solidityPack(['bytes'], [constValue]), size);
+  // console.log(data);
+  return data;
+}
+// 拼接合约获取
+export async function contractData(contractAddress: any, contractCallData: any) {
+  const length = await constData(ethers.utils.hexDataLength(contractCallData), 2);
+  // const data1 = ethers.utils.hexZeroPad(ethers.utils.solidityPack(['bytes'], [length]), 2);
+  const data = ethers.utils.hexConcat([
+    ethers.utils.hexZeroPad(ethers.utils.solidityPack(['address'], [contractAddress]), 20), // 20 个字节长度的地址编码
+    length, // 记录调用数据长度,占有2字节
+    contractCallData, // 存储原始调用数据
+  ]);
+  return data;
+}
+
 class Help {
   public readonly adminMap: Map<string, string>;
   public readonly ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -125,7 +172,7 @@ class Help {
       signer,
     );
 
-    console.log(signer?.getAddress());
+    console.log(await signer?.getAddress());
 
     const salt = ethers.utils.hexZeroPad('0x5', 32);
     const factory = await ethers.getContractFactory(contractName, signer);
