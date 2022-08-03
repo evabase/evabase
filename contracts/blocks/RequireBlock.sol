@@ -68,22 +68,41 @@ contract RequireBlock {
         uint256 start
     ) public returns (bytes32 ret, uint256 index) {
         if (way == uint8(CallWay.Const)) {
-            bytes calldata originalValue = expression[start:start + 32];
-            ret = _toBytes32(originalValue, 0);
+            bytes memory originalValue = expression[start:start + 32];
+            //solhint-disable no-inline-assembly
+            // toBytes32
+            assembly {
+                ret := mload(add(add(originalValue, 0x20), 0))
+            }
+
             index = start + 32;
         } else {
-            address dst = _toAddress(expression[start:20 + start], 0);
-            // BytesLib.sub(expression, start, 20), 0);
+            address dst;
+            bytes memory b1 = expression[start:20 + start];
+            //solhint-disable no-inline-assembly
+            //toAddress
+            assembly {
+                dst := div(mload(add(add(b1, 0x20), 0)), 0x1000000000000000000000000)
+            }
+
             index = start + 20;
-            uint16 len = _toUint16(expression[index:index + 2], 0);
-            // uint16 len = BytesLib._toUint16(BytesLib.sub(expression, index, 2), 0);
+            uint16 len;
+
+            bytes memory b2 = expression[index:index + 2];
+            //solhint-disable no-inline-assembly
+            // to Uint16
+            assembly {
+                len := mload(add(add(b2, 0x2), 0))
+            }
+
             index += 2;
             bytes memory data = expression[index:index + len];
-            //  BytesLib.sub(expression, index, len);
+
             index += len;
             bool success;
             bytes memory returndata;
             if (way == uint8(CallWay.Call)) {
+                //solhint-disable avoid-low-level-calls
                 (success, returndata) = dst.call{value: 0}(data);
             } else if (way == uint8(CallWay.StaticCall)) {
                 (success, returndata) = dst.staticcall(data);
@@ -101,38 +120,12 @@ contract RequireBlock {
                 }
                 revert(abi.decode(returndata, (string)));
             } else {
-                ret = _toBytes32(returndata, 0);
+                //solhint-disable no-inline-assembly
+                // to Bytes32
+                assembly {
+                    ret := mload(add(add(returndata, 0x20), 0))
+                }
             }
         }
-    }
-
-    function _toBytes32(bytes memory _bytes, uint256 _start) internal pure returns (bytes32) {
-        bytes32 tempBytes32;
-
-        assembly {
-            tempBytes32 := mload(add(add(_bytes, 0x20), _start))
-        }
-
-        return tempBytes32;
-    }
-
-    function _toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
-        address tempAddress;
-
-        assembly {
-            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
-        }
-
-        return tempAddress;
-    }
-
-    function _toUint16(bytes memory _bytes, uint256 _start) internal pure returns (uint16) {
-        uint16 tempUint;
-
-        assembly {
-            tempUint := mload(add(add(_bytes, 0x2), _start))
-        }
-
-        return tempUint;
     }
 }
