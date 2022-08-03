@@ -95,7 +95,7 @@ describe('RequireBlock', function () {
     const dataB = await contractData(ammOracle.address, contractCallDataB);
     const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
 
-    await expect(requireBlock.exec(expression)).to.revertedWith('lt');
+    await expect(requireBlock.exec(expression)).to.revertedWith('!<');
   });
 
   it('const 100 < USDT total', async function () {
@@ -130,7 +130,7 @@ describe('RequireBlock', function () {
     const dataB = await constData(123, 32);
     const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
     // const tx = await requireBlock.exec(expression);
-    await expect(requireBlock.exec(expression)).to.revertedWith('NEq');
+    await expect(requireBlock.exec(expression)).to.revertedWith('!!=');
   });
   it('const 123 < mockRequired.call', async function () {
     const headData = await head(Operator.Lt, CallWay.Const, CallWay.Call);
