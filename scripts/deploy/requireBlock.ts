@@ -28,6 +28,15 @@ async function main() {
   } else {
     console.log('RequireBlock existed !');
   }
+
+  const chainLinkDataFeedGetter = await help.deployByFactory('ChainLinkDataFeedGetter');
+
+  if (chainLinkDataFeedGetter !== zeroAddress) {
+    store.set('ChainLinkDataFeedGetter', chainLinkDataFeedGetter);
+    console.log(`ChainLinkDataFeedGetter: ${chainLinkDataFeedGetter}`);
+  } else {
+    console.log('chainLinkDataFeedGetter existed !');
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

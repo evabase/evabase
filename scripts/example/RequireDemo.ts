@@ -6,7 +6,7 @@
 // Runtime Environment's members available in the global scope.
 import '@openzeppelin/hardhat-upgrades';
 import { BigNumber } from 'ethers';
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
 import { store, help, HowToCall, KeepNetWork, Operator, CallWay } from '../help';
 
@@ -43,6 +43,22 @@ async function main() {
 
   const totalUSDC = BigNumber.from('1000000000000000000000000000');
   console.log(await constData(totalUSDC, 32));
+
+  // 测试priceData
+  if (network.name === 'rinkeby') {
+    const chainLinkDataFeedGetterAdress = store.get('ChainLinkDataFeedGetter');
+    // rinby EACAggregatorProxy
+    const dataPriceAddress = '0x74825DbC8BF76CC4e9494d0ecB210f676Efa001D';
+    const getPrice = await priceData(chainLinkDataFeedGetterAdress, dataPriceAddress);
+    const exConcatPriceData = await concatPriceData(chainLinkDataFeedGetterAdress, dataPriceAddress, 12333);
+    console.log(`getPrice=  ${getPrice}`);
+    console.log(`exConcatPriceData=  ${exConcatPriceData}`);
+
+    const requireBlockAddress = store.get('RequireBlock');
+    const RequireBlock = await ethers.getContractFactory('RequireBlock');
+    const requireBlock = await RequireBlock.attach(requireBlockAddress);
+    console.log(await requireBlock.exec(exConcatPriceData));
+  }
 }
 
 // 拼接头部
@@ -74,6 +90,37 @@ async function contractData(contractAddress: any, contractCallData: any) {
   ]);
   console.log(length);
   return data;
+}
+
+// 获取data Price
+async function priceData(contractAddress: any, dataPriceAddress: any) {
+  const ChainLinkDataFeedGetter = await ethers.getContractFactory('ChainLinkDataFeedGetter');
+  const c = await ChainLinkDataFeedGetter.attach(contractAddress);
+  const price = await c.latestRoundAnswer(dataPriceAddress);
+  return price;
+}
+
+// 拼接data Price
+async function concatPriceData(contractAddress: any, priceDataAddress: any, constDat: number) {
+  const headData = await head(Operator.NEq, CallWay.Const, CallWay.StaticCall);
+  console.log(`headData=  ${headData}`);
+  const dataA = await constData(constDat, 32);
+  console.log(`dataA=  ${dataA}`);
+  // const contractAddress = '0xC272e20C2d0F8fb7B9B05B9F2Ba4407E95928CbF';
+
+  const ChainLinkDataFeedGetter = await ethers.getContractFactory('ChainLinkDataFeedGetter');
+  const contractCallData = ChainLinkDataFeedGetter.interface.encodeFunctionData('latestRoundAnswer', [
+    priceDataAddress,
+  ]);
+  console.log(`contractCallData=  ${contractCallData}`);
+  const dataB = await contractData(contractAddress, contractCallData);
+  console.log(`dataB=  ${dataB}`);
+  console.log(`length Head= ${ethers.utils.hexDataLength(headData)}`);
+  console.log(`length A= ${ethers.utils.hexDataLength(dataA)}`);
+  console.log(`length B= ${ethers.utils.hexDataLength(dataB)}`);
+  const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+
+  return expression;
 }
 
 // We recommend this pattern to be able to use async/await everywhere
