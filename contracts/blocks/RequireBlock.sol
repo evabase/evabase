@@ -107,7 +107,6 @@ contract RequireBlock {
     }
 
     function _toBytes32(bytes memory _bytes, uint256 _start) internal pure returns (bytes32) {
-        require(_bytes.length >= _start + 32, "toBytes32_outOfBounds");
         bytes32 tempBytes32;
 
         assembly {
@@ -118,7 +117,6 @@ contract RequireBlock {
     }
 
     function _toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
-        require(_bytes.length >= _start + 20, "toAddress_outOfBounds");
         address tempAddress;
 
         assembly {
@@ -129,7 +127,6 @@ contract RequireBlock {
     }
 
     function _toUint16(bytes memory _bytes, uint256 _start) internal pure returns (uint16) {
-        require(_bytes.length >= _start + 2, "toUint16_outOfBounds");
         uint16 tempUint;
 
         assembly {
