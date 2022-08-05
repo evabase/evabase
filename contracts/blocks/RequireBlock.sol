@@ -33,14 +33,13 @@ contract RequireBlock {
         //67 length
         require(expression.length > 47, "invalid length");
         //head
-        // (uint8 op, uint8 wayA, uint8 wayB) = BytesLib.headConv(expression);
         uint8 op = uint8(expression[0]);
         uint8 wayA = uint8(expression[1]);
         uint8 wayB = uint8(expression[2]);
         require(wayA < 3 && wayB < 3 && op < 6, "invalid head");
-        (bytes32 valueA, uint256 index) = valueConv(expression, wayA, 3);
+        (bytes32 valueA, uint256 index) = _valueConv(expression, wayA, 3);
 
-        (bytes32 valueB, uint256 end) = valueConv(expression, wayB, index);
+        (bytes32 valueB, uint256 end) = _valueConv(expression, wayB, index);
 
         require(end == expression.length, "invalid end");
 
@@ -62,38 +61,20 @@ contract RequireBlock {
     }
 
     ///expression->A/B Calculation results
-    function valueConv(
+    function _valueConv(
         bytes calldata expression,
         uint8 way,
         uint256 start
-    ) public returns (bytes32 ret, uint256 index) {
+    ) private returns (bytes32 ret, uint256 index) {
         if (way == uint8(CallWay.Const)) {
-            bytes memory originalValue = expression[start:start + 32];
-            //solhint-disable no-inline-assembly
-            // toBytes32
-            assembly {
-                ret := mload(add(add(originalValue, 0x20), 0))
-            }
+            ret = bytes32(expression[start:start + 32]);
 
             index = start + 32;
         } else {
-            address dst;
-            bytes memory b1 = expression[start:20 + start];
-            //solhint-disable no-inline-assembly
-            //toAddress
-            assembly {
-                dst := div(mload(add(add(b1, 0x20), 0)), 0x1000000000000000000000000)
-            }
+            address dst = address(bytes20(expression[start:20 + start]));
 
             index = start + 20;
-            uint16 len;
-
-            bytes memory b2 = expression[index:index + 2];
-            //solhint-disable no-inline-assembly
-            // to Uint16
-            assembly {
-                len := mload(add(add(b2, 0x2), 0))
-            }
+            uint16 len = uint16(bytes2(expression[index:index + 2]));
 
             index += 2;
             bytes memory data = expression[index:index + len];
@@ -110,7 +91,10 @@ contract RequireBlock {
                 revert("invalid way");
             }
 
-            if (!success) {
+            if (success) {
+                if (returndata.length > 32) revert("invalid ret");
+                ret = abi.decode(returndata, (bytes32));
+            } else {
                 // Next 5 lines from https://ethereum.stackexchange.com/a/83577
                 // solhint-disable reason-string
                 if (returndata.length < 68) revert();
@@ -119,12 +103,6 @@ contract RequireBlock {
                     returndata := add(returndata, 0x04)
                 }
                 revert(abi.decode(returndata, (string)));
-            } else {
-                //solhint-disable no-inline-assembly
-                // to Bytes32
-                assembly {
-                    ret := mload(add(add(returndata, 0x20), 0))
-                }
             }
         }
     }
