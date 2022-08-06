@@ -1,7 +1,7 @@
 'use strict';
 import { UniswapV2 } from './shared/uniswapv2/factory';
 import { ethers } from 'hardhat';
-import { help, contractData, head, constData, CallWay, Operator } from '../scripts/help';
+import { help, contractData, head, constData, CallWay, Operator, zeroAddress } from '../scripts/help';
 import { ERC20, IUniswapV2Router02, RequireBlock, MockERC20, AMMOracle, MockRequire } from '../typechain';
 import { expect } from 'chai';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -143,6 +143,17 @@ describe('RequireBlock', function () {
     // console.log(contractCallDataB);
     const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
     // const tx = await requireBlock.exec(expression);
+    await expect(requireBlock.exec(expression)).to.ok;
+  });
+  it('const 123 < ETH balance', async function () {
+    const headData = await head(Operator.Lt, CallWay.Const, CallWay.StaticCall);
+    const dataA = await constData(100, 32);
+    const contractCallDataB = await user?.getAddress();
+    // console.log(contractCallDataB);
+    // const contractCallDataB = '0xeC5db9cb47DaD4160CdE1f31045F289403Dea34E';
+    const dataB = await contractData(zeroAddress, contractCallDataB);
+    // console.log(await ethers.provider.getBalance(user?.getAddress()));
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
     await expect(requireBlock.exec(expression)).to.ok;
   });
 });

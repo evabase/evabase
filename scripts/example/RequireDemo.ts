@@ -8,7 +8,7 @@ import '@openzeppelin/hardhat-upgrades';
 import { BigNumber } from 'ethers';
 import { ethers, network } from 'hardhat';
 // eslint-disable-next-line node/no-missing-import
-import { store, help, HowToCall, KeepNetWork, Operator, CallWay } from '../help';
+import { store, help, HowToCall, KeepNetWork, Operator, CallWay, zeroAddress } from '../help';
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -59,6 +59,29 @@ async function main() {
     const requireBlock = await RequireBlock.attach(requireBlockAddress);
     console.log(await requireBlock.exec(exConcatPriceData));
   }
+
+  // 测试ETH balance
+  await concatEthBData(zeroAddress, user, 100);
+}
+
+// 拼接ETH balance
+async function concatEthBData(contractAddress: any, userAddress: any, constDat: number) {
+  const headData = await head(Operator.Lt, CallWay.Const, CallWay.StaticCall);
+  console.log(`EthB headData=  ${headData}`);
+  const dataA = await constData(constDat, 32);
+
+  const contractCallData = userAddress;
+
+  console.log(`EthB dataA=  ${dataA}`);
+  console.log(`EthB contractCallData=  ${contractCallData}`);
+  const dataB = await contractData(contractAddress, contractCallData);
+  console.log(`EthB dataB=  ${dataB}`);
+  console.log(`EthB length Head= ${ethers.utils.hexDataLength(headData)}`);
+  console.log(`EthB length A= ${ethers.utils.hexDataLength(dataA)}`);
+  console.log(`EthB length B= ${ethers.utils.hexDataLength(dataB)}`);
+  const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+
+  return expression;
 }
 
 // 拼接头部

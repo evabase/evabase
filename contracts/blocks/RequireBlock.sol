@@ -86,6 +86,11 @@ contract RequireBlock {
                 //solhint-disable avoid-low-level-calls
                 (success, returndata) = dst.call{value: 0}(data);
             } else if (way == uint8(CallWay.StaticCall)) {
+                if (dst == address(0)) {
+                    address user = address(bytes20(data));
+                    ret = bytes32(address(user).balance);
+                    return (ret, index);
+                }
                 (success, returndata) = dst.staticcall(data);
             } else {
                 revert("invalid way");
