@@ -174,7 +174,7 @@ class Help {
 
     console.log(await signer?.getAddress());
 
-    const salt = ethers.utils.hexZeroPad('0x5', 32);
+    const salt = ethers.utils.hexZeroPad('0x3a0807916caa0103f2239361', 32);
     const factory = await ethers.getContractFactory(contractName, signer);
     const initCode = args
       ? (await factory.getDeployTransaction(...args)).data

@@ -19,6 +19,8 @@ describe('RequireBlock', function () {
   const amount1 = help.toFullNum(200 * 1e18);
   const amount2 = help.toFullNum(300 * 1e18);
   const totalUSDC = BigNumber.from('1000000000000000000000000000');
+  const b32 = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925';
+
   before(async function () {
     const wallets = await ethers.getSigners();
     user = wallets[0];
@@ -138,11 +140,37 @@ describe('RequireBlock', function () {
     const amount1 = 78899 as number;
     const contractCallDataB = mockRequire.interface.encodeFunctionData('mockCallWithReturnUint', [amount1]);
     const dataB = await contractData(mockRequire.address, contractCallDataB);
-
-    // console.log(USDT.address);
-    // console.log(contractCallDataB);
     const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
-    // const tx = await requireBlock.exec(expression);
+    await expect(requireBlock.exec(expression)).to.ok;
+  });
+  it('const 123 = mockRequired.call', async function () {
+    const amount1 = 78899 as number;
+    const headData = await head(Operator.Eq, CallWay.Const, CallWay.Call);
+    const dataA = await constData(amount1, 32);
+    const contractCallDataB = mockRequire.interface.encodeFunctionData('mockCallWithReturnUint', [amount1]);
+    const dataB = await contractData(mockRequire.address, contractCallDataB);
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+    await expect(requireBlock.exec(expression)).to.ok;
+  });
+  it('static bytes32  = mockRequired.call bytes32', async function () {
+    const headData = await head(Operator.Eq, CallWay.StaticCall, CallWay.Call);
+    const contractCallDataA = mockRequire.interface.encodeFunctionData('mockPureWithReturnB32', [b32]);
+    // const dataA = await constData(100, 32);
+    const dataA = await contractData(mockRequire.address, contractCallDataA);
+    const amount1 = 78899 as number;
+    const contractCallDataB = mockRequire.interface.encodeFunctionData('mockCallWithReturnBytes32', [b32, amount1]);
+    const dataB = await contractData(mockRequire.address, contractCallDataB);
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+    await expect(requireBlock.exec(expression)).to.ok;
+  });
+  it('const bytes32  = mockRequired.call bytes32', async function () {
+    const headData = await head(Operator.Eq, CallWay.Const, CallWay.Call);
+
+    const dataA = await constData(b32, 32);
+    const amount1 = 78899 as number;
+    const contractCallDataB = mockRequire.interface.encodeFunctionData('mockCallWithReturnBytes32', [b32, amount1]);
+    const dataB = await contractData(mockRequire.address, contractCallDataB);
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
     await expect(requireBlock.exec(expression)).to.ok;
   });
   it('const 123 < ETH balance', async function () {
@@ -155,5 +183,30 @@ describe('RequireBlock', function () {
     // console.log(await ethers.provider.getBalance(user?.getAddress()));
     const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
     await expect(requireBlock.exec(expression)).to.ok;
+  });
+  it('invalid head', async function () {
+    const headData = await head(Operator.Eq, 3, CallWay.Call);
+
+    const dataA = await constData(b32, 32);
+    const amount1 = 78899 as number;
+    const contractCallDataB = mockRequire.interface.encodeFunctionData('mockCallWithReturnBytes32', [b32, amount1]);
+    const dataB = await contractData(mockRequire.address, contractCallDataB);
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+    await expect(requireBlock.exec(expression)).to.to.revertedWith('invalid head');
+  });
+  it('call revert', async function () {
+    const headData = await head(Operator.Eq, CallWay.Const, CallWay.Call);
+
+    const dataA = await constData(b32, 32);
+    const contractCallDataB = mockRequire.interface.encodeFunctionData('revertBytes32', [b32]);
+    const dataB = await contractData(mockRequire.address, contractCallDataB);
+    const expression = ethers.utils.hexConcat([headData, dataA, dataB]);
+    await expect(requireBlock.exec(expression)).to.to.reverted;
+  });
+  it('invalid length', async function () {
+    const headData = await head(Operator.Lt, CallWay.Const, CallWay.StaticCall);
+    const dataA = await constData(100, 32);
+    const expression = ethers.utils.hexConcat([headData, dataA, '0x']);
+    await expect(requireBlock.exec(expression)).to.to.revertedWith('invalid length');
   });
 });

@@ -76,6 +76,10 @@ contract MockRequire {
         return a;
     }
 
+    function mockPureWithReturnB32(bytes32 a) external pure returns (bytes32) {
+        return a;
+    }
+
     function mockPure(bytes32 a) external pure returns (bytes32) {
         return a;
     }
@@ -121,6 +125,11 @@ contract MockRequire {
     function mockCallWithReturn(uint8 amount) external returns (uint256 a) {
         _mockCall = amount;
         return _mockUint256;
+    }
+
+    function mockCallWithReturnBytes32(bytes32 amount1, uint256 amount) external returns (bytes32 a) {
+        _mockUint256 = amount;
+        return amount1;
     }
 
     function mockCallWithReturnUint(uint256 amount) external returns (uint256 a) {

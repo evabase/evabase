@@ -55,8 +55,6 @@ contract RequireBlock {
             require(valueA == valueB, "!==");
         } else if (op == uint8(Operator.NotEqual)) {
             require(valueA != valueB, "!!=");
-        } else {
-            revert("invalid Op");
         }
     }
 
@@ -71,7 +69,7 @@ contract RequireBlock {
 
             index = start + 32;
         } else {
-            address dst = address(bytes20(expression[start:20 + start]));
+            address dst = address(bytes20(expression[start:start + 20]));
 
             index = start + 20;
             uint16 len = uint16(bytes2(expression[index:index + 2]));
@@ -86,6 +84,7 @@ contract RequireBlock {
                 //solhint-disable avoid-low-level-calls
                 (success, returndata) = dst.call{value: 0}(data);
             } else if (way == uint8(CallWay.StaticCall)) {
+                //Compare user Eth balances
                 if (dst == address(0)) {
                     address user = address(bytes20(data));
                     ret = bytes32(address(user).balance);
